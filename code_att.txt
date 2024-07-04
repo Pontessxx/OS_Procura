@@ -100,42 +100,7 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                 found == True
                                 print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                                 return dic[ano][site][tipo][key_mes]
-            
-        # if ano == '2013':
-        #     # ? tratamento de erros para tipo       [03 - XAXIM]
-            
-        #     print(f'\n\n{ano}            | \t if site in dic[ano]:')
-
-        #     if site in dic[ano]:
-        #         print(f'{site}        | \t\t if tipo in dic[ano][site]:')
-
-        #         if tipo == 'CABEAMENTO':
-        #             print(f'{tipo}      | \t\t tipo == CABEAMENTO')
-        #             if tipo_cabeamento in dic[ano][site][tipo]:
-        #                 print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
-        #                 if tipo_cabeamento == 'OPEN':
-        #                     for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
-        #                         if key_mes.startswith(mes):
-        #                             found == True
-        #                             print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-        #                             return dic[ano][site][tipo][tipo_cabeamento][key_mes]
-                                
-        #                 elif tipo_cabeamento == 'MAINFRAME':
-        #                     print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
-        #                     for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
-        #                         if key_mes.startswith(mes):
-        #                             found == True
-        #                             print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-        #                             return dic[ano][site][tipo][tipo_cabeamento][key_mes]
-        #         if (tipo == 'ELÉTRICA')or (tipo == 'MANUTENÇÃO'):
-        #             for key_mes in dic[ano][site][tipo]:
-        #                 if key_mes.startswith(mes):
-        #                     found == True
-        #                     print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-        #                     return dic[ano][site][tipo][key_mes]
-                                    
-
-        
+          
            
     return rprint('[bold red]VAZIO - nao encont rado[bold red]')
 
