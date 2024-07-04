@@ -2270,14 +2270,16 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                     return dic[ano][site][tipo][tipo_cabeamento][key_mes]
                                 
                         elif tipo_cabeamento == 'MAINFRAME':
-                        #    * tratamento de erros para os meses 01 - 09
-                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
-                                if key_mes.startswith(mes):
-                                    found = True
-                                    console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
-                            else: 
+                            try :
+                                #    * tratamento de erros para os meses 01 - 09
+                                for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                    if key_mes.startswith(mes):
+                                        found = True
+                                        console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                        return dic[ano][site][tipo][tipo_cabeamento][key_mes] 
+                            except:
                                 return console.print('\n\n[on red]NÃO ENCONTRADO[/on red]\n\n')
+
                                 
 
                 if (tipo == 'ELÉTRICA')or (tipo == 'MANUTENÇÃO'):
@@ -2351,13 +2353,13 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
 
 
 # input_ano = input(str("Digite OS: "))
-input_ano = "1009001"
+input_ano = "1001001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
 site = "01 - CTI" 
 tipo = "CABEAMENTO"
-tipo_cabeamento = "MAINFRAME"
+tipo_cabeamento = "MAINFARME"
 
 incremento_input =  procura(dic, ano, site, tipo, mes, tipo_cabeamento)
 
