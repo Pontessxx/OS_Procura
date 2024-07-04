@@ -2296,7 +2296,7 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                                     return dic[ano][site][tipo][key_mes]
                                 
-        if ano in ['2011']:
+        if ano in ['2011','2012']:
 
             console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
 
@@ -2352,13 +2352,13 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
 
 
 # input_ano = input(str("Digite OS: "))
-input_ano = "1101001"
+input_ano = "1201001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
 site = "01 - CTI" 
 tipo = "CABEAMENTO"
-tipo_cabeamento = "OPEN"
+tipo_cabeamento = "MAINFRAME"
 
 incremento_input =  procura(dic, ano, site, tipo, mes, tipo_cabeamento)
 
