@@ -2296,26 +2296,25 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                                     return dic[ano][site][tipo][key_mes]
                                 
-        if (ano == '2011')or (ano=='2012') or (ano=='2013') or (ano=='2014'):
+        if ano in ['2011']:
 
             console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
 
             if site in dic[ano]:
                 console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
 
-                if tipo == 'CABEAMENTO':
+                if tipo in 'CABEAMENTO':
                     console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
                     if tipo_cabeamento in dic[ano][site][tipo]:
-                        console.print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
+                        console.print(f'{tipo_cabeamento}      | \t\t\t tipo_cabeamento')
                         if tipo_cabeamento == 'OPEN':
                             for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
                                 if key_mes.startswith(mes):
                                     found == True
-                                    console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                                     return dic[ano][site][tipo][tipo_cabeamento][key_mes]
                                 
-                        elif tipo_cabeamento == 'MAINFRAME':
-                            console.print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
+                        else :
                             for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
                                 if key_mes.startswith(mes):
                                     found == True
@@ -2353,13 +2352,13 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
 
 
 # input_ano = input(str("Digite OS: "))
-input_ano = "1001001"
+input_ano = "1101001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
 site = "01 - CTI" 
 tipo = "CABEAMENTO"
-tipo_cabeamento = "MAINFARME"
+tipo_cabeamento = "OPEN"
 
 incremento_input =  procura(dic, ano, site, tipo, mes, tipo_cabeamento)
 
