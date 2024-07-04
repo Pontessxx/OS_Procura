@@ -2226,7 +2226,7 @@ dic = {
 }
 #  * ANOS CONCLUIDOS
     #//  2009
-    #  2010
+    #  2010 - 11 - 12 -13 - 14 -15 -16 -17 -18 -19 -20 -21 -22 -23
         # todo : 02 - ALPHAVILLE , 04 - REDE LAN   - tratamento de erros
         
     # ! FALTA : ELÉTRICA  MECANICA
@@ -2296,7 +2296,7 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                                     return dic[ano][site][tipo][key_mes]
                                 
-        if ano in ['2011','2012', '2013','2014']:
+        if ano in ['2011','2012', '2013','2014','2015','2016','2017','2018','2019']:
 
             console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
 
@@ -2352,7 +2352,7 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
 
 
 # input_ano = input(str("Digite OS: "))
-input_ano = "1401001"
+input_ano = "2001001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
