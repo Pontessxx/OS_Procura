@@ -1,0 +1,168 @@
+
+def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
+    print('____________ COMEÇO DA FUNÇÃO ____________')
+    found = False   # 
+    if ano in dic:
+        if ano == '2009':
+            # ? tratamento de erros para tipo       [02 - ALPHAVILLE] [03 - XAXIM] [04 - REDE LAN] e [CABEAMENTO][MAINFRAME][MANUTENÇÃO][ELÉTRICA]
+
+            print(f'\n\n{ano}            | \t if site in dic[ano]:')
+            if site in dic[ano]:
+                print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+                for key_mes in dic[ano][site]:
+                    if key_mes.startswith(mes):
+                        print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                        found == True
+                        return dic[ano][site][key_mes]
+                    
+
+        if ano == '2010':
+            # ? tratamento de erros para tipo       [03 - XAXIM]
+
+            print(f'\n\n{ano}            | \t if site in dic[ano]:')
+
+            if site in dic[ano]:
+                print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+
+                if tipo == 'CABEAMENTO':
+                    print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                    if tipo_cabeamento in dic[ano][site][tipo]:
+                        print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
+                        if tipo_cabeamento == 'OPEN':
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+                                
+                        elif tipo_cabeamento == 'MAINFRAME':
+                            print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+                                
+
+                if (tipo == 'ELÉTRICA')or (tipo == 'MANUTENÇÃO'):
+                    for key_mes in dic[ano][site][tipo]:
+                        if key_mes.startswith(mes):
+                            found == True
+                            print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                            return dic[ano][site][tipo][key_mes]
+                        
+                if site == '04 - REDE LAN':
+                    for key_mes in dic[ano][site][tipo]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][key_mes]
+                                
+        if (ano == '2011')or (ano=='2012') or (ano=='2013') or (ano=='2014'):
+            # or (ano=='2015') or (ano=='2016') or (ano=='2017') or (ano=='2018') or (ano=='2019') or (ano=='2020') or (ano=='2021') or (ano=='2022') or (ano=='2023')
+            print(f'\n\n{ano}            | \t if site in dic[ano]:')
+
+            if site in dic[ano]:
+                print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+
+                if tipo == 'CABEAMENTO':
+                    print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                    if tipo_cabeamento in dic[ano][site][tipo]:
+                        print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
+                        if tipo_cabeamento == 'OPEN':
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+                                
+                        elif tipo_cabeamento == 'MAINFRAME':
+                            print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+                if (tipo == 'ELÉTRICA')or (tipo == 'MANUTENÇÃO'):
+                    for key_mes in dic[ano][site][tipo]:
+                        if key_mes.startswith(mes):
+                            found == True
+                            print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                            return dic[ano][site][tipo][key_mes]
+                        
+
+                if (site == '02 - ALPHAVILLE') or (site == '04 - REDE LAN'):
+                    # ? Tratamento de erros para        [03 - XAXIM]
+
+                    # rprint(dic[ano][site][tipo])
+                    for key_mes in dic[ano][site][tipo]:
+                            if key_mes.startswith(mes):
+                                found == True
+                                print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                return dic[ano][site][tipo][key_mes]
+            
+        # if ano == '2013':
+        #     # ? tratamento de erros para tipo       [03 - XAXIM]
+            
+        #     print(f'\n\n{ano}            | \t if site in dic[ano]:')
+
+        #     if site in dic[ano]:
+        #         print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+
+        #         if tipo == 'CABEAMENTO':
+        #             print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+        #             if tipo_cabeamento in dic[ano][site][tipo]:
+        #                 print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
+        #                 if tipo_cabeamento == 'OPEN':
+        #                     for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+        #                         if key_mes.startswith(mes):
+        #                             found == True
+        #                             print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+        #                             return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+                                
+        #                 elif tipo_cabeamento == 'MAINFRAME':
+        #                     print(f'{tipo_cabeamento}      | \t\t tipo == CABEAMENTO')
+        #                     for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+        #                         if key_mes.startswith(mes):
+        #                             found == True
+        #                             print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+        #                             return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+        #         if (tipo == 'ELÉTRICA')or (tipo == 'MANUTENÇÃO'):
+        #             for key_mes in dic[ano][site][tipo]:
+        #                 if key_mes.startswith(mes):
+        #                     found == True
+        #                     print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+        #                     return dic[ano][site][tipo][key_mes]
+                                    
+
+        
+           
+    return rprint('[bold red]VAZIO - nao encont rado[bold red]')
+
+
+# input_ano = input(str("Digite OS: "))
+input_ano = "1311001"
+ano = "20"+input_ano[:2]
+mes = input_ano[2:4]
+num = input_ano[4:]
+site = "02 - ALPHAVILLE" 
+tipo = "CABEAMENTO"
+tipo_cabeamento = "OPEN"
+
+
+for key_mes in dic[ano][site]:
+    if key_mes.startswith(mes):
+        print(dic[ano][site][key_mes])
+
+incremento_input =  procura(dic, ano, site, tipo, mes, tipo_cabeamento)
+print(f'{incremento_input}          | \tINCREMENTO INPUT')
+print('\n_______COMBOBOX - VALUES________')
+print(f'{site}')
+print(f'{tipo}')
+print(f'{tipo_cabeamento}')
+print('----------------------------------------------\n')
+final = incremento_input + input_ano
+pprint(final)
+
+# base_path =f"\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{site}\\{tipo}\\{mes}\\{final}"
+# print(base_path)
