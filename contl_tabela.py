@@ -111,7 +111,7 @@ class Aba_Controle:
         label = ctk.CTkLabel(self.frame, text="CONTROLE DE FREQUENCIA", text_color=my_dict['font'])
         label.pack(pady=5, padx=5)
         
-        self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=my_dict['frames_ajuste'],height=50)
+        self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'],height=50)
         self.frame_checkbox.pack(pady=10, padx=10, fill='x')
 
         # Adicionar checkboxes
@@ -121,30 +121,30 @@ class Aba_Controle:
         combobox_frame.pack(pady=10, padx=10, fill='x')
 
         # Nome
-        nome_label = ctk.CTkLabel(combobox_frame, text="Nome :", text_color=my_dict['font'])
-        nome_label.grid(row=0, column=0, padx=5, pady=5)
-        self.nome_combobox = ctk.CTkComboBox(combobox_frame, values=self.get_nomes(), state='readonly')
-        self.nome_combobox.grid(row=0, column=1, padx=5, pady=5)
+        # nome_label = ctk.CTkLabel(combobox_frame, text="Nome :", text_color=my_dict['font'])
+        # nome_label.grid(row=0, column=0, padx=5, pady=5)
+        # self.nome_combobox = ctk.CTkComboBox(combobox_frame, values=self.get_nomes(), state='readonly')
+        # self.nome_combobox.grid(row=0, column=1, padx=5, pady=5)
 
         # tipo presenca
         tipo_presenca_label = ctk.CTkLabel(combobox_frame, text="Presença :", text_color=my_dict['font'])
-        tipo_presenca_label.grid(row=0, column=2, padx=5, pady=5)
+        tipo_presenca_label.grid(row=0, column=1, padx=10, pady=5)
         self.tipo_presenca_combobox = ctk.CTkComboBox(combobox_frame, values=self.get_presenca(), state='readonly')
-        self.tipo_presenca_combobox.grid(row=0, column=3, padx=5, pady=5)
+        self.tipo_presenca_combobox.grid(row=0, column=2, padx=10, pady=5)
        
         # Dia
         dias = [str(i) for i in range(1, 32)]
 
         dia_label = ctk.CTkLabel(combobox_frame, text="Dia :", text_color=my_dict['font'])
-        dia_label.grid(row=1, column=0, padx=5, pady=5)
+        dia_label.grid(row=0, column=3, padx=10, pady=5)
         self.dia_combobox = ctk.CTkComboBox(combobox_frame, values=dias, state='readonly')
-        self.dia_combobox.grid(row=1, column=1, padx=5, pady=5)
+        self.dia_combobox.grid(row=0, column=4, padx=10, pady=5)
 
         # Mês
         mes_label = ctk.CTkLabel(combobox_frame, text="Mês :", text_color=my_dict['font'])
-        mes_label.grid(row=1, column=2, padx=5, pady=5)
+        mes_label.grid(row=0, column=5, padx=10, pady=5)
         self.mes_combobox = ctk.CTkComboBox(combobox_frame, values=list(self.meses_dict.values()), state='readonly')
-        self.mes_combobox.grid(row=1, column=3, padx=5, pady=5)
+        self.mes_combobox.grid(row=0, column=6, padx=10, pady=5)
         mes_atual = datetime.datetime.now().month
         self.mes_combobox.set(self.meses_dict[mes_atual])
 
@@ -153,16 +153,19 @@ class Aba_Controle:
         anos = [str(a) for a in range(ano_atual, ano_atual + 100)]
         
         ano_label = ctk.CTkLabel(combobox_frame, text="Ano :", text_color=my_dict['font'])
-        ano_label.grid(row=1, column=4, padx=5, pady=5)
+        ano_label.grid(row=0, column=7, padx=10, pady=5)
         self.ano_combobox = ctk.CTkComboBox(combobox_frame, values=anos, state='readonly')
-        self.ano_combobox.grid(row=1, column=5, padx=5, pady=5)
+        self.ano_combobox.grid(row=0, column=8, padx=10, pady=5)
         self.ano_combobox.set(str(ano_atual))
 
-        button = ctk.CTkButton(combobox_frame, text="Adicionar", width=200, height=60, command=self.adicionar_frequencia)
-        button.grid(row=0, column=8, padx=5, pady=5, rowspan=2)
-        button2 = ctk.CTkButton(combobox_frame, text="Filtrar", width=200, height=60, command=self.filtrar_dados)
-        button2.grid(row=0, column=9, padx=5, pady=5, rowspan=2)
-        
+        button = ctk.CTkButton(combobox_frame, text="Adicionar", width=150, height=30, command=self.adicionar_frequencia)
+        button.grid(row=0, column=9, padx=50, pady=5)
+        button2 = ctk.CTkButton(combobox_frame, text="Filtrar", width=50, height=30, command=self.filtrar_dados)
+        button2.grid(row=0, column=10, padx=5, pady=5)
+
+        # self.print_button = ctk.CTkButton(combobox_frame, text="Imprimir Checkboxes", command=self.print_checkboxes)
+        # self.print_button.grid(row=0, column=10, padx=5, pady=5, rowspan=2)
+
         # Tabela (Treeview)
         tabela_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
@@ -179,10 +182,10 @@ class Aba_Controle:
         self.checkbox_vars = {}  # Dicionário para armazenar as variáveis das checkboxes
         row, col = 0, 0
         max_columns = 11  # Defina o número máximo de colunas por linha
-        
+
         for nome in nomes:
-            var = ctk.StringVar()
-            checkbox = ctk.CTkCheckBox(self.frame_checkbox, text=nome, variable=var, font=('Arial', 15))
+            var = ctk.StringVar(value='off')
+            checkbox = ctk.CTkCheckBox(self.frame_checkbox, text=nome, variable=var, onvalue='on', offvalue='off', font=('Arial', 15))
             checkbox.grid(row=row, column=col, padx=5, pady=5)
             self.checkbox_vars[nome] = var  # Armazena a variável da checkbox
             col += 1
@@ -190,6 +193,11 @@ class Aba_Controle:
             if col >= max_columns:
                 col = 0
                 row += 1
+
+    # def print_checkboxes(self):
+    #     for nome, var in self.checkbox_vars.items():
+    #         if var.get() == 'on':
+    #             print(f'{nome}: {var.get()}')
 
 
     def get_nomes(self):
@@ -225,7 +233,6 @@ class Aba_Controle:
             print(f'Error: {e}')
 
     def adicionar_frequencia(self):
-        nome = self.nome_combobox.get()
         tipo_presenca = self.tipo_presenca_combobox.get()
         dia = self.dia_combobox.get()
         mes = list(self.meses_dict.keys())[list(self.meses_dict.values()).index(self.mes_combobox.get())]
@@ -233,22 +240,24 @@ class Aba_Controle:
 
         data = datetime.datetime(int(ano), int(mes), int(dia))
 
-        if nome and tipo_presenca and dia and mes and ano:
+        if tipo_presenca and dia and mes and ano:
             try:
                 cursor = self.conn.cursor()
-                cursor.execute("SELECT ID FROM tblControle WHERE Nomes=? AND DATA=?", (nome, data))
-                result = cursor.fetchone()
-                
-                if result:  # Se o registro existir, atualize-o
-                    cursor.execute("UPDATE tblControle SET PRESENCA=? WHERE ID=?", (tipo_presenca, result[0]))
-                else:  # Se o registro não existir, insira um novo
-                    cursor.execute("SELECT MAX(ID) FROM tblControle")
-                    last_id = cursor.fetchone()[0]
-                    if last_id is None:
-                        last_id = 0
-                    new_id = last_id + 1
+                for nome, var in self.checkbox_vars.items():
+                    if var.get() == 'on':
+                        cursor.execute("SELECT ID FROM tblControle WHERE Nomes=? AND DATA=?", (nome, data))
+                        result = cursor.fetchone()
+                        
+                        if result:  # Se o registro existir, atualize-o
+                            cursor.execute("UPDATE tblControle SET PRESENCA=? WHERE ID=?", (tipo_presenca, result[0]))
+                        else:  # Se o registro não existir, insira um novo
+                            cursor.execute("SELECT MAX(ID) FROM tblControle")
+                            last_id = cursor.fetchone()[0]
+                            if last_id is None:
+                                last_id = 0
+                            new_id = last_id + 1
 
-                    cursor.execute("INSERT INTO tblControle (ID, DATA, NOMES, PRESENCA) VALUES (?, ?, ?, ?)", (new_id, data, nome, tipo_presenca))
+                            cursor.execute("INSERT INTO tblControle (ID, DATA, NOMES, PRESENCA) VALUES (?, ?, ?, ?)", (new_id, data, nome, tipo_presenca))
 
                 self.conn.commit()
                 self.carregar_dados()
