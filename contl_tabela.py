@@ -111,6 +111,12 @@ class Aba_Controle:
         label = ctk.CTkLabel(self.frame, text="CONTROLE DE FREQUENCIA", text_color=my_dict['font'])
         label.pack(pady=5, padx=5)
         
+        self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=my_dict['frames_ajuste'],height=50)
+        self.frame_checkbox.pack(pady=10, padx=10, fill='x')
+
+        # Adicionar checkboxes
+        self.add_checkboxes()
+
         combobox_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
         combobox_frame.pack(pady=10, padx=10, fill='x')
 
@@ -167,6 +173,24 @@ class Aba_Controle:
         self.tabela.heading("Presença", text="Presença")
         self.tabela.pack(fill='both', expand=True)
         self.carregar_dados()
+
+    def add_checkboxes(self):
+        nomes = self.get_nomes()
+        self.checkbox_vars = {}  # Dicionário para armazenar as variáveis das checkboxes
+        row, col = 0, 0
+        max_columns = 11  # Defina o número máximo de colunas por linha
+        
+        for nome in nomes:
+            var = ctk.StringVar()
+            checkbox = ctk.CTkCheckBox(self.frame_checkbox, text=nome, variable=var, font=('Arial', 15))
+            checkbox.grid(row=row, column=col, padx=5, pady=5)
+            self.checkbox_vars[nome] = var  # Armazena a variável da checkbox
+            col += 1
+
+            if col >= max_columns:
+                col = 0
+                row += 1
+
 
     def get_nomes(self):
         try:
