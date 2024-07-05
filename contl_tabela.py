@@ -153,10 +153,12 @@ class Aba_Controle:
         self.ano_combobox.grid(row=0, column=8, padx=10, pady=5)
         self.ano_combobox.set(str(ano_atual))
 
-        button = ctk.CTkButton(combobox_frame, text="Adicionar", width=150, height=30, command=self.adicionar_frequencia)
-        button.grid(row=0, column=9, padx=50, pady=5)
+        button = ctk.CTkButton(combobox_frame, text="Adicionar", width=75, height=30, command=self.adicionar_frequencia)
+        button.grid(row=0, column=9, padx=10, pady=5)
+        button = ctk.CTkButton(combobox_frame, text="Deletar", width=75, height=30, command=self.remover_frequencia)
+        button.grid(row=0, column=10, padx=10, pady=5)
         self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=50, height=30, command=self.toggle_filter)
-        self.filter_button.grid(row=0, column=10, padx=5, pady=5)
+        self.filter_button.grid(row=0, column=11, padx=5, pady=5)
 
         # Tabela (Treeview)
         tabela_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
@@ -249,6 +251,27 @@ class Aba_Controle:
                 self.carregar_dados()
             except pyodbc.Error as e:
                 print(f'Error: {e}')
+
+    def remover_frequencia(self):
+            dia = self.dia_combobox.get()
+            mes = list(self.meses_dict.keys())[list(self.meses_dict.values()).index(self.mes_combobox.get())]
+            ano = self.ano_combobox.get()
+
+            data = datetime.datetime(int(ano), int(mes), int(dia))
+
+            if dia and mes and ano:
+                try:
+                    cursor = self.conn.cursor()
+                    for nome, var in self.checkbox_vars.items():
+                        if var.get() == 'on':
+                            cursor.execute("DELETE FROM tblControle WHERE Nomes=? AND DATA=?", (nome, data))
+                    
+                    self.dia_combobox.set('')
+                    self.tipo_presenca_combobox.set('')
+                    self.conn.commit()
+                    self.carregar_dados()
+                except pyodbc.Error as e:
+                    print(f'Error: {e}')
 
     def toggle_filter(self):
         if self.filter_mode:
