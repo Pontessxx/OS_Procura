@@ -103,6 +103,7 @@ class ControleApp:
 class Aba_Controle:
     def __init__(self, parent, master, my_dict, conn, meses_dict):
         self.parent = parent  # Referência para a instância da classe pai
+        self.filter_mode = False
         self.conn = conn  # Conexão com o banco de dados
         self.meses_dict = meses_dict  # Dicionário de meses
         self.frame = ctk.CTkFrame(master, fg_color=my_dict['preto'])
@@ -119,12 +120,6 @@ class Aba_Controle:
 
         combobox_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
         combobox_frame.pack(pady=10, padx=10, fill='x')
-
-        # Nome
-        # nome_label = ctk.CTkLabel(combobox_frame, text="Nome :", text_color=my_dict['font'])
-        # nome_label.grid(row=0, column=0, padx=5, pady=5)
-        # self.nome_combobox = ctk.CTkComboBox(combobox_frame, values=self.get_nomes(), state='readonly')
-        # self.nome_combobox.grid(row=0, column=1, padx=5, pady=5)
 
         # tipo presenca
         tipo_presenca_label = ctk.CTkLabel(combobox_frame, text="Presença :", text_color=my_dict['font'])
@@ -160,11 +155,8 @@ class Aba_Controle:
 
         button = ctk.CTkButton(combobox_frame, text="Adicionar", width=150, height=30, command=self.adicionar_frequencia)
         button.grid(row=0, column=9, padx=50, pady=5)
-        button2 = ctk.CTkButton(combobox_frame, text="Filtrar", width=50, height=30, command=self.filtrar_dados)
-        button2.grid(row=0, column=10, padx=5, pady=5)
-
-        # self.print_button = ctk.CTkButton(combobox_frame, text="Imprimir Checkboxes", command=self.print_checkboxes)
-        # self.print_button.grid(row=0, column=10, padx=5, pady=5, rowspan=2)
+        self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=50, height=30, command=self.toggle_filter)
+        self.filter_button.grid(row=0, column=10, padx=5, pady=5)
 
         # Tabela (Treeview)
         tabela_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
@@ -193,12 +185,6 @@ class Aba_Controle:
             if col >= max_columns:
                 col = 0
                 row += 1
-
-    # def print_checkboxes(self):
-    #     for nome, var in self.checkbox_vars.items():
-    #         if var.get() == 'on':
-    #             print(f'{nome}: {var.get()}')
-
 
     def get_nomes(self):
         try:
@@ -264,6 +250,12 @@ class Aba_Controle:
             except pyodbc.Error as e:
                 print(f'Error: {e}')
 
+    def toggle_filter(self):
+        if self.filter_mode:
+            self.limpar_filtro()
+        else:
+            self.filtrar_dados()
+
     def filtrar_dados(self):
         dia = self.dia_combobox.get()
         mes = self.mes_combobox.get()
@@ -272,15 +264,15 @@ class Aba_Controle:
 
         try:
             cursor = self.conn.cursor()
-            if dia and mes and ano:
+            if dia and mes and ano and tipo_presenca:
+                query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=? AND PRESENCA=?"
+                cursor.execute(query, (dia, list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano, tipo_presenca))
+            elif dia and mes and ano:
                 query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=?"
                 cursor.execute(query, (dia, list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano))
             elif tipo_presenca:
                 query = "SELECT * FROM tblControle WHERE PRESENCA=?"
                 cursor.execute(query, (tipo_presenca,))
-            elif dia and mes and ano and tipo_presenca:
-                query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=? AND PRESENCA=?"
-                cursor.execute(query, (dia, list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano, tipo_presenca))
             else:
                 query = "SELECT * FROM tblControle"
                 cursor.execute(query)
@@ -290,8 +282,18 @@ class Aba_Controle:
                 id, data, status, nome = row
                 data_formatada = data.strftime('%d/%m/%Y')
                 self.tabela.insert("", "end", values=[data_formatada, nome, status])
+            
+            self.filter_button.configure(text="Limpar Filtro")
+            self.filter_mode = True
         except pyodbc.Error as e:
             print(f'Error: {e}')
+
+    def limpar_filtro(self):
+        self.carregar_dados()
+        self.dia_combobox.set('')
+        self.tipo_presenca_combobox.set('')
+        self.filter_button.configure(text="Filtrar")
+        self.filter_mode = False
 
 
 class Aba_adiciona_remove_nomes:
