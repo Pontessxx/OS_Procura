@@ -266,13 +266,22 @@ class Aba_Controle:
 
     def filtrar_dados(self):
         dia = self.dia_combobox.get()
-        mes = list(self.meses_dict.keys())[list(self.meses_dict.values()).index(self.mes_combobox.get())]
+        mes = self.mes_combobox.get()
         ano = self.ano_combobox.get()
+        tipo_presenca = self.tipo_presenca_combobox.get()
 
         try:
             cursor = self.conn.cursor()
-            query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=?"
-            cursor.execute(query, (dia, mes, ano))
+            if dia and mes and ano:
+                query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=?"
+                cursor.execute(query, (dia, list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano))
+            elif tipo_presenca:
+                query = "SELECT * FROM tblControle WHERE PRESENCA=?"
+                cursor.execute(query, (tipo_presenca,))
+            else:
+                query = "SELECT * FROM tblControle"
+                cursor.execute(query)
+            
             self.tabela.delete(*self.tabela.get_children())  # Limpa a tabela antes de carregar novos dados
             for row in cursor.fetchall():
                 id, data, status, nome = row
