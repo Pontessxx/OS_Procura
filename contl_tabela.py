@@ -278,6 +278,9 @@ class Aba_Controle:
             elif tipo_presenca:
                 query = "SELECT * FROM tblControle WHERE PRESENCA=?"
                 cursor.execute(query, (tipo_presenca,))
+            elif dia and mes and ano and tipo_presenca:
+                query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=? AND PRESENCA=?"
+                cursor.execute(query, (dia, list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano, tipo_presenca))
             else:
                 query = "SELECT * FROM tblControle"
                 cursor.execute(query)
