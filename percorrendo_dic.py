@@ -2358,34 +2358,36 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento,tipo_manutencao):
                             console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                             return dic[ano][site][tipo][key_mes]
                 
-                if tipo in ['MANUTENÇÃO'] and ano in ['2014','2015']:
-                    # console.print(dic[ano][site][tipo])
+                if tipo in ['MANUTENÇÃO'] and ano in ['2014','2015','2016','2017','2018','2019','2021','2022']:
+                    console.print(dic[ano][site][tipo])
                     for key_mes in dic[ano][site][tipo]:
                         if key_mes.startswith(mes):
                             found == True
                             console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                             dic_manutencao = dic[ano][site][tipo][key_mes]
-                            if tipo_manutencao == 'PREVENTIVA':
+                            if tipo_manutencao in 'PREVENTIVA':
                                 
                                 for key in dic_manutencao:
                                     if key and dic_manutencao[key] and tipo_manutencao:
                                         if tipo_manutencao.lower() in key.lower():
-                                            
                                             chave = key
                                             if dic_manutencao[chave]:
                                                 console.print(f'{dic_manutencao}   | \t\t\t if key and dic_manutencao[key] and tipo_manutencao')
                                                 return dic_manutencao[chave]
                                 
                                 return dic_manutencao[chave]
-                            if tipo_manutencao == 'CORRETIVA':
+                            if tipo_manutencao in 'CORRETIVA':
                                 for key in dic_manutencao:
+                                    console.print(dic_manutencao)
                                     if key and dic_manutencao[key] and tipo_manutencao:
                                         if tipo_manutencao.lower() in key.lower():
-                                            
                                             chave = key
+                                            console.print(dic_manutencao[key])
                                             if dic_manutencao[chave]:
                                                 console.print(f'{dic_manutencao}   | \t\t\t if key and dic_manutencao[key] and tipo_manutencao')
                                                 return dic_manutencao[chave]
+                                    else:
+                                        return ''
                                 
                                 return dic_manutencao[chave]
                         else:                     
@@ -2554,7 +2556,7 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento,tipo_manutencao):
            
     return console.print('[bold red]VAZIO - nao encontrado[bold red]')
 
-input_ano = "1501001"
+input_ano = "1802001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
@@ -2563,8 +2565,8 @@ site = "01 - CTI"
 tipo = 'MANUTENÇÃO'
 # tipo_cabeamento = "OPEN"
 tipo_cabeamento = ""
-tipo_manutenção = "CORRETIVA"
-# tipo_manutenção = "PREVENTIVA"
+# tipo_manutenção = "CORRETIVA"
+tipo_manutenção = "PREVENTIVA"
 
 incremento_input =  procura(dic, ano, site, tipo, mes, tipo_cabeamento, tipo_manutenção)
 
