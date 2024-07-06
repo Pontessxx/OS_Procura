@@ -2232,13 +2232,12 @@ dic = {
     
     #   03 - XAXIM  
         # todo : Tratamento de erros -  2010 - 2011 - 2012 - 2013 - 2014 - 2015 - 2016 - 
-        # * feito: 2017
+        # // feito: 2017, 2018 ,2019, 2020, 2021, 2022, 2023
 
     #  04 - REDE LAN
-        # todo : tratamento do erros - 
+        # todo : tratamento do erros - elétrica manutenção
+        # // feito: 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023
         
-        
-    # ! FALTA : MECANICA
 
         
 def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
@@ -2368,7 +2367,7 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                 
                
                         
-                if (site == '04 - REDE LAN'):
+                if site in '04 - REDE LAN':
                     # ? Tratamento de erros para        [03 - XAXIM]
 
                     # console.print(dic[ano][site][tipo])
@@ -2434,6 +2433,12 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                 found == True
                                 console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                                 return dic[ano][site][key_mes]
+            if site == '04 - REDE LAN':
+                for key_mes in dic[ano][site][tipo]:
+                            if key_mes.startswith(mes):
+                                found == True
+                                console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                return dic[ano][site][tipo][key_mes]
 
         if ano in ['2020']:
             console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
@@ -2493,16 +2498,23 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                         found == True
                         console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                         return dic[ano][site][tipo][key_mes]
+            
+            if site == '04 - REDE LAN':
+                for key_mes in dic[ano][site][tipo]:
+                            if key_mes.startswith(mes):
+                                found == True
+                                console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                return dic[ano][site][tipo][key_mes]
           
            
     return console.print('[bold red]VAZIO - nao encontrado[bold red]')
 
-input_ano = "2308001"
+input_ano = "2301001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
-# site = "01 - CTI" 
-site = "03 - XAXIM" 
+
+site = "04 - REDE LAN" 
 tipo = 'CABEAMENTO'
 tipo_cabeamento = "OPEN"
 
