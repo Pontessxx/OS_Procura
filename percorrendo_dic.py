@@ -2243,7 +2243,7 @@ dic = {
         
 
         
-def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
+def procura(dic, ano, site, tipo, mes, tipo_cabeamento,tipo_manutencao):
     console.print('[bold blue]____________ DEF - PROCURA ____________[/bold blue]')
     found = False   # 
     if ano in dic:
@@ -2351,12 +2351,49 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                                     return dic[ano][site][tipo][key_mes]
         
-                if tipo in ['ELÉTRICA', 'MANUTENÇÃO']:
+                if tipo in ['ELÉTRICA']:
                     for key_mes in dic[ano][site][tipo]:
                         if key_mes.startswith(mes):
                             found == True
                             console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                             return dic[ano][site][tipo][key_mes]
+                
+                if tipo in ['MANUTENÇÃO'] and tipo_manutencao:
+                    # console.print(dic[ano][site][tipo])
+                    for key_mes in dic[ano][site][tipo]:
+                        if key_mes.startswith(mes):
+                            found == True
+                            console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                            dic_manutencao = dic[ano][site][tipo][key_mes]
+                            if tipo_manutencao == 'PREVENTIVA':
+                                
+                                for key in dic_manutencao:
+                                    if key and dic_manutencao[key] and tipo_manutencao:
+                                        if tipo_manutencao.lower() in key.lower():
+                                            
+                                            chave = key
+                                            if dic_manutencao[chave]:
+                                                console.print(f'{dic_manutencao}   | \t\t\t if key and dic_manutencao[key] and tipo_manutencao')
+                                                return dic_manutencao[chave]
+                                
+                                return dic_manutencao[chave]
+                            if tipo_manutencao == 'CORRETIVA':
+                                for key in dic_manutencao:
+                                    if key and dic_manutencao[key] and tipo_manutencao:
+                                        if tipo_manutencao.lower() in key.lower():
+                                            
+                                            chave = key
+                                            if dic_manutencao[chave]:
+                                                console.print(f'{dic_manutencao}   | \t\t\t if key and dic_manutencao[key] and tipo_manutencao')
+                                                return dic_manutencao[chave]
+                                
+                                return dic_manutencao[chave]
+                        else:                     
+                            return console.print('[bold red]VAZIO - nao encontrado[bold red]')
+                    
+                        
+
+                
 
                 if site in ['03 - XAXIM'] and ano in ['2011','2012', '2013','2014','2015','2016','2017','2018','2019','2021']:
                     if tipo in 'CABEAMENTO':
@@ -2512,7 +2549,7 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
            
     return console.print('[bold red]VAZIO - nao encontrado[bold red]')
 
-input_ano = "1401001"
+input_ano = "1101001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
@@ -2520,9 +2557,11 @@ num = input_ano[4:]
 site = "01 - CTI" 
 tipo = 'MANUTENÇÃO'
 # tipo_cabeamento = "OPEN"
-tipo_cabeamento = "OPEN"
+tipo_cabeamento = ""
+tipo_manutenção = "CORRETIVA"
+# tipo_manutenção = "PREVENTIVA"
 
-incremento_input =  procura(dic, ano, site, tipo, mes, tipo_cabeamento)
+incremento_input =  procura(dic, ano, site, tipo, mes, tipo_cabeamento, tipo_manutenção)
 
 if incremento_input:
     table = Table(title="Resultado da Procura")
@@ -2532,8 +2571,10 @@ if incremento_input:
 
     table.add_row("Incremento Input", incremento_input)
     table.add_row("Site", site)
+    table.add_row("Mes", mes)
     table.add_row("Tipo", tipo)
     table.add_row("Tipo Cabeamento", tipo_cabeamento)
+    table.add_row("Tipo Manutenção", tipo_manutenção)
     final = incremento_input + input_ano
     table.add_row("Final", final)
 
