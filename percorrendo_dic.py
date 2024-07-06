@@ -2225,13 +2225,22 @@ dic = {
 
 }
 #  * ANOS CONCLUIDOS
-    #//  2009
-    #  2010 - 11 - 12 -13 - 14 -15 -16 -17 -18 -19 -20 -21 -22 -23
-        # todo : 02 - ALPHAVILLE , 04 - REDE LAN   - tratamento de erros
+    #//  2009 (CTI)(02 - ALPHA)
+    # // 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 - ELÉTRICA CABEAMENTO
+        # todo : manutenção
+    
+    
+    #   03 - XAXIM  
+        # todo : Tratamento de erros -  2010 - 2011 - 2012 - 2013 - 2014 - 2015 - 2016 - 
+        # * feito: 2017
+
+    #  04 - REDE LAN
+        # todo : tratamento do erros - 
         
-    # ! FALTA : ELÉTRICA  MECANICA
+        
+    # ! FALTA : MECANICA
 
-
+        
 def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
     console.print('[bold blue]____________ DEF - PROCURA ____________[/bold blue]')
     found = False   # 
@@ -2296,11 +2305,109 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                                     return dic[ano][site][tipo][key_mes]
                                 
-        if ano in ['2011','2012', '2013','2014','2015','2016','2017','2018','2019']:
+        if ano in ['2011','2012', '2013','2014','2015','2016','2017','2018','2019','2021','2022']:
 
             console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
 
             if site in dic[ano]:
+                console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+
+
+                if ano in ['2022'] and site in '03 - XAXIM':
+                    if tipo_cabeamento == 'OPEN':
+                        for key_mes in dic[ano][site]:
+                            if key_mes.startswith(mes):
+                                found == True
+                                console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                                return dic[ano][site][key_mes]
+                            
+                if tipo in 'CABEAMENTO':
+                    console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                    if tipo_cabeamento in dic[ano][site][tipo]:
+                        console.print(f'{tipo_cabeamento}      | \t\t\t tipo_cabeamento')
+                        if tipo_cabeamento == 'OPEN':
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
+                        else :
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes] 
+                                
+                
+
+                if ano in ['2011','2013','2014','2015'] and site in '02 - ALPHAVILLE':
+                    tipo_cabeamento =''
+                    for key_mes in dic[ano][site][tipo]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][key_mes]
+        
+                if tipo in 'ELÉTRICA':
+                    for key_mes in dic[ano][site][tipo]:
+                        if key_mes.startswith(mes):
+                            found == True
+                            console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                            return dic[ano][site][tipo][key_mes]
+
+                if site in ['03 - XAXIM'] and ano in ['2011','2012', '2013','2014','2015','2016','2017','2018','2019','2021']:
+                    if tipo in 'CABEAMENTO':
+                        console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                        if tipo_cabeamento == 'OPEN':
+                            for key_mes in dic[ano][site][tipo]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][key_mes]
+                
+               
+                        
+                if (site == '04 - REDE LAN'):
+                    # ? Tratamento de erros para        [03 - XAXIM]
+
+                    # console.print(dic[ano][site][tipo])
+                    for key_mes in dic[ano][site][tipo]:
+                            if key_mes.startswith(mes):
+                                found == True
+                                console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                return dic[ano][site][tipo][key_mes]
+        
+    
+        if ano in ['2023']:
+            if site in '02 - ALPHAVILLE':
+                console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+
+                if tipo in 'CABEAMENTO':
+                    console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                    tipo = 'CABEAMENTO LÓGICO'
+                    if tipo_cabeamento in dic[ano][site][tipo]:
+                        console.print(f'{tipo_cabeamento}      | \t\t\t tipo_cabeamento')
+                        if tipo_cabeamento == 'OPEN':
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
+                        else :
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+                if tipo in 'ELÉTRICA':
+                    for key_mes in dic[ano][site][tipo]:
+                        if key_mes.startswith(mes):
+                            found == True
+                            console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                            return dic[ano][site][tipo][key_mes]
+            if site in '01 - CTI':
                 console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
 
                 if tipo in 'CABEAMENTO':
@@ -2313,7 +2420,56 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                     found == True
                                     console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                                     return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
+                        else :
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+            if site in '03 - XAXIM':
+                    if tipo_cabeamento == 'OPEN':
+                        for key_mes in dic[ano][site]:
+                            if key_mes.startswith(mes):
+                                found == True
+                                console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                                return dic[ano][site][key_mes]
+
+        if ano in ['2020']:
+            console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
+            if site in ['01 - CTI']:
+                console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+                if tipo in 'CABEAMENTO':
+                    if tipo_cabeamento in ['MAINFRAME']:
+                        console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                        if tipo_cabeamento in dic[ano][site][tipo]['OPEN']:
+                            console.print(f'{tipo_cabeamento}      | \t\t\t tipo_cabeamento')
+                            for key_mes in dic[ano][site][tipo]['OPEN']:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo]['OPEN'][key_mes]
+                    else :
+                        console.print(f'{tipo_cabeamento}      | \t\t\t tipo_cabeamento')
+                        if tipo_cabeamento == 'OPEN':
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
                                 
+            if site in ['02 - ALPHAVILLE']:
+                if tipo in 'CABEAMENTO':
+                    console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                    if tipo_cabeamento in dic[ano][site][tipo]:
+                        console.print(f'{tipo_cabeamento}      | \t\t\t tipo_cabeamento')
+                        if tipo_cabeamento == 'OPEN':
+                            for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
+                                if key_mes.startswith(mes):
+                                    found == True
+                                    console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                                    return dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
                         else :
                             for key_mes in dic[ano][site][tipo][tipo_cabeamento]:
                                 if key_mes.startswith(mes):
@@ -2321,44 +2477,34 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                                     return dic[ano][site][tipo][tipo_cabeamento][key_mes]
                                 
-
-
-                if (tipo == 'ELÉTRICA')or (tipo == 'MANUTENÇÃO'):
-                    # for key_mes in dic[ano][site][tipo]:
-                    #     if key_mes.startswith(mes):
-                    #         found == True
-                    #         console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-                    #         return dic[ano][site][tipo][key_mes]
-                        
-                    if site == '02 - ALPHAVILLE':
-                        console.print('ELÉTRICA OU MECANICA - DESENVOLVENDO')
-                        # for key_mes in dic[ano][site][tipo]:
-                        #             if key_mes.startswith(mes):
-                        #                 found == True
-                        #                 console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-                        #                 return dic[ano][site][tipo][key_mes]
-                if (site == '04 - REDE LAN'):
-                    # ? Tratamento de erros para        [03 - XAXIM]
-
-                    # console.print(dic[ano][site][tipo])
-                    for key_mes in dic[ano][site][tipo]:
+            if site in ['03 - XAXIM']:
+                if tipo in 'CABEAMENTO':
+                    console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                    if tipo_cabeamento == 'OPEN':
+                        for key_mes in dic[ano][site][tipo]:
                             if key_mes.startswith(mes):
                                 found == True
-                                console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                                 return dic[ano][site][tipo][key_mes]
+                        
+            if tipo in 'ELÉTRICA':
+                for key_mes in dic[ano][site][tipo]:
+                    if key_mes.startswith(mes):
+                        found == True
+                        console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                        return dic[ano][site][tipo][key_mes]
           
            
-    return console.print('[bold red]VAZIO - nao encont rado[bold red]')
+    return console.print('[bold red]VAZIO - nao encontrado[bold red]')
 
-
-# input_ano = input(str("Digite OS: "))
-input_ano = "2001001"
+input_ano = "2308001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
-site = "01 - CTI" 
-tipo = "CABEAMENTO"
-tipo_cabeamento = "MAINFRAME"
+# site = "01 - CTI" 
+site = "03 - XAXIM" 
+tipo = 'CABEAMENTO'
+tipo_cabeamento = "OPEN"
 
 incremento_input =  procura(dic, ano, site, tipo, mes, tipo_cabeamento)
 
@@ -2372,11 +2518,11 @@ if incremento_input:
     table.add_row("Site", site)
     table.add_row("Tipo", tipo)
     table.add_row("Tipo Cabeamento", tipo_cabeamento)
-    table.add_row("Final", incremento_input + input_ano)
+    final = incremento_input + input_ano
+    table.add_row("Final", final)
 
     console.print(table)
 else:
     console.print("[bold red]Nenhum resultado encontrado.[/bold red]")
-
 # base_path =f"\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{site}\\{tipo}\\{mes}\\{final}"
 # console.print(base_path)
