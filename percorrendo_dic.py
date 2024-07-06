@@ -2228,10 +2228,13 @@ dic = {
     #//  2009 (CTI)(02 - ALPHA)
     # // 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 - ELÉTRICA CABEAMENTO
         # todo : manutenção
+
+        # MANUTENÇÃO cti: 2010 2011 - 2012 - 2013 
+            # todo : tratamento de erros - dicionario : - 2014 - 2015 - 2016 - 2017 - 2018 - 2019 - 2020 - 2021 - 2022 - 2023
     
     
     #   03 - XAXIM  
-        # todo : Tratamento de erros -  2010 - 2011 - 2012 - 2013 - 2014 - 2015 - 2016 - 
+        # todo : Tratamento de erros -  2010 - 2011 - 2012 - 2013 - 2014 - 2015 - 2016
         # // feito: 2017, 2018 ,2019, 2020, 2021, 2022, 2023
 
     #  04 - REDE LAN
@@ -2348,7 +2351,7 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
                                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                                     return dic[ano][site][tipo][key_mes]
         
-                if tipo in 'ELÉTRICA':
+                if tipo in ['ELÉTRICA', 'MANUTENÇÃO']:
                     for key_mes in dic[ano][site][tipo]:
                         if key_mes.startswith(mes):
                             found == True
@@ -2509,13 +2512,14 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento):
            
     return console.print('[bold red]VAZIO - nao encontrado[bold red]')
 
-input_ano = "2301001"
+input_ano = "1401001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
 
-site = "04 - REDE LAN" 
-tipo = 'CABEAMENTO'
+site = "01 - CTI" 
+tipo = 'MANUTENÇÃO'
+# tipo_cabeamento = "OPEN"
 tipo_cabeamento = "OPEN"
 
 incremento_input =  procura(dic, ano, site, tipo, mes, tipo_cabeamento)
