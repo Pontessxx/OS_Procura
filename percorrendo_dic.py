@@ -2359,39 +2359,31 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento,tipo_manutencao):
                             return dic[ano][site][tipo][key_mes]
                 
                 if tipo in ['MANUTENÇÃO'] and ano in ['2014','2015','2016','2017','2018','2019','2021','2022']:
-                    console.print(dic[ano][site][tipo])
-                    for key_mes in dic[ano][site][tipo]:
+                    console.print('\n\n[on purple] MANUTENÇÃO [/on purple]\n\n')
+                    for key_mes, value in dic[ano][site][tipo].items():
                         if key_mes.startswith(mes):
-                            found == True
                             console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-                            dic_manutencao = dic[ano][site][tipo][key_mes]
-                            if tipo_manutencao in 'PREVENTIVA':
-                                
-                                for key in dic_manutencao:
-                                    if key and dic_manutencao[key] and tipo_manutencao:
-                                        if tipo_manutencao.lower() in key.lower():
-                                            chave = key
-                                            if dic_manutencao[chave]:
-                                                console.print(f'{dic_manutencao}   | \t\t\t if key and dic_manutencao[key] and tipo_manutencao')
-                                                return dic_manutencao[chave]
-                                
-                                return dic_manutencao[chave]
-                            if tipo_manutencao in 'CORRETIVA':
-                                for key in dic_manutencao:
-                                    console.print(dic_manutencao)
-                                    if key and dic_manutencao[key] and tipo_manutencao:
-                                        if tipo_manutencao.lower() in key.lower():
-                                            chave = key
-                                            console.print(dic_manutencao[key])
-                                            if dic_manutencao[chave]:
-                                                console.print(f'{dic_manutencao}   | \t\t\t if key and dic_manutencao[key] and tipo_manutencao')
-                                                return dic_manutencao[chave]
-                                    else:
-                                        return ''
-                                
-                                return dic_manutencao[chave]
-                        else:                     
-                            return console.print('[bold red]VAZIO - nao encontrado[bold red]')
+                            dic_manutencao = value
+                            chave = None
+
+                            if tipo_manutencao.lower() == 'preventiva':
+                                for key, val in dic_manutencao.items():
+                                    if tipo_manutencao.lower() in key.lower():
+                                        chave = key
+                                        if val:
+                                            return val
+
+                            elif tipo_manutencao.lower() == 'corretiva':
+                                for key, val in dic_manutencao.items():
+                                    if tipo_manutencao.lower() in key.lower():
+                                        chave = key
+                                        if val:
+                                            return val
+
+                            if chave is None:
+                                return ''
+                    return ''
+                    
                 elif tipo in ['MANUTENÇÃO'] and ano in ['2011','2012','2013']:
                     for key_mes in dic[ano][site][tipo]:
                         if key_mes.startswith(mes):
@@ -2556,7 +2548,7 @@ def procura(dic, ano, site, tipo, mes, tipo_cabeamento,tipo_manutencao):
            
     return console.print('[bold red]VAZIO - nao encontrado[bold red]')
 
-input_ano = "1802001"
+input_ano = "2202001"
 ano = "20"+input_ano[:2]
 mes = input_ano[2:4]
 num = input_ano[4:]
