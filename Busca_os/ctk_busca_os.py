@@ -2259,6 +2259,7 @@ class SimpleApp(ctk.CTk):
         button = ctk.CTkButton(self.frame, text="Buscar Arquivo", command=self.mostrar_resultado)
         button.grid(row=2, column=2, padx=20, pady=20, )
         self.site_combobox.set('01 - CTI') 
+
     def separar_input(self):
         input_str = self.input_value.get()
         if len(input_str) == 7:
@@ -2274,6 +2275,8 @@ class SimpleApp(ctk.CTk):
                 'Site': self.site_combobox.get(),
                 'Tipo': self.tipo_combobox.get(),
                 f'Tipo {self.tipo_combobox.get()}': self.tipo_cabeamento.get(),
+                'Input_path':self.procura(ano, self.site_combobox.get(), self.tipo_combobox.get(), mes, self.tipo_cabeamento.get())+input_str,
+                
             }
         else:
             return "Formato inválido. O input deve ter 7 caracteres."
@@ -2298,6 +2301,206 @@ class SimpleApp(ctk.CTk):
         x = (screen_width / 2) - (width / 2)
         y = (screen_height / 2) - (height / 2)
         self.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+
+
+    def procura(self, ano, site, tipo, mes, tipo_cabeamento):
+        console.print('[bold blue]____________ DEF - PROCURA ____________[/bold blue]')
+        found = False
+        ano = '20'+ ano
+        if ano in self.dic:
+            if ano in ['2009']:
+                return self._handle_2009(ano, site, mes)
+            elif ano in ['2010']:
+                return self._handle_2010(ano, site, tipo, mes, tipo_cabeamento)
+            elif ano in ['2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2021', '2022']:
+                return self._handle_2011_2022(ano, site, tipo, mes, tipo_cabeamento)
+            elif ano in ['2023']:
+                return self._handle_2023(ano, site, tipo, mes, tipo_cabeamento)
+            elif ano in ['2020']:
+                return self._handle_2020(ano, site, tipo, mes, tipo_cabeamento)
+
+        return console.print('[bold red]VAZIO - nao encontrado[bold red]')
+
+    def _handle_2009(self, ano, site, mes):
+        console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
+        for key_mes in self.dic[ano][site]:
+            if key_mes.startswith(mes):
+                console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                return self.dic[ano][site][key_mes]
+
+    def _handle_2010(self, ano, site, tipo, mes, tipo_cabeamento):
+        console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
+        if site in self.dic[ano]:
+            console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+
+            if tipo == 'CABEAMENTO':
+                console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                console.print('\n[on yellow] VERIFICANDO TIPO DE CABEAMENTO [/on yellow]')
+
+                if tipo_cabeamento in self.dic[ano][site][tipo]:
+                    console.print(f'{tipo_cabeamento}        | \t\t\t tipo_cabeamento')
+                    for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
+                        if key_mes.startswith(mes):
+                            console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                            return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
+            elif tipo in ['ELÉTRICA', 'MANUTENÇÃO']:
+                for key_mes in self.dic[ano][site][tipo]:
+                    if key_mes.startswith(mes):
+                        console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                        return self.dic[ano][site][tipo][key_mes]
+
+            if site == '04 - REDE LAN':
+                for key_mes in self.dic[ano][site][tipo]:
+                    if key_mes.startswith(mes):
+                        console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                        return self.dic[ano][site][tipo][key_mes]
+
+    def _handle_2011_2022(self, ano, site, tipo, mes, tipo_cabeamento):
+        console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
+        if site in self.dic[ano]:
+            console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+            if ano in ['2022'] and site in '03 - XAXIM':
+                if tipo_cabeamento == 'OPEN':
+                    for key_mes in self.dic[ano][site]:
+                        if key_mes.startswith(mes):
+                            console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                            return self.dic[ano][site][key_mes]
+
+            if tipo == 'CABEAMENTO':
+                console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                if tipo_cabeamento in self.dic[ano][site][tipo]:
+                    console.print(f'{tipo_cabeamento}      | \t\t\t tipo_cabeamento')
+                    for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
+                        if key_mes.startswith(mes):
+                            console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                            return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
+            if tipo in ['ELÉTRICA']:
+                for key_mes in self.dic[ano][site][tipo]:
+                    if key_mes.startswith(mes):
+                        console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                        return self.dic[ano][site][tipo][key_mes]
+
+            if tipo == 'MANUTENÇÃO':
+                return self._handle_manutencao(ano, site, tipo, mes, tipo_cabeamento)
+                
+            if site in ['03 - XAXIM'] and ano in ['2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2021']:
+                if tipo == 'CABEAMENTO':
+                    console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                    for key_mes in self.dic[ano][site][tipo]:
+                        if key_mes.startswith(mes):
+                            console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                            return self.dic[ano][site][tipo][key_mes]
+
+            if site == '04 - REDE LAN':
+                for key_mes in self.dic[ano][site][tipo]:
+                    if key_mes.startswith(mes):
+                        console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                        return self.dic[ano][site][tipo][key_mes]
+
+    def _handle_manutencao(self, ano, site, tipo, mes, tipo_cabeamento):
+        for key_mes, value in self.dic[ano][site][tipo].items():
+            if key_mes.startswith(mes):
+                console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                dic_manutencao = value
+                chave = None
+
+                if tipo_cabeamento.lower() == 'preventiva':
+                    for key, val in dic_manutencao.items():
+                        if tipo_cabeamento.lower() in key.lower():
+                            chave = key
+                            if val:
+                                return val
+
+                elif tipo_cabeamento.lower() == 'corretiva':
+                    for key, val in dic_manutencao.items():
+                        if tipo_cabeamento.lower() in key.lower():
+                            chave = key
+                            if val:
+                                return val
+
+                if chave is None:
+                    return ''
+        return ''
+
+    def _handle_2023(self, ano, site, tipo, mes, tipo_cabeamento):
+        if site == '02 - ALPHAVILLE':
+            console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+            if tipo == 'CABEAMENTO':
+                console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                tipo = 'CABEAMENTO LÓGICO'
+                if tipo_cabeamento in self.dic[ano][site][tipo]:
+                    console.print(f'{tipo_cabeamento}      | \t\t\t tipo_cabeamento')
+                    for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
+                        if key_mes.startswith(mes):
+                            console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                            return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
+            if tipo == 'ELÉTRICA':
+                for key_mes in self.dic[ano][site][tipo]:
+                    if key_mes.startswith(mes):
+                        console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                        return self.dic[ano][site][tipo][key_mes]
+
+        if site == '01 - CTI':
+            console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+            if tipo == 'CABEAMENTO':
+                console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
+                    if key_mes.startswith(mes):
+                        console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                        return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
+        if site == '03 - XAXIM':
+            for key_mes in self.dic[ano][site]:
+                if key_mes.startswith(mes):
+                    console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                    return self.dic[ano][site][key_mes]
+
+        if site == '04 - REDE LAN':
+            for key_mes in self.dic[ano][site][tipo]:
+                if key_mes.startswith(mes):
+                    console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                    return self.dic[ano][site][tipo][key_mes]
+
+    def _handle_2020(self, ano, site, tipo, mes, tipo_cabeamento):
+        console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
+        if site == '01 - CTI':
+            console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+            if tipo == 'CABEAMENTO':
+                for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
+                    if key_mes.startswith(mes):
+                        console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                        return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
+        if site == '02 - ALPHAVILLE':
+            if tipo == 'CABEAMENTO':
+                console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
+                    if key_mes.startswith(mes):
+                        console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                        return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
+
+        if site == '03 - XAXIM':
+            if tipo == 'CABEAMENTO':
+                console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                for key_mes in self.dic[ano][site][tipo]:
+                    if key_mes.startswith(mes):
+                        console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
+                        return self.dic[ano][site][tipo][key_mes]
+
+        if tipo == 'ELÉTRICA':
+            for key_mes in self.dic[ano][site][tipo]:
+                if key_mes.startswith(mes):
+                    console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                    return self.dic[ano][site][tipo][key_mes]
+
+        if site == '04 - REDE LAN':
+            for key_mes in self.dic[ano][site][tipo]:
+                if key_mes.startswith(mes):
+                    console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                    return self.dic[ano][site][tipo][key_mes]
 
 if __name__ == "__main__":
     app = SimpleApp()
