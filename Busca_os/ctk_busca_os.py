@@ -2276,14 +2276,14 @@ class SimpleApp(ctk.CTk):
                 'Tipo': self.tipo_combobox.get(),
                 f'Tipo {self.tipo_combobox.get()}': self.tipo_cabeamento.get(),
                 'Input_path':self.procura(ano, self.site_combobox.get(), self.tipo_combobox.get(), mes, self.tipo_cabeamento.get())+input_str,
-                
+
             }
         else:
             return "Formato inválido. O input deve ter 7 caracteres."
 
     def mostrar_resultado(self):
         resultado = self.separar_input()
-        print(resultado)
+        console.print(resultado)
 
     def trocar_combobox(self, choice):
         if choice == 'CABEAMENTO':
@@ -2309,19 +2309,25 @@ class SimpleApp(ctk.CTk):
         ano = '20'+ ano
         if ano in self.dic:
             if ano in ['2009']:
+                console.print('\n[on green] 2009 [/on green]')
                 return self._handle_2009(ano, site, mes)
             elif ano in ['2010']:
+                console.print('\n[on green] 2010 [/on green]')
                 return self._handle_2010(ano, site, tipo, mes, tipo_cabeamento)
             elif ano in ['2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2021', '2022']:
+                console.print(f'\n[on green] {ano} [/on green]')
                 return self._handle_2011_2022(ano, site, tipo, mes, tipo_cabeamento)
             elif ano in ['2023']:
+                console.print(f'\n[on green] {ano} [/on green]')
                 return self._handle_2023(ano, site, tipo, mes, tipo_cabeamento)
             elif ano in ['2020']:
+                console.print(f'\n[on green] {ano} [/on green]')
                 return self._handle_2020(ano, site, tipo, mes, tipo_cabeamento)
 
         return console.print('[bold red]VAZIO - nao encontrado[bold red]')
 
     def _handle_2009(self, ano, site, mes):
+        # * criar mensagem de erro
         console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
         for key_mes in self.dic[ano][site]:
             if key_mes.startswith(mes):
