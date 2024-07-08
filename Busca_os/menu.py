@@ -5,11 +5,12 @@ import customtkinter as ctk
 class MenuApp:
     def __init__(self, root):
         self.root = root
+        self.dic = {}
         ctk.set_appearance_mode('dark')
         root.geometry('700x400')
         root.title('Busca de arquivos')
         root.minsize(700, 400)
-        self.dic_anos = {}
+        # self.dic_anos = {}
         self.center_window(700, 400)  # Centraliza a janela
 
         self.my_dict = {
@@ -89,12 +90,12 @@ class MenuApp:
             ano = input_str[:2]
             mes = input_str[2:4]
             num = input_str[4:]
-            os_code = "EEc" + input_str
+            os_code = ''
             return {
                 'Ano': ano,
                 'Mês': mes,
                 'Número': num,
-                'Código OS': os_code
+                'Código OS': os_code,
             }
         else:
             return "Formato inválido. O input deve ter 7 caracteres."
@@ -106,14 +107,34 @@ class Aba_cti:
         self.frame.pack(fill='both', expand=True)
         label = ctk.CTkLabel(self.frame, text="Conteúdo da 01 - CTI", text_color=my_dict['font'])
         label.pack(pady=5, padx=5)
-        entry = ctk.CTkEntry(self.frame, textvariable=input_var, fg_color=my_dict['font'])
+        entry = ctk.CTkEntry(self.frame, textvariable=input_var,)
         entry.pack(pady=20, padx=20)
         button = ctk.CTkButton(self.frame, text="Buscar Arquivo", command=self.mostrar_resultado)
-        button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
+        button.pack(pady=20, padx=20)
+        self.site_combobox = ctk.CTkComboBox(self.frame, values=['01 - CTI', '02 - ALPHAVILLE','03 - XAXIM','04 - REDE LAN'], state='readonly')
+        self.site_combobox.pack(pady=20, padx=20)
+        
+        self.tipo_combobox = ctk.CTkComboBox(self.frame, values=['CABEAMENTO', 'ELÉTRICA', 'MANUTENÇÃO'], state='readonly', command=self.trocar_combobox)
+        self.tipo_combobox.pack(pady=20, padx=20)
+
+        self.tipo_cabeamento = ctk.CTkComboBox(self.frame, values=[''], state='readonly')
+        self.tipo_cabeamento.pack(pady=20, padx=20)
+        # self.trocar_combobox()
+        
 
     def mostrar_resultado(self):
         resultado = self.parent.buscar_arquivo()
         print(resultado)  # Usando Pretty para formatar o output
+
+    def trocar_combobox(self, choice):
+        if choice == 'CABEAMENTO':
+            self.tipo_cabeamento.configure(values=['OPEN', 'MAINFRAME'])
+        elif choice == 'MANUTENÇÃO':
+            self.tipo_cabeamento.configure(values=['CORRETIVA', 'PREVENTIVA'])
+        else:
+            self.tipo_cabeamento.configure(values=[''])
+
+        self.tipo_cabeamento.set('')  
 
 class Aba_alpha:
     def __init__(self, parent, master, my_dict, input_var):
