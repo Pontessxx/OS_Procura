@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from rich.console import Console
-from rich.table import Table
+from tkinter import messagebox
 
 
 console = Console()
@@ -2266,12 +2266,7 @@ class SimpleApp(ctk.CTk):
             ano = input_str[:2]
             mes = input_str[2:4]
             num = input_str[4:]
-            os_code = ''
             return {
-                'Ano': ano,
-                'Mês': mes,
-                'Número': num,
-                'Código OS': os_code,
                 'Site': self.site_combobox.get(),
                 'Tipo': self.tipo_combobox.get(),
                 f'Tipo {self.tipo_combobox.get()}': self.tipo_cabeamento.get(),
