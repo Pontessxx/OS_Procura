@@ -1,6 +1,10 @@
 import customtkinter as ctk
 import datetime
 import pyodbc
+from tkinter import ttk
+
+
+import calendar
 
 class ControleApp:
     def __init__(self, root):
@@ -102,6 +106,8 @@ class ControleApp:
 class Aba_Controle:
     def __init__(self, parent, master, my_dict, conn, meses_dict):
         self.parent = parent  # Referência para a instância da classe pai
+        self.style_treeview = ttk.Style()
+        self.filter_mode = False
         self.conn = conn  # Conexão com o banco de dados
         self.meses_dict = meses_dict  # Dicionário de meses
         self.frame = ctk.CTkFrame(master, fg_color=my_dict['preto'])
@@ -110,57 +116,91 @@ class Aba_Controle:
         label = ctk.CTkLabel(self.frame, text="CONTROLE DE FREQUENCIA", text_color=my_dict['font'])
         label.pack(pady=5, padx=5)
         
-        combobox_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['frames_ajuste'])
-        combobox_frame.pack(pady=10, padx=10, fill='y',side='left')
+        self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'],height=50)
+        self.frame_checkbox.pack(pady=10, padx=10, fill='x')
 
-        # Nome
-        nome_label = ctk.CTkLabel(combobox_frame, text="Nome :", text_color=my_dict['font'])
-        nome_label.grid(row=0, column=0, padx=5, pady=5)
-        # for i in range(len(self.get_nomes())):
-        #     nomes = self.get_nomes()
-        #     nome_combobox = ctk.CTkCheckBox(combobox_frame, text=nomes[i])
-        #     nome_combobox.grid(row=0, column=i, padx=5, pady=5)
-        self.nome_combobox = ctk.CTkComboBox(combobox_frame, values=self.get_nomes(), state='readonly')
-        self.nome_combobox.grid(row=1, column=0, padx=5, pady=5)
+        # Adicionar checkboxes
+        self.add_checkboxes()
+
+        combobox_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
+        combobox_frame.pack(pady=10, padx=10, fill='x')
 
         # tipo presenca
         tipo_presenca_label = ctk.CTkLabel(combobox_frame, text="Presença :", text_color=my_dict['font'])
-        tipo_presenca_label.grid(row=2, column=0, padx=5, pady=5)
-        tipo_presenca_combobox = ctk.CTkComboBox(combobox_frame, values=self.get_presenca(), state='readonly')
-        tipo_presenca_combobox.grid(row=3, column=0, padx=5, pady=5)
+        tipo_presenca_label.grid(row=0, column=1, padx=10, pady=5)
+        self.tipo_presenca_combobox = ctk.CTkComboBox(combobox_frame, values=self.get_presenca(), state='readonly')
+        self.tipo_presenca_combobox.grid(row=0, column=2, padx=10, pady=5)
        
         # Dia
         dias = [str(i) for i in range(1, 32)]
 
         dia_label = ctk.CTkLabel(combobox_frame, text="Dia :", text_color=my_dict['font'])
-        dia_label.grid(row=4, column=0, padx=5, pady=5)
-        dia_combobox = ctk.CTkComboBox(combobox_frame, values=dias, state='readonly')
-        dia_combobox.grid(row=5, column=0, padx=5, pady=5)
+        dia_label.grid(row=0, column=3, padx=10, pady=5)
+        self.dia_combobox = ctk.CTkComboBox(combobox_frame, values=dias, state='readonly')
+        self.dia_combobox.grid(row=0, column=4, padx=10, pady=5)
 
         # Mês
         mes_label = ctk.CTkLabel(combobox_frame, text="Mês :", text_color=my_dict['font'])
-        mes_label.grid(row=6, column=0, padx=5, pady=5)
-        mes_combobox = ctk.CTkComboBox(combobox_frame, values=list(self.meses_dict.values()), state='readonly')
-        mes_combobox.grid(row=7, column=0, padx=5, pady=5)
+        mes_label.grid(row=0, column=5, padx=10, pady=5)
+        self.mes_combobox = ctk.CTkComboBox(combobox_frame, values=list(self.meses_dict.values()), state='readonly')
+        self.mes_combobox.grid(row=0, column=6, padx=10, pady=5)
         mes_atual = datetime.datetime.now().month
-        mes_combobox.set(self.meses_dict[mes_atual])
+        self.mes_combobox.set(self.meses_dict[mes_atual])
 
         # Ano
         ano_atual = datetime.datetime.now().year
         anos = [str(a) for a in range(ano_atual, ano_atual + 100)]
         
         ano_label = ctk.CTkLabel(combobox_frame, text="Ano :", text_color=my_dict['font'])
-        ano_label.grid(row=8, column=0, padx=5, pady=5)
-        ano_combobox = ctk.CTkComboBox(combobox_frame, values=anos, state='readonly')
-        ano_combobox.grid(row=9, column=0, padx=5, pady=5)
-        ano_combobox.set(str(ano_atual))
+        ano_label.grid(row=0, column=7, padx=10, pady=5)
+        self.ano_combobox = ctk.CTkComboBox(combobox_frame, values=anos, state='readonly')
+        self.ano_combobox.grid(row=0, column=8, padx=10, pady=5)
+        self.ano_combobox.set(str(ano_atual))
 
-        button = ctk.CTkButton(combobox_frame, text="Adicionar", width=200, height=60)
-        button.grid(row=10, column=0, padx=5, pady=5, rowspan=2)
+        button = ctk.CTkButton(combobox_frame, text="Adicionar", width=75, height=30, command=self.adicionar_frequencia)
+        button.grid(row=0, column=9, padx=10, pady=5)
+        button = ctk.CTkButton(combobox_frame, text="Deletar", width=75, height=30, command=self.remover_frequencia)
+        button.grid(row=0, column=10, padx=10, pady=5)
+        self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=50, height=30, command=self.toggle_filter)
+        self.filter_button.grid(row=0, column=11, padx=5, pady=5)
 
-        # # Tabview
-        # tabela_frame = ctk.CTkFrame(self.frame,fg_color=my_dict['preto'])
-        # tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
+        # Tabela (Treeview)
+        tabela_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
+        tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
+
+        self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings',)
+        self.style_treeview.theme_use('clam')
+        #configurando a cor da treeview para ajustar ao tema
+        self.style_treeview.configure("Treeview",
+                                        background=my_dict['preto'],
+                                        foreground=my_dict['font'],
+                                        fieldbackground=my_dict['preto'],
+                                        rowheight=25,
+                                        )
+        self.style_treeview.configure("Treeview.Heading", background=my_dict['preto'], foreground=my_dict['font'],)
+        # self.style_treeview.map("Treeview", background=[('selected', my_dict['selecionado'])])  #* muda a cor do item selecionado
+        self.tabela.heading("Data", text="Data")
+        self.tabela.heading("Nome", text="Nome")
+        self.tabela.heading("Presença", text="Presença")
+        self.tabela.pack(fill='both', expand=True)
+        self.carregar_dados()
+
+    def add_checkboxes(self):
+        nomes = self.get_nomes()
+        self.checkbox_vars = {}  # Dicionário para armazenar as variáveis das checkboxes
+        row, col = 0, 0
+        max_columns = 11  # Defina o número máximo de colunas por linha
+
+        for nome in nomes:
+            var = ctk.StringVar(value='off')
+            checkbox = ctk.CTkCheckBox(self.frame_checkbox, text=nome, variable=var, onvalue='on', offvalue='off', font=('Arial', 15))
+            checkbox.grid(row=row, column=col, padx=5, pady=5)
+            self.checkbox_vars[nome] = var  # Armazena a variável da checkbox
+            col += 1
+
+            if col >= max_columns:
+                col = 0
+                row += 1
 
     def get_nomes(self):
         try:
@@ -181,6 +221,116 @@ class Aba_Controle:
         except pyodbc.Error as e:
             print(f'Error: {e}')
             return []
+
+    def carregar_dados(self):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("SELECT * FROM tblControle")
+            self.tabela.delete(*self.tabela.get_children())  # Limpa a tabela antes de carregar novos dados
+            for row in cursor.fetchall():
+                id, data, status, nome = row
+                data_formatada = data.strftime('%d/%m/%Y')
+                self.tabela.insert("", "end", values=[data_formatada, nome, status])
+        except pyodbc.Error as e:
+            print(f'Error: {e}')
+
+    def adicionar_frequencia(self):
+        tipo_presenca = self.tipo_presenca_combobox.get()
+        dia = self.dia_combobox.get()
+        mes = list(self.meses_dict.keys())[list(self.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = self.ano_combobox.get()
+
+        data = datetime.datetime(int(ano), int(mes), int(dia))
+
+        if tipo_presenca and dia and mes and ano:
+            try:
+                cursor = self.conn.cursor()
+                for nome, var in self.checkbox_vars.items():
+                    if var.get() == 'on':
+                        cursor.execute("SELECT ID FROM tblControle WHERE Nomes=? AND DATA=?", (nome, data))
+                        result = cursor.fetchone()
+                        
+                        if result:  # Se o registro existir, atualize-o
+                            cursor.execute("UPDATE tblControle SET PRESENCA=? WHERE ID=?", (tipo_presenca, result[0]))
+                        else:  # Se o registro não existir, insira um novo
+                            cursor.execute("SELECT MAX(ID) FROM tblControle")
+                            last_id = cursor.fetchone()[0]
+                            if last_id is None:
+                                last_id = 0
+                            new_id = last_id + 1
+
+                            cursor.execute("INSERT INTO tblControle (ID, DATA, NOMES, PRESENCA) VALUES (?, ?, ?, ?)", (new_id, data, nome, tipo_presenca))
+
+                self.conn.commit()
+                self.carregar_dados()
+            except pyodbc.Error as e:
+                print(f'Error: {e}')
+
+    def remover_frequencia(self):
+            dia = self.dia_combobox.get()
+            mes = list(self.meses_dict.keys())[list(self.meses_dict.values()).index(self.mes_combobox.get())]
+            ano = self.ano_combobox.get()
+
+            data = datetime.datetime(int(ano), int(mes), int(dia))
+
+            if dia and mes and ano:
+                try:
+                    cursor = self.conn.cursor()
+                    for nome, var in self.checkbox_vars.items():
+                        if var.get() == 'on':
+                            cursor.execute("DELETE FROM tblControle WHERE Nomes=? AND DATA=?", (nome, data))
+                    
+                    self.dia_combobox.set('')
+                    self.tipo_presenca_combobox.set('')
+                    self.conn.commit()
+                    self.carregar_dados()
+                except pyodbc.Error as e:
+                    print(f'Error: {e}')
+
+    def toggle_filter(self):
+        if self.filter_mode:
+            self.limpar_filtro()
+        else:
+            self.filtrar_dados()
+
+    def filtrar_dados(self):
+        dia = self.dia_combobox.get()
+        mes = self.mes_combobox.get()
+        ano = self.ano_combobox.get()
+        tipo_presenca = self.tipo_presenca_combobox.get()
+
+        try:
+            cursor = self.conn.cursor()
+            if dia and mes and ano and tipo_presenca:
+                query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=? AND PRESENCA=?"
+                cursor.execute(query, (dia, list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano, tipo_presenca))
+            elif dia and mes and ano:
+                query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=?"
+                cursor.execute(query, (dia, list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano))
+            elif tipo_presenca:
+                query = "SELECT * FROM tblControle WHERE PRESENCA=?"
+                cursor.execute(query, (tipo_presenca,))
+            else:
+                query = "SELECT * FROM tblControle"
+                cursor.execute(query)
+            
+            self.tabela.delete(*self.tabela.get_children())  # Limpa a tabela antes de carregar novos dados
+            for row in cursor.fetchall():
+                id, data, status, nome = row
+                data_formatada = data.strftime('%d/%m/%Y')
+                self.tabela.insert("", "end", values=[data_formatada, nome, status])
+            
+            self.filter_button.configure(text="Limpar Filtro")
+            self.filter_mode = True
+        except pyodbc.Error as e:
+            print(f'Error: {e}')
+
+    def limpar_filtro(self):
+        self.carregar_dados()
+        self.dia_combobox.set('')
+        self.tipo_presenca_combobox.set('')
+        self.filter_button.configure(text="Filtrar")
+        self.filter_mode = False
 
 
 class Aba_adiciona_remove_nomes:
@@ -243,6 +393,7 @@ class Aba_adiciona_remove_nomes:
                 cursor.execute("DELETE FROM tblNomes WHERE Nomes = ?", (nome,))
                 self.conn.commit()
                 self.nome_combobox.configure(values=self.get_nomes())
+                self.nome_combobox.set('')
             except pyodbc.Error as e:
                 print(f'Error: {e}')
 

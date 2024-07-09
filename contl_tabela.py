@@ -455,8 +455,8 @@ class Aba_relatorio:
         label = ctk.CTkLabel(self.frame, text="ABA DE RELATORIO", text_color=my_dict['font'])
         label.pack(pady=20, padx=20)
         
-        frame_menu_inferior = ctk.CTkFrame(self.frame, width=160, fg_color=my_dict['menu-inf'], bg_color=my_dict['preto'])
-        frame_menu_inferior.pack(padx=20,pady=20,side='left', fill='y')
+        frame_filtros = ctk.CTkFrame(self.frame, width=100, fg_color=my_dict['menu-inf'], bg_color=my_dict['preto'])
+        frame_filtros.pack(padx=20,pady=20,side='left', fill='y')
 
 
         self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'],height=50)
