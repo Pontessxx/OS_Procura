@@ -2,7 +2,7 @@ import customtkinter as ctk
 import datetime
 import pyodbc
 from tkinter import ttk
-import ttkbootstrap as tb
+
 
 import calendar
 
@@ -454,11 +454,9 @@ class Aba_relatorio:
         self.frame.pack(fill='both', expand=True)
         label = ctk.CTkLabel(self.frame, text="ABA DE RELATORIO", text_color=my_dict['font'])
         label.pack(pady=20, padx=20)
-        
-        frame_filtros = ctk.CTkFrame(self.frame, width=100, fg_color=my_dict['menu-inf'], bg_color=my_dict['preto'])
-        frame_filtros.pack(padx=20,pady=20,side='left', fill='y')
 
-
+        filtro_frame = ctk.CTkFrame(self.frame, width=160, fg_color=my_dict['menu-inf'], bg_color=my_dict['preto'])
+        filtro_frame.pack(padx=20,pady=20,side='left', fill='y')
         self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'],height=50)
         self.frame_checkbox.pack(pady=10, padx=10, fill='x')
          # Adicionar checkboxes
@@ -490,7 +488,6 @@ class Aba_relatorio:
         except pyodbc.Error as e:
             print(f'Error: {e}')
             return []
-
        
 
 if __name__ == '__main__':
