@@ -2,7 +2,7 @@ import customtkinter as ctk
 import datetime
 import pyodbc
 from tkinter import ttk
-
+import ttkbootstrap as tb
 
 import calendar
 
@@ -454,6 +454,42 @@ class Aba_relatorio:
         self.frame.pack(fill='both', expand=True)
         label = ctk.CTkLabel(self.frame, text="ABA DE RELATORIO", text_color=my_dict['font'])
         label.pack(pady=20, padx=20)
+        
+        frame_menu_inferior = ctk.CTkFrame(self.frame, width=160, fg_color=my_dict['menu-inf'], bg_color=my_dict['preto'])
+        frame_menu_inferior.pack(padx=20,pady=20,side='left', fill='y')
+
+
+        self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'],height=50)
+        self.frame_checkbox.pack(pady=10, padx=10, fill='x')
+         # Adicionar checkboxes
+        self.add_checkboxes()
+
+    def add_checkboxes(self):
+        nomes = self.get_nomes()
+        self.checkbox_vars = {}  # Dicionário para armazenar as variáveis das checkboxes
+        row, col = 0, 0
+        max_columns = 11  # Defina o número máximo de colunas por linha
+
+        for nome in nomes:
+            var = ctk.StringVar(value='off')
+            checkbox = ctk.CTkCheckBox(self.frame_checkbox, text=nome, variable=var, onvalue='on', offvalue='off', font=('Arial', 11))
+            checkbox.grid(row=row, column=col, padx=5, pady=5)
+            self.checkbox_vars[nome] = var  # Armazena a variável da checkbox
+            col += 1
+
+            if col >= max_columns:
+                col = 0
+                row += 1
+
+    def get_nomes(self):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("SELECT DISTINCT Nomes FROM tblNomes")
+            nomes = [row[0] for row in cursor.fetchall()]
+            return nomes
+        except pyodbc.Error as e:
+            print(f'Error: {e}')
+            return []
 
        
 
