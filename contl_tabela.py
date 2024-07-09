@@ -322,28 +322,37 @@ class Aba_Controle:
         mes = self.mes_combobox.get()
         ano = self.ano_combobox.get()
         tipo_presenca = self.tipo_presenca_combobox.get()
+        nomes_selecionados = [nome for nome, var in self.checkbox_vars.items() if var.get() == 'on']
 
         try:
             cursor = self.conn.cursor()
-            if dia and mes and ano and tipo_presenca:
-                query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=? AND PRESENCA=?"
-                cursor.execute(query, (dia, list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano, tipo_presenca))
-            elif dia and mes and ano:
-                query = "SELECT * FROM tblControle WHERE DAY(DATA)=? AND MONTH(DATA)=? AND YEAR(DATA)=?"
-                cursor.execute(query, (dia, list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano))
-            elif tipo_presenca:
-                query = "SELECT * FROM tblControle WHERE PRESENCA=?"
-                cursor.execute(query, (tipo_presenca,))
-            else:
-                query = "SELECT * FROM tblControle"
-                cursor.execute(query)
+            query = "SELECT * FROM tblControle WHERE 1=1"
+            params = []
+
+            if dia:
+                query += " AND DAY(DATA)=?"
+                params.append(dia)
+            if mes:
+                query += " AND MONTH(DATA)=?"
+                params.append(list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)])
+            if ano:
+                query += " AND YEAR(DATA)=?"
+                params.append(ano)
+            if tipo_presenca:
+                query += " AND PRESENCA=?"
+                params.append(tipo_presenca)
+            if nomes_selecionados:
+                query += " AND NOMES IN ({})".format(','.join(['?']*len(nomes_selecionados)))
+                params.extend(nomes_selecionados)
+
+            cursor.execute(query, params)
             
             self.tabela.delete(*self.tabela.get_children())  # Limpa a tabela antes de carregar novos dados
             for row in cursor.fetchall():
                 id, data, status, nome = row
                 data_formatada = data.strftime('%d/%m/%Y')
                 self.tabela.insert("", "end", values=[data_formatada, nome, status])
-            
+
             self.filter_button.configure(text="Limpar Filtro")
             self.filter_mode = True
         except pyodbc.Error as e:
@@ -355,6 +364,9 @@ class Aba_Controle:
         self.tipo_presenca_combobox.set('')
         self.filter_button.configure(text="Filtrar")
         self.filter_mode = False
+        # Limpar as checkboxes
+        for nome, var in self.checkbox_vars.items():
+            var.set('off')
 
 
 class Aba_adiciona_remove_nomes:
