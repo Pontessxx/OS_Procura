@@ -27,6 +27,7 @@ class ControleApp:
             'borda': '#a3a3a3',
             'adicionar_btn': 'green',
             'remover_btn': 'red',
+            'hover_treeview':'#cc092f',
         }
 
         self.meses_dict = {
@@ -171,14 +172,12 @@ class Aba_Controle:
         self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings',)
         self.style_treeview.theme_use('clam')
         #configurando a cor da treeview para ajustar ao tema
-        self.style_treeview.configure("Treeview",
-                                        background=my_dict['preto'],
-                                        foreground=my_dict['font'],
-                                        fieldbackground=my_dict['preto'],
-                                        rowheight=25,
-                                        )
-        self.style_treeview.configure("Treeview.Heading", background=my_dict['preto'], foreground=my_dict['font'],)
-        # self.style_treeview.map("Treeview", background=[('selected', my_dict['selecionado'])])  #* muda a cor do item selecionado
+        self.style_treeview.configure("Treeview.Heading", background=my_dict['preto'], foreground=my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 10))
+        self.style_treeview.map("Treeview.Heading", background=[('active', my_dict['hover_treeview'])])
+
+        self.style_treeview.configure("Treeview", background=my_dict['preto'], foreground=my_dict['font'], fieldbackground=my_dict['preto'], rowheight=25, borderwidth=1, relief='solid')
+        self.style_treeview.map("Treeview", background=[('selected', my_dict['hover_treeview'])], fieldbackground=[('!selected', my_dict['preto'])])
+        
         self.tabela.heading("Data", text="Data")
         self.tabela.heading("Nome", text="Nome")
         self.tabela.heading("Presença", text="Presença")
