@@ -101,7 +101,7 @@ class ControleApp:
         elif frame_name == "Inserir Nomes":
             Aba_adiciona_remove_nomes(self, self.frame_tela, self.my_dict, self.conn)
         elif frame_name == "Relatorio":
-            Aba_relatorio(self, self.frame_tela, self.my_dict, self.conn)
+            Aba_relatorio(self, self.frame_tela, self.my_dict, self.conn, self.meses_dict)
     
 
 class Aba_Controle:
@@ -447,11 +447,13 @@ class Aba_adiciona_remove_nomes:
 
 
 class Aba_relatorio:
-    def __init__(self, parent, master, my_dict, conn):
+    def __init__(self, parent, master, my_dict, conn,meses_dict):
         self.parent = parent  # Referência para a instância da classe pai
         self.conn = conn  # Conexão com o banco de dados
         self.frame = ctk.CTkFrame(master, fg_color=my_dict['preto'])
         self.frame.pack(fill='both', expand=True)
+
+        self.meses_dict = meses_dict  # Dicionário de meses
         label = ctk.CTkLabel(self.frame, text="ABA DE RELATORIO", text_color=my_dict['font'])
         label.pack(pady=20, padx=20)
 
@@ -460,6 +462,14 @@ class Aba_relatorio:
         self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'],height=50)
         self.frame_checkbox.pack(pady=10, padx=10, fill='x')
          # Adicionar checkboxes
+
+        # Mês
+        mes_label = ctk.CTkLabel(filtro_frame, text="Mês :", text_color=my_dict['font'])
+        mes_label.grid(row=0, column=5, padx=10, pady=5)
+        self.mes_combobox = ctk.CTkComboBox(filtro_frame, values=list(self.meses_dict.values()), state='readonly')
+        self.mes_combobox.grid(row=0, column=6, padx=10, pady=5)
+        mes_atual = datetime.datetime.now().month
+        self.mes_combobox.set(self.meses_dict[mes_atual])
         self.add_checkboxes()
 
     def add_checkboxes(self):
