@@ -150,7 +150,8 @@ class Aba_Controle:
 
         # Ano
         ano_atual = datetime.datetime.now().year
-        anos = [str(a) for a in range(ano_atual, ano_atual + 100)]
+        ano_inicial = 2024
+        anos = [str(a) for a in range(ano_inicial, ano_atual + 100)]
         
         ano_label = ctk.CTkLabel(combobox_frame, text="Ano :", text_color=my_dict['font'])
         ano_label.grid(row=0, column=7, padx=10, pady=5)
@@ -182,6 +183,9 @@ class Aba_Controle:
         self.tabela.heading("Nome", text="Nome")
         self.tabela.heading("Presença", text="Presença")
         self.tabela.pack(fill='both', expand=True)
+
+        self.tabela.bind("<ButtonRelease-1>", self.linha_selecionada_treeview)
+
         self.carregar_dados()
 
     def add_checkboxes(self):
@@ -291,6 +295,27 @@ class Aba_Controle:
             self.limpar_filtro()
         else:
             self.filtrar_dados()
+
+    def linha_selecionada_treeview(self, event):
+        for selected_item in self.tabela.selection():
+            item = self.tabela.item(selected_item)
+            record = item['values']
+            print(f"Item selecionado: {record}")
+            
+            data_formatada, nome, tipo_presenca = record
+            dia, mes, ano = data_formatada.split('/')
+            
+            self.dia_combobox.set(dia)
+            # self.mes_combobox.set(self.meses_dict[int(mes)])
+            # self.ano_combobox.set(ano)
+            # self.tipo_presenca_combobox.set(tipo_presenca)
+            
+            # Atualizar checkboxes
+            for nome_chk, var in self.checkbox_vars.items():
+                if nome_chk == nome:
+                    var.set('on')
+                else:
+                    var.set('off')
 
     def filtrar_dados(self):
         dia = self.dia_combobox.get()
