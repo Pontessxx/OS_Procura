@@ -1,6 +1,9 @@
 import customtkinter as ctk
 from rich.console import Console
 from tkinter import messagebox
+import os
+from rich.panel import Panel
+from rich.text import Text
 
 
 console = Console()
@@ -8,6 +11,7 @@ class SimpleApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.input_value = ctk.StringVar()  # Variável para armazenar o valor do input
+        self.base_path = "\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\"
         self.dic = {
         "2009":{
             "01 - CTI":{
@@ -2260,19 +2264,41 @@ class SimpleApp(ctk.CTk):
         button.grid(row=2, column=2, padx=20, pady=20, )
         self.site_combobox.set('01 - CTI') 
 
+    def print_section_header(self,title, description):
+        """ Função para imprimir cabeçalhos de seção com estilo Markdown usando o rich. """
+        title_text = Text(title, style="bold yellow")
+        description_text = Text(description, style="white")
+        panel = Panel(description_text, title=title_text, border_style="green")
+        console.print(panel)
+
     def separar_input(self):
         input_str = self.input_value.get()
         if len(input_str) == 7:
             ano = input_str[:2]
             mes = input_str[2:4]
             num = input_str[4:]
-            return {
+            procurar_input = self.procura(ano, self.site_combobox.get(), self.tipo_combobox.get(), mes, self.tipo_cabeamento.get())
+            # console.print(procurar_input)
+            os_code = procurar_input[0] + input_str
+            lista_paths = os.listdir(self.base_path) 
+
+
+            """ return {
                 'Site': self.site_combobox.get(),
                 'Tipo': self.tipo_combobox.get(),
                 f'Tipo {self.tipo_combobox.get()}': self.tipo_cabeamento.get(),
-                'Input_path':self.procura(ano, self.site_combobox.get(), self.tipo_combobox.get(), mes, self.tipo_cabeamento.get())+input_str,
+                'Input_path':input_str,
+                'base_path': f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{input_str}',
+                
 
-            }
+            } """
+            self.print_section_header("Algoritimo de procura", f"\n\n- {procurar_input}\n\n- {input_str}\n\n- {os_code}\n\n- {self.base_path}")  
+            
+            console.print('\n\n[bold green]____________ LISTA DE CAMINHOS ____________[/bold green]\n\n')
+            console.print(lista_paths)
+            print('\n\n')
+            os_path = self.encontrar_string_por_codigo(lista_paths,os_code)
+            return os_path
         else:
             return "Formato inválido. O input deve ter 7 caracteres."
 
@@ -2297,6 +2323,12 @@ class SimpleApp(ctk.CTk):
         y = (screen_height / 2) - (height / 2)
         self.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
 
+    def encontrar_string_por_codigo(self,lista, codigo):
+            console.print('\n\n[bold yellow]____________ DEF - encontrar_string_por_codigo ____________[/bold yellow]\n\n')
+            for item in lista:
+                if item.startswith(codigo):
+                    return item
+            return None
 
     def procura(self, ano, site, tipo, mes, tipo_cabeamento):
         console.print('[bold blue]____________ DEF - PROCURA ____________[/bold blue]')
@@ -2304,10 +2336,10 @@ class SimpleApp(ctk.CTk):
         ano = '20'+ ano
         if ano in self.dic:
             if ano in ['2009']:
-                console.print('\n[on green] 2009 [/on green]')
+                console.print('\n[on green] 2009 [/on green]') #base_path => OK
                 return self._handle_2009(ano, site, mes)
             elif ano in ['2010']:
-                console.print('\n[on green] 2010 [/on green]')
+                console.print('\n[on green] 2010 [/on green]')  #falta manutençao 
                 return self._handle_2010(ano, site, tipo, mes, tipo_cabeamento)
             elif ano in ['2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2021', '2022']:
                 console.print(f'\n[on green] {ano} [/on green]')
@@ -2327,35 +2359,73 @@ class SimpleApp(ctk.CTk):
         for key_mes in self.dic[ano][site]:
             if key_mes.startswith(mes):
                 console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-                return self.dic[ano][site][key_mes]
+
+                # * Passando path 
+                self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                teste = (self.dic[ano][site][key_mes], self.base_path)
+                return teste         #       self.dic[ano][site][key_mes]
 
     def _handle_2010(self, ano, site, tipo, mes, tipo_cabeamento):
         console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
         if site in self.dic[ano]:
             console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
+            if site in ['01 - CTI']:
+                if tipo == 'CABEAMENTO':
+                    console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                    console.print('\n[on yellow] VERIFICANDO TIPO DE CABEAMENTO [/on yellow]')
 
-            if tipo == 'CABEAMENTO':
-                console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
-                console.print('\n[on yellow] VERIFICANDO TIPO DE CABEAMENTO [/on yellow]')
+                    if tipo_cabeamento in self.dic[ano][site][tipo]:
+                        console.print(f'{tipo_cabeamento}        | \t\t\t tipo_cabeamento')
+                        for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
+                            if key_mes.startswith(mes):
+                                console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                                # return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
 
-                if tipo_cabeamento in self.dic[ano][site][tipo]:
-                    console.print(f'{tipo_cabeamento}        | \t\t\t tipo_cabeamento')
-                    for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
+                                self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                                teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                                return teste
+            
+                            
+                elif tipo in ['ELÉTRICA', 'MANUTENÇÃO']:
+                    for key_mes in self.dic[ano][site][tipo]:
                         if key_mes.startswith(mes):
                             console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-                            return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
+                            self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                            return teste        #   self.dic[ano][site][tipo][key_mes]
+                        
+            if site in ['02 - ALPHAVILLE']:
+                if tipo == 'CABEAMENTO':
+                    console.print(f'{tipo}      | \t\t tipo == CABEAMENTO')
+                    console.print('\n[on yellow] ALPHAVILLE [/on yellow]')
+                    tipo_cabeamento =''
+                    console.print(f'{tipo_cabeamento}        | \t\t\t tipo_cabeamento')
+                    for key_mes in self.dic[ano][site][tipo]:
+                        if key_mes.startswith(mes):
+                            console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                            # return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
 
-            elif tipo in ['ELÉTRICA', 'MANUTENÇÃO']:
-                for key_mes in self.dic[ano][site][tipo]:
-                    if key_mes.startswith(mes):
-                        console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-                        return self.dic[ano][site][tipo][key_mes]
+                            self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                            return teste
+                
+                                
+                if tipo in ['ELÉTRICA', 'MANUTENÇÃO']:
+                    for key_mes in self.dic[ano][site][tipo]:
+                        if key_mes.startswith(mes):
+                            console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                            self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                            return teste        #   self.dic[ano][site][tipo][key_mes]
+
 
             if site == '04 - REDE LAN':
                 for key_mes in self.dic[ano][site][tipo]:
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
-                        return self.dic[ano][site][tipo][key_mes]
+                        self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                        return teste 
 
     def _handle_2011_2022(self, ano, site, tipo, mes, tipo_cabeamento):
         console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
@@ -2401,17 +2471,20 @@ class SimpleApp(ctk.CTk):
                         return self.dic[ano][site][tipo][key_mes]
 
     def _handle_manutencao(self, ano, site, tipo, mes, tipo_cabeamento):
+        console.print('\n[on white] MANUTENCAO - FUNCAO [/on white]') 
         for key_mes, value in self.dic[ano][site][tipo].items():
             if key_mes.startswith(mes):
                 console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
+                console.print(f'{value}   | \t\t\t value')
                 dic_manutencao = value
                 chave = None
-
+                console.print(self.dic[ano][site][tipo].items())
                 if tipo_cabeamento.lower() == 'preventiva':
                     for key, val in dic_manutencao.items():
                         if tipo_cabeamento.lower() in key.lower():
                             chave = key
                             if val:
+                                console.print(val)
                                 return val
 
                 elif tipo_cabeamento.lower() == 'corretiva':
@@ -2419,6 +2492,7 @@ class SimpleApp(ctk.CTk):
                         if tipo_cabeamento.lower() in key.lower():
                             chave = key
                             if val:
+                                console.print(val)
                                 return val
 
                 if chave is None:
@@ -2473,7 +2547,14 @@ class SimpleApp(ctk.CTk):
                 for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
-                        return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
+                        if tipo_cabeamento in 'MAINFRAME':
+                            self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\OPEN\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                            return teste
+                        else:
+                            self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                            return teste
 
         if site == '02 - ALPHAVILLE':
             if tipo == 'CABEAMENTO':
@@ -2481,7 +2562,9 @@ class SimpleApp(ctk.CTk):
                 for key_mes in self.dic[ano][site][tipo][tipo_cabeamento]:
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
-                        return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
+                        self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                        return teste
 
         if site == '03 - XAXIM':
             if tipo == 'CABEAMENTO':
@@ -2490,7 +2573,10 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                         return self.dic[ano][site][tipo][key_mes]
-
+        
+        if tipo == 'MANUTENÇÃO':
+            self._handle_manutencao(ano, site, tipo, mes, tipo_cabeamento)
+        
         if tipo == 'ELÉTRICA':
             for key_mes in self.dic[ano][site][tipo]:
                 if key_mes.startswith(mes):
