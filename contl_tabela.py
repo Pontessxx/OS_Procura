@@ -179,9 +179,9 @@ class Aba_Controle:
         self.style_treeview.configure("Treeview", background=my_dict['preto'], foreground=my_dict['font'], fieldbackground=my_dict['preto'], rowheight=25, borderwidth=1, relief='solid')
         self.style_treeview.map("Treeview", background=[('selected', my_dict['hover_treeview'])], fieldbackground=[('!selected', my_dict['preto'])])
         
-        self.tabela.heading("Data", text="Data")
-        self.tabela.heading("Nome", text="Nome")
-        self.tabela.heading("Presença", text="Presença")
+        self.tabela.heading("Data", text="Data", command=lambda: self.ordenar_dados("Data", False))
+        self.tabela.heading("Nome", text="Nome", command=lambda: self.ordenar_dados("Nome", False))
+        self.tabela.heading("Presença", text="Presença", command=lambda: self.ordenar_dados("Presença", False))
         self.tabela.pack(fill='both', expand=True)
 
         self.tabela.bind("<ButtonRelease-1>", self.linha_selecionada_treeview)
@@ -300,22 +300,24 @@ class Aba_Controle:
         for selected_item in self.tabela.selection():
             item = self.tabela.item(selected_item)
             record = item['values']
-            print(f"Item selecionado: {record}")
+            # print(f"Item selecionado: {record}")
             
             data_formatada, nome, tipo_presenca = record
             dia, mes, ano = data_formatada.split('/')
-            
+            # Remover zero à esquerda do dia
+            if dia.startswith('0'):
+                dia = dia[1:]
             self.dia_combobox.set(dia)
             # self.mes_combobox.set(self.meses_dict[int(mes)])
             # self.ano_combobox.set(ano)
             # self.tipo_presenca_combobox.set(tipo_presenca)
             
             # Atualizar checkboxes
-            for nome_chk, var in self.checkbox_vars.items():
+            """ for nome_chk, var in self.checkbox_vars.items():
                 if nome_chk == nome:
                     var.set('on')
                 else:
-                    var.set('off')
+                    var.set('off') """
 
     def filtrar_dados(self):
         dia = self.dia_combobox.get()
@@ -368,6 +370,16 @@ class Aba_Controle:
         for nome, var in self.checkbox_vars.items():
             var.set('off')
 
+    def ordenar_dados(self, coluna, reverse):
+        try:
+            dados = [(self.tabela.set(k, coluna), k) for k in self.tabela.get_children('')]
+            dados.sort(reverse=reverse)
+
+            for index, (val, k) in enumerate(dados):
+                self.tabela.move(k, '', index)
+            self.tabela.heading(coluna, command=lambda: self.ordenar_dados(coluna, not reverse))
+        except Exception as e:
+            print(f"Error: {e}")
 
 class Aba_adiciona_remove_nomes:
     def __init__(self, parent, master, my_dict, conn):
