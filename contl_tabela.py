@@ -3,6 +3,9 @@ import datetime
 import pyodbc
 from tkinter import ttk
 
+
+import calendar
+
 class ControleApp:
     def __init__(self, root):
         self.root = root
@@ -103,6 +106,7 @@ class ControleApp:
 class Aba_Controle:
     def __init__(self, parent, master, my_dict, conn, meses_dict):
         self.parent = parent  # Referência para a instância da classe pai
+        self.style_treeview = ttk.Style()
         self.filter_mode = False
         self.conn = conn  # Conexão com o banco de dados
         self.meses_dict = meses_dict  # Dicionário de meses
@@ -164,7 +168,17 @@ class Aba_Controle:
         tabela_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
 
-        self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings')
+        self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings',)
+        self.style_treeview.theme_use('clam')
+        #configurando a cor da treeview para ajustar ao tema
+        self.style_treeview.configure("Treeview",
+                                        background=my_dict['preto'],
+                                        foreground=my_dict['font'],
+                                        fieldbackground=my_dict['preto'],
+                                        rowheight=25,
+                                        )
+        self.style_treeview.configure("Treeview.Heading", background=my_dict['preto'], foreground=my_dict['font'],)
+        # self.style_treeview.map("Treeview", background=[('selected', my_dict['selecionado'])])  #* muda a cor do item selecionado
         self.tabela.heading("Data", text="Data")
         self.tabela.heading("Nome", text="Nome")
         self.tabela.heading("Presença", text="Presença")
