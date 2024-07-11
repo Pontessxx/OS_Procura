@@ -2300,11 +2300,19 @@ class SimpleApp(ctk.CTk):
             os_path = self.encontrar_string_por_codigo(lista_paths,os_code)
             return os_path
         else:
-            return "Formato inválido. O input deve ter 7 caracteres."
+            return None
 
     def mostrar_resultado(self):
-        resultado = self.separar_input()
-        console.print(resultado)
+        try:
+            resultado = self.separar_input()
+            if resultado is None:
+                messagebox.showerror("Erro", "Formato inválido. O input deve ter 7 caracteres.")
+            elif resultado['Input_path'] is None:
+                messagebox.showerror("Erro", "Nenhum resultado encontrado.")
+            else:
+                messagebox.showinfo("Resultado", str(resultado))
+        except Exception as e:
+            messagebox.showerror("Erro", str(e))
 
     def trocar_combobox(self, choice):
         if choice == 'CABEAMENTO':
