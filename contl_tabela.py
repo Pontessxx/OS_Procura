@@ -465,11 +465,22 @@ class Aba_relatorio:
 
         # Mês
         mes_label = ctk.CTkLabel(filtro_frame, text="Mês :", text_color=my_dict['font'])
-        mes_label.grid(row=0, column=5, padx=10, pady=5)
+        mes_label.grid(row=0, column=0, padx=10, pady=5)
         self.mes_combobox = ctk.CTkComboBox(filtro_frame, values=list(self.meses_dict.values()), state='readonly')
-        self.mes_combobox.grid(row=0, column=6, padx=10, pady=5)
+        self.mes_combobox.grid(row=0, column=1, padx=10, pady=5)
         mes_atual = datetime.datetime.now().month
         self.mes_combobox.set(self.meses_dict[mes_atual])
+
+        # Ano
+        ano_atual = datetime.datetime.now().year
+        ano_inicial = 2024
+        anos = [str(a) for a in range(ano_inicial, ano_atual + 100)]
+        
+        ano_label = ctk.CTkLabel(filtro_frame, text="Ano :", text_color=my_dict['font'])
+        ano_label.grid(row=1, column=0, padx=10, pady=5)
+        self.ano_combobox = ctk.CTkComboBox(filtro_frame, values=anos, state='readonly')
+        self.ano_combobox.grid(row=1, column=1, padx=10, pady=5)
+        self.ano_combobox.set(str(ano_atual))
         self.add_checkboxes()
 
     def add_checkboxes(self):
