@@ -14,6 +14,7 @@ console = Console()
 class SimpleApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+        self.iconbitmap('C:\\Users\\Henrique\\OneDrive\\Anexos\\FIAP_2024\\OS_Procura\\Busca_os\\img\\teste.ico')
         self.input_value = ctk.StringVar()  # Variável para armazenar o valor do input
         self.base_path = "\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\"
         self.dic = {
@@ -2252,8 +2253,8 @@ class SimpleApp(ctk.CTk):
         self.maxsize(width=500,height=500)
 
         # img_searching
-        self.img_arquivo = Image.open('C:\\Users\\i442101\\OneDrive - Banco Bradesco S.A\\Meus_Anexos\\vscode\\Projeto_tkinter_OS\\DICIONARIO\\img\\image.png').convert("RGBA")
-        self.ctk_img_arquivo = ctk.CTkImage(self.img_arquivo, size=(16,16))
+        # self.img_arquivo = Image.open('C:\\Users\\i442101\\OneDrive - Banco Bradesco S.A\\Meus_Anexos\\vscode\\Projeto_tkinter_OS\\DICIONARIO\\img\\image.png').convert("RGBA")
+        # self.ctk_img_arquivo = ctk.CTkImage(self.img_arquivo, size=(16,16))
 
 
         # Frame principal
@@ -2279,7 +2280,7 @@ class SimpleApp(ctk.CTk):
         self.tipo_cabeamento = ctk.CTkComboBox(self.frame, values=[''], state='readonly')
         self.tipo_cabeamento.grid(row=1, column=2, padx=20, pady=20)
         
-        button = ctk.CTkButton(self.frame, image=self.ctk_img_arquivo, text="Buscar Arquivo", command=self.mostrar_resultado)
+        button = ctk.CTkButton(self.frame, text="Buscar Arquivo", command=self.mostrar_resultado)
         button.grid(row=2, column=2, padx=20, pady=20, )
         
         self.site_combobox.set('01 - CTI')
