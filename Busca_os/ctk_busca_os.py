@@ -1,9 +1,13 @@
 import customtkinter as ctk
-from rich.console import Console
+from tkinter import ttk
 from tkinter import messagebox
-import os
+from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+import os
+import subprocess
+from PIL import Image   
+
 
 
 console = Console()
@@ -18,25 +22,25 @@ class SimpleApp(ctk.CTk):
                 # base_path =f"\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.combobox_sites.get()}\\{self.combobox_tipos.get()}\\{mes_path}"
                 # os_code = os_code.replace("EEc", "OS EEc")
                 "11 - NOVEMBRO":"OS EEc", 
-                "12 - DEZEMBRO":"OS EEc", 
+                "12 - DEZEMBRO":"OS EE ", 
             }
         },
         "2010":{
             "01 - CTI":{
                 "CABEAMENTO": {
                     "OPEN":{
-                        "01 - JANEIRO":"OS EE", 
-                        "02 - FEVEREIRO":"OS EE", 
-                        "03 - MARÇO":"OS EE", 
-                        "04 - ABRIL":"OS EE", 
-                        "05 - MAIO":"OS EE", 
-                        "06 - JUNHO":"OS EE", 
-                        "07 - JULHO":"OS EE", 
-                        "08 - AGOSTO":"OS EE", 
-                        "09 - SETEMBRO":"OS EE", 
-                        "10 - OUTUBRO":"OS EE", 
-                        "11 - NOVEMBRO":"OS EE", 
-                        "12 - DEZEMBRO":"OS EE", 
+                        "01 - JANEIRO":"OS EE ", 
+                        "02 - FEVEREIRO":"OS EE ", 
+                        "03 - MARÇO":"OS EE ", 
+                        "04 - ABRIL":"OS EE ", 
+                        "05 - MAIO":"OS EE ", 
+                        "06 - JUNHO":"OS EE ", 
+                        "07 - JULHO":"OS EE ", 
+                        "08 - AGOSTO":"OS EE ", 
+                        "09 - SETEMBRO":"OS EE ", 
+                        "10 - OUTUBRO":"OS EE ", 
+                        "11 - NOVEMBRO":"OS EE ", 
+                        "12 - DEZEMBRO":"OS EE ", 
                     },
                     "MAINFRAME":{
                         # "01 - JANEIRO":"OS EE", 
@@ -84,20 +88,19 @@ class SimpleApp(ctk.CTk):
             },
             "02 - ALPHAVILLE":{
                 "CABEAMENTO": {
-                    "OPEN":{
-                        # "02 - FEVEREIRO":"OS EE", 
-                        # "03 - MARÇO":"OS EE", 
-                        # "06 - JUNHO":"OS EE", 
-                        # "11 - NOVEMBRO":"OS EE", 
-                        "01 - JANEIRO":"OS EE", 
-                        "04 - ABRIL":"OS EE", 
-                        "05 - MAIO":"OS EE", 
-                        "07 - JULHO":"OS EE", 
-                        "08 - AGOSTO":"OS EE", 
-                        "09 - SETEMBRO":"OS EE", 
-                        "10 - OUTUBRO":"OS EE", 
-                        "12 - DEZEMBRO":"OS EE", 
-                    },
+                    # "02 - FEVEREIRO":"OS EE", 
+                    # "03 - MARÇO":"OS EE", 
+                    # "06 - JUNHO":"OS EE", 
+                    # "11 - NOVEMBRO":"OS EE", 
+                    "01 - JANEIRO":"OS EE ", 
+                    "04 - ABRIL":"OS EE ", 
+                    "05 - MAIO":"OS EE ", 
+                    "07 - JULHO":"OS EE ", 
+                    "08 - AGOSTO":"OS EE ", 
+                    "09 - SETEMBRO":"OS EE ", 
+                    "10 - OUTUBRO":"OS EE ", 
+                    "12 - DEZEMBRO":"OS EE ", 
+                    
                 },
                 "ELÉTRICA":{
                     # "02 - FEVEREIRO":"OS EE ", 
@@ -1119,8 +1122,8 @@ class SimpleApp(ctk.CTk):
             },
             "04 - REDE LAN":{
                 "CABEAMENTO": {
-                    "01 - JANEIRO":"EERL", 
-                    "02 - FEVEREIRO":"OS EERL", 
+                    "01 - JANEIRO":"Os EERL ", 
+                    "02 - FEVEREIRO":"OS EERL ", 
                     "03 - MARÇO":"OS EERL ", 
                     "04 - ABRIL":"EERL", 
                     "05 - MAIO":"EERL", 
@@ -1537,20 +1540,20 @@ class SimpleApp(ctk.CTk):
                         "10 - OUTUBRO":"EEc", 
                         "11 - NOVEMBRO":"EEc ", 
                         "12 - DEZEMBRO":"EEc ",
-                        "MAINFRAME":{
-                            "01 - JANEIRO":"EE MF ", 
-                            "02 - FEVEREIRO":"EE MF ", 
-                            "03 - MARÇO":"EE MF ", 
-                            # "04 - ABRIL":"EE MF ", 
-                            # "05 - MAIO":"EEc", 
-                            "06 - JUNHO":"EE MF ", 
-                            "07 - JULHO":"EE MF ", 
-                            "08 - AGOSTO":"EE MF ", 
-                            "09 - SETEMBRO":"EE MF ", 
-                            "10 - OUTUBRO":"EE MF ", 
-                            "11 - NOVEMBRO":"EEc ", 
-                            "12 - DEZEMBRO":"EEc ",
-                        },
+                    },
+                    "MAINFRAME":{
+                        "01 - JANEIRO":"EE MF ", 
+                        "02 - FEVEREIRO":"EE MF ", 
+                        "03 - MARÇO":"EE MF ", 
+                        # "04 - ABRIL":"EE MF ", 
+                        # "05 - MAIO":"EEc", 
+                        "06 - JUNHO":"EE MF ", 
+                        "07 - JULHO":"EE MF ", 
+                        "08 - AGOSTO":"EE MF ", 
+                        "09 - SETEMBRO":"EE MF ", 
+                        "10 - OUTUBRO":"EE MF ", 
+                        "11 - NOVEMBRO":"EEc ", 
+                        "12 - DEZEMBRO":"EEc ",
                     },
                     
                 },
@@ -1573,31 +1576,31 @@ class SimpleApp(ctk.CTk):
                     
                     "02 - FEVEREIRO":{"Preventiva": "OS EEm "}, 
                     
-                    "03 - Março":{"Preventiva": "OS EEm "}, 
+                    "03 - MARÇO":{"Preventiva": "OS EEm "}, 
                     
-                    "04 - Abril":{"Corretiva": "OS EEmc ",
+                    "04 - ABRIL":{"Corretiva": "OS EEmc ",
                                 "Preventiva": "OS EEm "},
                     
-                    "05 - Maio":{"Preventiva": "OS EEm "}, 
+                    "05 - MAIO":{"Preventiva": "OS EEm "}, 
                     
-                    "06 - Junho":{"Corretiva": "OS EEmc",
+                    "06 - JUNHO":{"Corretiva": "OS EEmc",
                                 "Preventiva": "OS EEm "}, 
                     
-                    "07 - Julho":{"Corretiva": "OS EEmc ",
+                    "07 - JULHO":{"Corretiva": "OS EEmc ",
                                 "Preventiva": "OS EEm"}, 
                     
-                    "08 - Agosto":{"Corretiva": "EEmc ",
+                    "08 - AGOSTO":{"Corretiva": "EEmc ",
                                 "Preventiva": "OS EEm "}, 
                     
-                    "09 - Setembro":{"Corretiva": "OS EEmc",
+                    "09 - SETEMBRO":{"Corretiva": "OS EEmc",
                                 "Preventiva": "OS EEm "},
                     
-                    "10 - Outubro":{"Preventiva": "OS EEm "}, 
+                    "10 - OUTUBRO":{"Preventiva": "OS EEm "}, 
                     
-                    "11 - Novembro":{"Corretiva": "OS EEmc ",
+                    "11 - NOVEMBRO":{"Corretiva": "OS EEmc ",
                                 "Preventiva": "OS EEm "},
                     
-                    "12 - Dezembro":"OS EEm "
+                    "12 - DEZEMBRO":"OS EEm "
                 }
             },
             "02 - ALPHAVILLE":{
@@ -2234,10 +2237,24 @@ class SimpleApp(ctk.CTk):
         },
 
     }
-
+        self.my_dic = {
+            'Frame_Preto': '#222',
+            'Vermelho_Brad': '#cc092f',
+            'Frame_Ajsute': '#666',
+            'font': '#c2c2c2',
+        }
         self.title("Aloritimo de busca de OS")
-        self.geometry("500x300")
-        self.center_window(500, 300)
+        self.style_treeview = ttk.Style()
+
+        self.geometry("500x200")
+        self._set_appearance_mode('System')
+        self.minsize(width=500,height=500)
+        self.maxsize(width=500,height=500)
+
+        # img_searching
+        self.img_arquivo = Image.open('C:\\Users\\i442101\\OneDrive - Banco Bradesco S.A\\Meus_Anexos\\vscode\\Projeto_tkinter_OS\\DICIONARIO\\img\\image.png').convert("RGBA")
+        self.ctk_img_arquivo = ctk.CTkImage(self.img_arquivo, size=(16,16))
+
 
         # Frame principal
         self.frame = ctk.CTkFrame(self,width=60, height=60)
@@ -2250,8 +2267,10 @@ class SimpleApp(ctk.CTk):
         entry = ctk.CTkEntry(self.frame, textvariable=self.input_value)
         entry.grid(row=0, column=1, padx=20, pady=20)
         
+        # Site Combobox
         self.site_combobox = ctk.CTkComboBox(self.frame, values=['01 - CTI', '02 - ALPHAVILLE', '03 - XAXIM', '04 - REDE LAN'], state='readonly')
         self.site_combobox.grid(row=0, column=2, padx=20, pady=20)
+        # tipo Combobox
         self.label2 = ctk.CTkLabel(self.frame, text="Tipo da OS: ")
         self.label2.grid(row=1, column=0, padx=20, pady=20)
         self.tipo_combobox = ctk.CTkComboBox(self.frame, values=['CABEAMENTO', 'ELÉTRICA', 'MANUTENÇÃO'], state='readonly', command=self.trocar_combobox)
@@ -2260,9 +2279,27 @@ class SimpleApp(ctk.CTk):
         self.tipo_cabeamento = ctk.CTkComboBox(self.frame, values=[''], state='readonly')
         self.tipo_cabeamento.grid(row=1, column=2, padx=20, pady=20)
         
-        button = ctk.CTkButton(self.frame, text="Buscar Arquivo", command=self.mostrar_resultado)
+        button = ctk.CTkButton(self.frame, image=self.ctk_img_arquivo, text="Buscar Arquivo", command=self.mostrar_resultado)
         button.grid(row=2, column=2, padx=20, pady=20, )
-        self.site_combobox.set('01 - CTI') 
+        
+        self.site_combobox.set('01 - CTI')
+        
+        # Tabela (Treeview) - frame
+        tabela_frame = ctk.CTkFrame(self, fg_color=self.my_dic['Frame_Preto'])
+        tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
+        self.tabela = ttk.Treeview(tabela_frame, columns="Diretorio", show='headings',)
+        self.style_treeview.theme_use('clam')
+        self.style_treeview.configure("Treeview.Heading", background=self.my_dic['Frame_Preto'], foreground=self.my_dic['font'], borderwidth=1, relief='solid', font=('Arial', 10))
+        self.style_treeview.map("Treeview.Heading", background=[('active', self.my_dic['Vermelho_Brad'])])
+        self.style_treeview.configure("Treeview", background=self.my_dic['Frame_Preto'], foreground=self.my_dic['font'], fieldbackground=self.my_dic['Frame_Preto'], rowheight=25, borderwidth=1, relief='solid')
+        self.style_treeview.map("Treeview", background=[('selected', self.my_dic['Vermelho_Brad'])], fieldbackground=[('!selected', self.my_dic['Frame_Preto'])])
+
+        self.tabela.heading("Diretorio", text="Diretorio",)
+        self.tabela.pack(fill='both', expand=True)
+
+        self.tabela.bind("<ButtonRelease-1>", self.linha_selecionada_treeview)
+
+        self.center_window(500, 500)
 
     def print_section_header(self,title, description):
         """ Função para imprimir cabeçalhos de seção com estilo Markdown usando o rich. """
@@ -2271,6 +2308,22 @@ class SimpleApp(ctk.CTk):
         panel = Panel(description_text, title=title_text, border_style="green")
         console.print(panel)
 
+    def linha_selecionada_treeview(self, event):
+        for selected_item in self.tabela.selection():
+            item = self.tabela.item(selected_item)
+            record = item['values']
+            self.path = self.path + '\\' + record[0]
+            self.print_section_header("TREEVIEW SELECIONADA", f"\n\n- {item}\n\n- {record}\n\n- {self.base_path}\n\n- {self.path}")
+            subprocess.run(['explorer', self.path], shell=True)
+            return messagebox.showinfo("Resultado", f"Pasta aberta: {self.path}")
+
+    def add_items_to_treeview(self, treeview, lista_paths):
+            treeview.delete(*treeview.get_children())
+            for item in lista_paths:
+                treeview.insert('', 'end', values=[item])
+
+
+
     def separar_input(self):
         input_str = self.input_value.get()
         if len(input_str) == 7:
@@ -2278,41 +2331,34 @@ class SimpleApp(ctk.CTk):
             mes = input_str[2:4]
             num = input_str[4:]
             procurar_input = self.procura(ano, self.site_combobox.get(), self.tipo_combobox.get(), mes, self.tipo_cabeamento.get())
-            # console.print(procurar_input)
-            os_code = procurar_input[0] + input_str
-            lista_paths = os.listdir(self.base_path) 
+            if procurar_input is not None:
+                os_code = procurar_input[0] + input_str
+                lista_paths = os.listdir(self.base_path) 
 
-
-            """ return {
-                'Site': self.site_combobox.get(),
-                'Tipo': self.tipo_combobox.get(),
-                f'Tipo {self.tipo_combobox.get()}': self.tipo_cabeamento.get(),
-                'Input_path':input_str,
-                'base_path': f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{input_str}',
+                self.print_section_header("Algoritimo de procura", f"\n\n- {procurar_input}\n\n- {input_str}\n\n- {os_code}\n\n- {self.base_path}")  
                 
-
-            } """
-            self.print_section_header("Algoritimo de procura", f"\n\n- {procurar_input}\n\n- {input_str}\n\n- {os_code}\n\n- {self.base_path}")  
-            
-            console.print('\n\n[bold green]____________ LISTA DE CAMINHOS ____________[/bold green]\n\n')
-            console.print(lista_paths)
-            print('\n\n')
-            os_path = self.encontrar_string_por_codigo(lista_paths,os_code)
-            return os_path
+                console.print('\n\n[bold green]____________ LISTA DE CAMINHOS ____________[/bold green]\n\n')
+                console.print(lista_paths)
+                print('\n\n')
+                os_path = self.encontrar_string_por_codigo(lista_paths,os_code)
+                self.add_items_to_treeview(self.tabela, lista_paths)
+                # abrir a pasta selecionada
+                self.path = self.base_path
+                self.base_path = self.base_path+'\\'+os_path
+                subprocess.run(['explorer', self.base_path], shell=True)
+                
+                # return os_path
+                return messagebox.showinfo("Resultado", f"Pasta aberta: {self.base_path}")
+            else:
+                return messagebox.showerror('Não Encontrado', 'Foras de parâmetros!\n(Tipo, ano ou mes)')
         else:
-            return None
+            return messagebox.showerror("Erro", "Formato inválido. O input deve ter 7 caracteres.")
 
     def mostrar_resultado(self):
-        try:
-            resultado = self.separar_input()
-            if resultado is None:
-                messagebox.showerror("Erro", "Formato inválido. O input deve ter 7 caracteres.")
-            elif resultado['Input_path'] is None:
-                messagebox.showerror("Erro", "Nenhum resultado encontrado.")
-            else:
-                messagebox.showinfo("Resultado", str(resultado))
-        except Exception as e:
-            messagebox.showerror("Erro", str(e))
+        resultado = self.separar_input()
+        console.print(resultado)
+
+    
 
     def trocar_combobox(self, choice):
         if choice == 'CABEAMENTO':
@@ -2327,9 +2373,11 @@ class SimpleApp(ctk.CTk):
     def center_window(self, width, height):
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-        x = (screen_width / 2) - (width / 2)
-        y = (screen_height / 2) - (height / 2)
-        self.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+        
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2)
+        
+        self.geometry(f'{width}x{height}+{x}+{y}')
 
     def encontrar_string_por_codigo(self,lista, codigo):
             console.print('\n\n[bold yellow]____________ DEF - encontrar_string_por_codigo ____________[/bold yellow]\n\n')
@@ -2361,7 +2409,7 @@ class SimpleApp(ctk.CTk):
 
         return console.print('[bold red]VAZIO - nao encontrado[bold red]')
 
-    def _handle_2009(self, ano, site, mes):# * criar mensagem de erro
+    def _handle_2009(self, ano, site, mes):
         console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
         for key_mes in self.dic[ano][site]:
             if key_mes.startswith(mes):
@@ -2369,10 +2417,11 @@ class SimpleApp(ctk.CTk):
 
                 # * Passando path 
                 self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                teste = (self.dic[ano][site][key_mes], self.base_path)
+                self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                teste = (self.dic[ano][site][key_mes], self.base_path,self.path)
                 return teste         
 
-    def _handle_2010(self, ano, site, tipo, mes, tipo_cabeamento): # * criar mensagem de erro
+    def _handle_2010(self, ano, site, tipo, mes, tipo_cabeamento):
         console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
         if site in self.dic[ano]:
             console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
@@ -2387,7 +2436,8 @@ class SimpleApp(ctk.CTk):
                             if key_mes.startswith(mes):
                                 console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                                 self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
-                                teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                                self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                                teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path,self.path)
                                 return teste
             
                             
@@ -2396,7 +2446,8 @@ class SimpleApp(ctk.CTk):
                         if key_mes.startswith(mes):
                             console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                             self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                            self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                             return teste
                         
             if site in ['02 - ALPHAVILLE']:
@@ -2411,7 +2462,8 @@ class SimpleApp(ctk.CTk):
                             # return self.dic[ano][site][tipo][tipo_cabeamento][key_mes]
 
                             self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                            self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                             return teste
                 
                                 
@@ -2420,7 +2472,8 @@ class SimpleApp(ctk.CTk):
                         if key_mes.startswith(mes):
                             console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                             self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                            self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                             return teste        #   self.dic[ano][site][tipo][key_mes]
 
 
@@ -2429,7 +2482,8 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                         return teste 
 
     def _handle_2011_2022(self, ano, site, tipo, mes, tipo_cabeamento):
@@ -2441,7 +2495,8 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{key_mes}'
-                        teste = (self.dic[ano][site][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][key_mes], self.base_path,self.path)
                         return teste
 
             if tipo == 'CABEAMENTO':
@@ -2452,7 +2507,8 @@ class SimpleApp(ctk.CTk):
                         if key_mes.startswith(mes):
                             console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                             self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
-                            teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                            self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path,self.path)
                             return teste
 
             if tipo in ['ELÉTRICA']:
@@ -2460,13 +2516,15 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                         return teste
 
             if tipo == 'MANUTENÇÃO':
                 teste = self._handle_manutencao(ano, site, tipo, mes, tipo_cabeamento)
                 self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{teste[2]}\\{self.tipo_cabeamento.get()}'
-                juntando = (teste[0], self.base_path)
+                self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{teste[2]}\\{self.tipo_cabeamento.get()}'
+                juntando = (teste[0], self.base_path,self.path)
                 return juntando
                 
             if site in ['03 - XAXIM'] and ano in ['2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2021']:
@@ -2476,7 +2534,8 @@ class SimpleApp(ctk.CTk):
                         if key_mes.startswith(mes):
                             console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                             self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
-                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                            self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                             return teste
                             # return self.dic[ano][site][tipo][key_mes]
 
@@ -2485,7 +2544,8 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                         return teste 
 
     def _handle_manutencao(self, ano, site, tipo, mes, tipo_cabeamento):
@@ -2531,7 +2591,8 @@ class SimpleApp(ctk.CTk):
                         if key_mes.startswith(mes):
                             console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                             self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{tipo}\\{self.tipo_cabeamento.get()}\\{key_mes}'
-                            teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                            self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{tipo}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path,self.path)
                             return teste
 
             if tipo == 'ELÉTRICA':
@@ -2539,7 +2600,8 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                         return teste
                     
             if tipo == 'MANUTENÇÃO':
@@ -2547,7 +2609,8 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                         return teste
                     
         if site == '01 - CTI':
@@ -2558,7 +2621,8 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
-                        teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path,self.path)
                         return teste
             
             if tipo == 'ELÉTRICA':
@@ -2566,13 +2630,15 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\ELETRICA\\{key_mes}'
-                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\ELETRICA\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                         return teste
                     
             if tipo == 'MANUTENÇÃO':
                 teste = self._handle_manutencao(ano, site, tipo, mes, tipo_cabeamento)
                 self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{teste[2]}\\{self.tipo_cabeamento.get()}'
-                juntando = (teste[0], self.base_path)
+                self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{teste[2]}\\{self.tipo_cabeamento.get()}'
+                juntando = (teste[0], self.base_path, self.path)
                 return juntando
         
 
@@ -2581,7 +2647,8 @@ class SimpleApp(ctk.CTk):
                 if key_mes.startswith(mes):
                     console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                     self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{key_mes}'
-                    teste = (self.dic[ano][site][key_mes], self.base_path)
+                    self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{key_mes}'
+                    teste = (self.dic[ano][site][key_mes], self.base_path, self.path)
                     return teste 
 
         if site == '04 - REDE LAN':
@@ -2589,10 +2656,11 @@ class SimpleApp(ctk.CTk):
                 if key_mes.startswith(mes):
                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                     self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{key_mes}'
-                    teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                    self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{key_mes}'
+                    teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                     return teste 
 
-    def _handle_2020(self, ano, site, tipo, mes, tipo_cabeamento): # * Criar tratamento de erros
+    def _handle_2020(self, ano, site, tipo, mes, tipo_cabeamento):
         console.print(f'\n\n{ano}            | \t if site in dic[ano]:')
         if site == '01 - CTI':
             console.print(f'{site}        | \t\t if tipo in dic[ano][site]:')
@@ -2602,7 +2670,8 @@ class SimpleApp(ctk.CTk):
                         console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                         if tipo_cabeamento in 'MAINFRAME':
                             self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\OPEN\\{self.tipo_cabeamento.get()}\\{key_mes}'
-                            teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                            self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\OPEN\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                            teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path,self.path)
                             return teste
                         else:
                             self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
@@ -2616,7 +2685,8 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
-                        teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{self.tipo_cabeamento.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][tipo_cabeamento][key_mes], self.base_path,self.path)
                         return teste
 
         if site == '03 - XAXIM':
@@ -2626,13 +2696,15 @@ class SimpleApp(ctk.CTk):
                     if key_mes.startswith(mes):
                         console.print(f'{key_mes}   | \t\t\t\t\t key_mes.startswith(mes)')
                         self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                        self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                        teste = (self.dic[ano][site][tipo][key_mes], self.base_path, self.path)
                         return teste 
         
         if tipo == 'MANUTENÇÃO':
             teste = self._handle_manutencao(ano, site, tipo, mes, tipo_cabeamento)
             self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{teste[2]}\\{self.tipo_cabeamento.get()}'
-            juntando = (teste[0], self.base_path)
+            self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{teste[2]}\\{self.tipo_cabeamento.get()}'
+            juntando = (teste[0], self.base_path,self.path)
             return juntando
         
         if tipo == 'ELÉTRICA':
@@ -2640,7 +2712,8 @@ class SimpleApp(ctk.CTk):
                 if key_mes.startswith(mes):
                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                     self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                    teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                    self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                    teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                     return teste 
 
         if site == '04 - REDE LAN':
@@ -2648,9 +2721,15 @@ class SimpleApp(ctk.CTk):
                 if key_mes.startswith(mes):
                     console.print(f'{key_mes}   | \t\t\t key_mes.startswith(mes)')
                     self.base_path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
-                    teste = (self.dic[ano][site][tipo][key_mes], self.base_path)
+                    self.path = f'\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\{ano}\\{self.site_combobox.get()}\\{self.tipo_combobox.get()}\\{key_mes}'
+                    teste = (self.dic[ano][site][tipo][key_mes], self.base_path,self.path)
                     return teste
 
 if __name__ == "__main__":
     app = SimpleApp()
     app.mainloop()
+
+
+
+
+
