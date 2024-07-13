@@ -14,7 +14,7 @@ console = Console()
 class SimpleApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.iconbitmap('C:\\Users\\Henrique\\OneDrive\\Anexos\\FIAP_2024\\OS_Procura\\Busca_os\\img\\teste.ico')
+        self.iconbitmap('C:\\Users\\Henrique\\OneDrive\\Anexos\\FIAP_2024\\OS_Procura\\Busca_os\\img\\bradimg.ico')
         self.input_value = ctk.StringVar()  # Variável para armazenar o valor do input
         self.base_path = "\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\04 - ABERTURA DE OS\\OS EE\\04 - ANOS ANTERIORES\\"
         self.dic = {
