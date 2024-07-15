@@ -2,7 +2,8 @@ import customtkinter as ctk
 import datetime
 import pyodbc
 from tkinter import ttk
-
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import calendar
 
@@ -170,7 +171,8 @@ class Aba_Controle:
         # Tabela (Treeview)
         tabela_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
-
+        treeScrollbar = ttk.Scrollbar(tabela_frame, orient='vertical')
+        treeScrollbar.pack(side='right', fill='y')
         self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings',)
         self.style_treeview.theme_use('clam')
         #configurando a cor da treeview para ajustar ao tema
@@ -588,7 +590,40 @@ class Aba_relatorio:
                 quantidade_label = ctk.CTkLabel(self.filtro_frame_2, text=str(quantidade), text_color='#c2c2c2')
                 quantidade_label.grid(row=row, column=2, padx=10, pady=5)
                 row+=1
+            self.gerar_grafico_pizza()
 
+        except pyodbc.Error as e:
+            print(f'Error: {e}')
+
+    def gerar_grafico_pizza(self):
+        mes = self.mes_combobox.get()
+        ano = self.ano_combobox.get()
+        
+        try:
+            cursor = self.conn.cursor()
+            query = """
+                SELECT PRESENCA, COUNT(*)
+                FROM tblControle
+                WHERE MONTH(DATA)=? AND YEAR(DATA)=?
+                GROUP BY PRESENCA
+            """
+            cursor.execute(query, (list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano))
+            dados = cursor.fetchall()
+
+            if not dados:
+                print("Nenhum dado encontrado para o mês e ano selecionados.")
+                return
+            
+            tipos_presenca = [row[0] for row in dados]
+            quantidades = [row[1] for row in dados]
+
+            fig, ax = plt.subplots()
+            ax.pie(quantidades, labels=tipos_presenca, autopct='%1.1f%%', startangle=90)
+            ax.axis('equal')
+
+            # Adicionar o gráfico ao Tkinter
+            chart = FigureCanvasTkAgg(fig, self.frame_inferior)
+            chart.get_tk_widget().pack()
 
         except pyodbc.Error as e:
             print(f'Error: {e}')
