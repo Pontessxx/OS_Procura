@@ -4,7 +4,7 @@ import pyodbc
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import calendar
+import pandas as pd
 from tkinter import messagebox
 
 class ControleApp:
@@ -618,6 +618,24 @@ class Aba_relatorio_mes:
         except pyodbc.Error as e:
             print(f'Error: {e}')
 
+    def conectar_bd(self):
+        # Caminho para o banco de dados Access
+        db_path = './ControleDataBase.accdb'
+        
+        # Conexão com o banco de dados Access
+        conn_str = r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=' + db_path
+        conn = pyodbc.connect(conn_str)
+        
+        return conn
+    def ler_dados(self):
+        conn = self.conectar_bd()
+        
+        # Ler uma tabela do banco de dados
+        query = "SELECT * FROM tblControle"
+        df = pd.read_sql(query, conn)
+        
+        return df
+
     def abrir_janela_graficos(self):
         # Minimiza a janela principal
         self.parent.root.iconify()
@@ -630,7 +648,11 @@ class Aba_relatorio_mes:
         # Adiciona conteúdo à nova janela
         label = ctk.CTkLabel(self.new_window, text="Aqui estarão os gráficos gerados", text_color='#c2c2c2')
         label.pack(pady=20)
+        df = self.ler_dados()
 
+        # Exibir as primeiras linhas do dataframe
+        print(df.head())
+        
         # Adiciona um botão para fechar a nova janela e maximizar a janela principal
         btn_fechar = ctk.CTkButton(self.new_window, text="Fechar", command=self.fechar_janela_graficos)
         btn_fechar.pack(pady=20)
