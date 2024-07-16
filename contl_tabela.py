@@ -519,7 +519,7 @@ class Aba_relatorio_mes:
         self.button = ctk.CTkButton(filtro_frame_1, text="Filtrar", width=160, height=30, command=self.toggle_filter)
         self.button.grid(row=5, column=0, padx=10, pady=10, columnspan=2)
 
-        self.btn_gerar_graficos = ctk.CTkButton(filtro_frame_1, text="Mostrar Gráficos", width=160, height=30,)
+        self.btn_gerar_graficos = ctk.CTkButton(filtro_frame_1, text="Mostrar Gráficos", width=160, height=30,command=self.abrir_janela_graficos)
         self.btn_gerar_graficos.grid(row=6, column=0, padx=10, pady=10, columnspan=2)
         label = ctk.CTkLabel(self.filtro_frame_2, text='TIPO DE PRESENÇA', text_color='#c2c2c2')
         label.grid(row=0, column=0, padx=10, pady=5, columnspan=4)
@@ -617,8 +617,29 @@ class Aba_relatorio_mes:
 
         except pyodbc.Error as e:
             print(f'Error: {e}')
-    
 
+    def abrir_janela_graficos(self):
+        # Minimiza a janela principal
+        self.parent.root.iconify()
+        # Cria uma nova janela
+        self.new_window = ctk.CTkToplevel(self.parent.root)
+        self.new_window.title(f"Gráficos - {self.mes_combobox.get()}")
+        self.new_window.geometry("800x600")
+        # expande a nova janela
+        self.new_window.state('zoomed')
+        # Adiciona conteúdo à nova janela
+        label = ctk.CTkLabel(self.new_window, text="Aqui estarão os gráficos gerados", text_color='#c2c2c2')
+        label.pack(pady=20)
+
+        # Adiciona um botão para fechar a nova janela e maximizar a janela principal
+        btn_fechar = ctk.CTkButton(self.new_window, text="Fechar", command=self.fechar_janela_graficos)
+        btn_fechar.pack(pady=20)
+
+    def fechar_janela_graficos(self):
+        # Fecha a nova janela
+        self.new_window.destroy()
+        # Maximiza a janela principal
+        self.parent.root.state('zoomed')
 if __name__ == '__main__':
     root = ctk.CTk()
     app = ControleApp(root)
