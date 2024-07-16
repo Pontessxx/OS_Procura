@@ -4,8 +4,8 @@ import pyodbc
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
 import calendar
+from tkinter import messagebox
 
 class ControleApp:
     def __init__(self, root):
@@ -13,7 +13,7 @@ class ControleApp:
         ctk.set_appearance_mode('dark')
         root.geometry('1100x600')
         root.title('Busca de arquivos')
-        root.minsize(1100, 600)
+        root.minsize(1110, 600)
 
         self.center_window(1100, 600)  # Centraliza a janela
 
@@ -43,7 +43,7 @@ class ControleApp:
         self.setup_auto()
 
     def connect_to_db(self):
-        try: 
+        try:
             con_string = r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\Henrique\OneDrive\Anexos\FIAP_2024\OS_Procura\ControleDataBase.accdb'
             conn = pyodbc.connect(con_string)
             return conn
@@ -78,7 +78,7 @@ class ControleApp:
         self.show_frame("Controle de Frequencia")
 
     def add_buttons_menu(self, frame):
-        button_texts = ["Controle de Frequencia", "Inserir Nomes", "Relatorio"]
+        button_texts = ["Controle de Frequencia", "Inserir Nomes", "Relatorio Mensal"]
 
         for text in button_texts:
             button = ctk.CTkButton(frame, text=text, command=lambda t=text: self.show_frame(t), hover_color=self.my_dict['hover'], border_width=2, border_color=self.my_dict['borda'])
@@ -102,8 +102,8 @@ class ControleApp:
             Aba_Controle(self, self.frame_tela, self.my_dict, self.conn, self.meses_dict)
         elif frame_name == "Inserir Nomes":
             Aba_adiciona_remove_nomes(self, self.frame_tela, self.my_dict, self.conn)
-        elif frame_name == "Relatorio":
-            Aba_relatorio(self, self.frame_tela, self.my_dict, self.conn, self.meses_dict)
+        elif frame_name == "Relatorio Mensal":
+            Aba_relatorio_mes(self, self.frame_tela, self.my_dict, self.conn, self.meses_dict)
     
 
 class Aba_Controle:
@@ -125,7 +125,7 @@ class Aba_Controle:
         # Adicionar checkboxes
         self.add_checkboxes()
 
-        combobox_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
+        combobox_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'],)
         combobox_frame.pack(pady=10, padx=10, fill='x')
 
         # tipo presenca
@@ -160,19 +160,24 @@ class Aba_Controle:
         self.ano_combobox = ctk.CTkComboBox(combobox_frame, values=anos, state='readonly')
         self.ano_combobox.grid(row=0, column=8, padx=10, pady=5)
         self.ano_combobox.set(str(ano_atual))
+        
+
+        spacer = ctk.CTkLabel(combobox_frame, text='')
+        spacer.grid(padx=20,row=0, column=9)
 
         button = ctk.CTkButton(combobox_frame, text="Adicionar", width=75, height=30, command=self.adicionar_frequencia)
-        button.grid(row=0, column=9, padx=10, pady=5)
-        button = ctk.CTkButton(combobox_frame, text="Deletar", width=75, height=30, command=self.remover_frequencia)
         button.grid(row=0, column=10, padx=10, pady=5)
-        self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=50, height=30, command=self.toggle_filter)
-        self.filter_button.grid(row=0, column=11, padx=5, pady=5)
+        button = ctk.CTkButton(combobox_frame, text="Deletar", width=75, height=30, command=self.remover_frequencia)
+        button.grid(row=0, column=11, padx=10, pady=5)
+        spacer = ctk.CTkLabel(combobox_frame, text='')
+        spacer.grid(padx=20,row=0, column=12)
+        self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=75, height=30, command=self.toggle_filter)
+        self.filter_button.grid(row=0, column=13, padx=5, pady=5)
 
         # Tabela (Treeview)
         tabela_frame = ctk.CTkFrame(self.frame, fg_color=my_dict['preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
-        treeScrollbar = ttk.Scrollbar(tabela_frame, orient='vertical')
-        treeScrollbar.pack(side='right', fill='y')
+
         self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings',)
         self.style_treeview.theme_use('clam')
         #configurando a cor da treeview para ajustar ao tema
@@ -257,15 +262,23 @@ class Aba_Controle:
                         result = cursor.fetchone()
                         
                         if result:  # Se o registro existir, atualize-o
-                            cursor.execute("UPDATE tblControle SET PRESENCA=? WHERE ID=?", (tipo_presenca, result[0]))
+                            resposta = messagebox.askquestion(title="Dados já existentes", message=f"nome: {nome}\n data: {data.strftime('%d/%m/%Y')}")
+                            if resposta=='yes':
+                                cursor.execute("UPDATE tblControle SET PRESENCA=? WHERE ID=?", (tipo_presenca, result[0]))
+                                for nome, var in self.checkbox_vars.items():
+                                    var.set('off')
+                            else: 
+                                break
                         else:  # Se o registro não existir, insira um novo
                             cursor.execute("SELECT MAX(ID) FROM tblControle")
                             last_id = cursor.fetchone()[0]
                             if last_id is None:
                                 last_id = 0
                             new_id = last_id + 1
-
                             cursor.execute("INSERT INTO tblControle (ID, DATA, NOMES, PRESENCA) VALUES (?, ?, ?, ?)", (new_id, data, nome, tipo_presenca))
+                            for nome, var in self.checkbox_vars.items():
+                                var.set('off')
+                       
 
                 self.conn.commit()
                 self.carregar_dados()
@@ -307,13 +320,16 @@ class Aba_Controle:
             data_formatada, nome, tipo_presenca = record
             dia, mes, ano = data_formatada.split('/')
             # Remover zero à esquerda do dia
-            if dia.startswith('0'):
-                dia = dia[1:]
+            dia = dia.lstrip('0')
+            mes = mes.lstrip('0')
             self.dia_combobox.set(dia)
-            # self.mes_combobox.set(self.meses_dict[int(mes)])
-            # self.ano_combobox.set(ano)
-            # self.tipo_presenca_combobox.set(tipo_presenca)
             
+            # Converter a string do mês para um número inteiro
+            mes_numero = int(mes)
+            
+            # Definir o combobox do mês com o valor correspondente ao mês
+            if mes_numero in self.meses_dict:
+                self.mes_combobox.set(self.meses_dict[mes_numero])
             # Atualizar checkboxes
             """ for nome_chk, var in self.checkbox_vars.items():
                 if nome_chk == nome:
@@ -383,10 +399,10 @@ class Aba_Controle:
         except Exception as e:
             print(f"Error: {e}")
 
-class Aba_adiciona_remove_nomes:
+class Aba_adiciona_remove_nomes: 
     def __init__(self, parent, master, my_dict, conn):
-        self.parent = parent  # Referência para a instância da classe pai
-        self.conn = conn  # Conexão com o banco de dados
+        self.parent = parent # Referência para a instância da classe pai
+        self.conn = conn # Conexão com o banco de dados
         self.frame = ctk.CTkFrame(master, fg_color=my_dict['preto'])
         self.frame.pack(fill='both', expand=True)
     
@@ -437,44 +453,45 @@ class Aba_adiciona_remove_nomes:
 
     def remover_nome(self):
         nome = self.nome_combobox.get()
-        if nome:
-            try:
-                cursor = self.conn.cursor()
-                cursor.execute("DELETE FROM tblNomes WHERE Nomes = ?", (nome,))
-                self.conn.commit()
-                self.nome_combobox.configure(values=self.get_nomes())
-                self.nome_combobox.set('')
-            except pyodbc.Error as e:
-                print(f'Error: {e}')
+        resposta = messagebox.askquestion(title="Aviso", message=f'Gostaria de apagar o {nome}, e seus dados ')
+        if resposta == 'yes':
+            if nome:
+                try:
+                    cursor = self.conn.cursor()
+                    cursor.execute("DELETE FROM tblNomes WHERE Nomes = ?", (nome,))
+                    cursor.execute("DELETE FROM tblControle WHERE Nomes = ?", (nome,)) # Remover linhas da tblControle
+                    self.conn.commit()
+                    self.nome_combobox.configure(values=self.get_nomes())
+                    self.nome_combobox.set('')
+                except pyodbc.Error as e:
+                    print(f'Error: {e}')
+        
 
 
-class Aba_relatorio:
-    def __init__(self, parent, master, my_dict, conn,meses_dict):
-        self.parent = parent  # Referência para a instância da classe pai
-        self.conn = conn  # Conexão com o banco de dados
+class Aba_relatorio_mes: 
+    def __init__(self, parent, master, my_dict, conn, meses_dict):
+        self.parent = parent # Referência para a instância da classe pai
+        self.conn = conn # Conexão com o banco de dados
         self.style_treeview = ttk.Style()
+        self.filter_mode = False
+
         self.frame_superior = ctk.CTkFrame(master, fg_color=my_dict['preto'])
         self.frame_superior.pack(fill='both', expand=True)
-        self.frame_inferior = ctk.CTkFrame(master, fg_color=my_dict['frames_ajuste'])
-        self.frame_inferior.pack(fill='both', expand=True)
-        
+
+
         filtro_frame = ctk.CTkFrame(self.frame_superior, width=160, fg_color=my_dict['menu-inf'], bg_color=my_dict['preto'])
-        filtro_frame.pack(padx=20,pady=20,side='left',fill='y')
-        filtro_frame_1 = ctk.CTkFrame(filtro_frame, width=100, fg_color=my_dict['menu-inf'],)
-        filtro_frame_1.pack(side='top',fill='y', expand=True)
-        label_grafico = ctk.CTkLabel(self.frame_inferior, text='GRÁFICO', text_color='#c2c2c2',)
-        label_grafico.pack(padx=20,pady=20)
-        self.filtro_frame_2 = ctk.CTkFrame(filtro_frame, width=100, fg_color=my_dict['menu-inf'],)
-        self.filtro_frame_2.pack(side='bottom',fill='y', expand=True)
+        filtro_frame.pack(padx=20, pady=20, side='left', fill='y')
 
+        filtro_frame_1 = ctk.CTkFrame(filtro_frame, width=100, fg_color=my_dict['menu-inf'])
+        filtro_frame_1.pack(side='top', fill='y', expand=True)
 
-        self.meses_dict = meses_dict  # Dicionário de meses
-        # label = ctk.CTkLabel(self.frame_superior, text="ABA DE RELATORIO", text_color=my_dict['font'])
-        # label.pack(pady=20, padx=20)
+        self.filtro_frame_2 = ctk.CTkFrame(filtro_frame, width=100, fg_color=my_dict['menu-inf'])
+        self.filtro_frame_2.pack(side='bottom', fill='y', expand=True)
 
-        self.frame_checkbox = ctk.CTkFrame(self.frame_superior, fg_color=my_dict['preto'],height=50)
+        self.meses_dict = meses_dict # Dicionário de meses
+
+        self.frame_checkbox = ctk.CTkFrame(self.frame_superior, fg_color=my_dict['preto'], height=50)
         self.frame_checkbox.pack(pady=10, padx=10, fill='x')
-         # Adicionar checkboxes
 
         # Mês
         mes_label = ctk.CTkLabel(filtro_frame_1, text="Mês :", text_color=my_dict['font'])
@@ -499,19 +516,20 @@ class Aba_relatorio:
         spacer = ctk.CTkLabel(filtro_frame_1, text='')
         spacer.grid(row=3, column=0)
 
-        button = ctk.CTkButton(filtro_frame_1, text="Filtrar", width=160, height=30, command=self.contar_presencas)
-        button.grid(row=5, column=0, padx=10, pady=10,columnspan = 2)
+        self.button = ctk.CTkButton(filtro_frame_1, text="Filtrar", width=160, height=30, command=self.toggle_filter)
+        self.button.grid(row=5, column=0, padx=10, pady=10, columnspan=2)
 
-        label = ctk.CTkLabel(self.filtro_frame_2, text='TIPO DE PRESENÇA', text_color='#c2c2c2',)
-        label.grid(row=0, column=0, padx=10, pady=5, columnspan=2)
-
+        self.btn_gerar_graficos = ctk.CTkButton(filtro_frame_1, text="Mostrar Gráficos", width=160, height=30,)
+        self.btn_gerar_graficos.grid(row=6, column=0, padx=10, pady=10, columnspan=2)
+        label = ctk.CTkLabel(self.filtro_frame_2, text='TIPO DE PRESENÇA', text_color='#c2c2c2')
+        label.grid(row=0, column=0, padx=10, pady=5, columnspan=4)
 
         self.add_checkboxes()
 
         tabela_frame = ctk.CTkFrame(self.frame_superior, fg_color=my_dict['preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
 
-        self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença",'Dia da Semana'), show='headings',)
+        self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença", 'Dia da Semana'), show='headings')
         self.style_treeview.theme_use('clam')
         self.style_treeview.configure("Treeview.Heading", background=my_dict['preto'], foreground=my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 10))
         self.style_treeview.map("Treeview.Heading", background=[('active', my_dict['hover_treeview'])])
@@ -519,26 +537,25 @@ class Aba_relatorio:
         self.style_treeview.configure("Treeview", background=my_dict['preto'], foreground=my_dict['font'], fieldbackground=my_dict['preto'], rowheight=25, borderwidth=1, relief='solid')
         self.style_treeview.map("Treeview", background=[('selected', my_dict['hover_treeview'])], fieldbackground=[('!selected', my_dict['preto'])])
         
-        self.tabela.heading("Data", text="Data",)
-        self.tabela.heading("Nome", text="Nome",)
-        self.tabela.heading("Presença", text="Presença",)
-        self.tabela.heading("Dia da Semana", text="Dia da Semana",)
+        self.tabela.heading("Data", text="Data")
+        self.tabela.heading("Nome", text="Nome")
+        self.tabela.heading("Presença", text="Presença")
+        self.tabela.heading("Dia da Semana", text="Dia da Semana")
         self.tabela.pack(fill='both', expand=True)
 
         
-                
 
     def add_checkboxes(self):
         nomes = self.get_nomes()
-        self.checkbox_vars = {}  # Dicionário para armazenar as variáveis das checkboxes
+        self.checkbox_vars = {} # Dicionário para armazenar as variáveis das checkboxes
         row, col = 0, 0
-        max_columns = 11  # Defina o número máximo de colunas por linha
+        max_columns = 11 # Defina o número máximo de colunas por linha
 
         for nome in nomes:
             var = ctk.StringVar(value='off')
             checkbox = ctk.CTkCheckBox(self.frame_checkbox, text=nome, variable=var, onvalue='on', offvalue='off', font=('Arial', 11))
             checkbox.grid(row=row, column=col, padx=5, pady=5)
-            self.checkbox_vars[nome] = var  # Armazena a variável da checkbox
+            self.checkbox_vars[nome] = var # Armazena a variável da checkbox
             col += 1
 
             if col >= max_columns:
@@ -554,17 +571,19 @@ class Aba_relatorio:
         except pyodbc.Error as e:
             print(f'Error: {e}')
             return []
-        
-    def get_presenca(self):
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute("SELECT DISTINCT PRESENCA FROM tblTipoFrequencia")
-            presenca = [row[0] for row in cursor.fetchall()]
-            return presenca
-        except pyodbc.Error as e:
-            print(f'Error: {e}')
-            return []
-        
+
+    def toggle_filter(self):
+        if self.filter_mode:
+            self.limpar_filtro()
+        else:
+            self.contar_presencas()
+    
+    def limpar_filtro(self):
+        self.filter_mode = False
+        self.button.configure(text='Filtrar')
+        for widget in self.filtro_frame_2.winfo_children():
+            widget.destroy()
+
     def contar_presencas(self):
         mes = list(self.meses_dict.keys())[list(self.meses_dict.values()).index(self.mes_combobox.get())]
         ano = self.ano_combobox.get()
@@ -576,61 +595,31 @@ class Aba_relatorio:
 
             resultados = cursor.fetchall()
             contagem = {resultado[0]: resultado[1] for resultado in resultados}
+
             # apagar as labels anteriores
             for widget in self.filtro_frame_2.winfo_children():
                 widget.destroy()
 
-            label = ctk.CTkLabel(self.filtro_frame_2, text='TIPO DE PRESENÇA', text_color='#c2c2c2',)
+            label = ctk.CTkLabel(self.filtro_frame_2, text='TIPO DE PRESENÇA', text_color='#c2c2c2')
             label.grid(row=0, column=0, padx=10, pady=5, columnspan=4)
-            row =1
-            for tipo_presenca, quantidade in contagem.items():
+            row = 1
 
-                presenca_label = ctk.CTkLabel(self.filtro_frame_2, text=tipo_presenca, text_color='#c2c2c2',)
+            for tipo_presenca, quantidade in contagem.items():
+                presenca_label = ctk.CTkLabel(self.filtro_frame_2, text=tipo_presenca, text_color='#c2c2c2')
                 presenca_label.grid(row=row, column=0, padx=10, pady=5)
                 quantidade_label = ctk.CTkLabel(self.filtro_frame_2, text=str(quantidade), text_color='#c2c2c2')
                 quantidade_label.grid(row=row, column=2, padx=10, pady=5)
-                row+=1
-            self.gerar_grafico_pizza()
-
-        except pyodbc.Error as e:
-            print(f'Error: {e}')
-
-    def gerar_grafico_pizza(self):
-        mes = self.mes_combobox.get()
-        ano = self.ano_combobox.get()
-        
-        try:
-            cursor = self.conn.cursor()
-            query = """
-                SELECT PRESENCA, COUNT(*)
-                FROM tblControle
-                WHERE MONTH(DATA)=? AND YEAR(DATA)=?
-                GROUP BY PRESENCA
-            """
-            cursor.execute(query, (list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano))
-            dados = cursor.fetchall()
-
-            if not dados:
-                print("Nenhum dado encontrado para o mês e ano selecionados.")
-                return
+                row += 1
             
-            tipos_presenca = [row[0] for row in dados]
-            quantidades = [row[1] for row in dados]
-
-            fig, ax = plt.subplots()
-            ax.pie(quantidades, labels=tipos_presenca, autopct='%1.1f%%', startangle=90)
-            ax.axis('equal')
-
-            # Adicionar o gráfico ao Tkinter
-            chart = FigureCanvasTkAgg(fig, self.frame_inferior)
-            chart.get_tk_widget().pack()
+            self.filter_mode = True
+            self.button.configure(text='Limpar Filtro')
+            # print(contagem)
 
         except pyodbc.Error as e:
             print(f'Error: {e}')
-
+    
 
 if __name__ == '__main__':
     root = ctk.CTk()
     app = ControleApp(root)
     root.mainloop()
-
