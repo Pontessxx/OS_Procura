@@ -10,6 +10,7 @@ from tkinter import messagebox
 class ControleApp:
     def __init__(self, root):
         self.root = root
+        self.root.iconbitmap('C:\\Users\\Henrique\\OneDrive\\Anexos\\FIAP_2024\\OS_Procura\\Busca_os\\img\\bradimg.ico')
         ctk.set_appearance_mode('dark')
         root.geometry('1130x600')
         # root.eval('tk::PlaceWindow . center')
