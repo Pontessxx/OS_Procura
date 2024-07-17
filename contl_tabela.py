@@ -520,7 +520,7 @@ class Aba_relatorio_mes:
         spacer = ctk.CTkLabel(filtro_frame_1, text='')
         spacer.grid(row=3, column=0)
 
-        self.button = ctk.CTkButton(filtro_frame_1, text="Filtrar", width=160, height=30, command=self.contar_presencas)
+        self.button = ctk.CTkButton(filtro_frame_1, text="Filtrar", width=160, height=30, command=self.Filtrar_dados)
         self.button.grid(row=5, column=0, padx=10, pady=10, columnspan=2)
 
         self.btn_gerar_graficos = ctk.CTkButton(filtro_frame_1, text="Mostrar Gráficos", width=160, height=30,command=self.abrir_janela_graficos)
@@ -582,15 +582,26 @@ class Aba_relatorio_mes:
         for widget in self.filtro_frame_2.winfo_children():
             widget.destroy()
 
-    def contar_presencas(self):
+    def Filtrar_dados(self):
         mes = list(self.meses_dict.keys())[list(self.meses_dict.values()).index(self.mes_combobox.get())]
         ano = self.ano_combobox.get()
-
+        
+        # Obter os nomes selecionados nas checkboxes
+        nomes_selecionados = [nome for nome, var in self.checkbox_vars.items() if var.get() == 'on']
+        
         try:
             cursor = self.conn.cursor()
-            query = "SELECT DATA, NOMES, PRESENCA FROM tblControle WHERE MONTH(DATA)=? AND YEAR(DATA)=?"
-            cursor.execute(query, (mes, ano))
-
+            
+            if nomes_selecionados:
+                # Filtrar por mês, ano e nomes selecionados
+                query = "SELECT DATA, NOMES, PRESENCA FROM tblControle WHERE MONTH(DATA)=? AND YEAR(DATA)=? AND NOMES IN ({})".format(','.join(['?']*len(nomes_selecionados)))
+                params = [mes, ano] + nomes_selecionados
+            else:
+                # Filtrar apenas por mês e ano
+                query = "SELECT DATA, NOMES, PRESENCA FROM tblControle WHERE MONTH(DATA)=? AND YEAR(DATA)=?"
+                params = [mes, ano]
+            
+            cursor.execute(query, params)
             resultados = cursor.fetchall()
 
             # Atualiza a Treeview com os dados filtrados
@@ -600,7 +611,13 @@ class Aba_relatorio_mes:
                 data_formatada = data.strftime('%d/%m/%Y')
                 self.tabela.insert("", "end", values=[data_formatada, nome, presenca])
 
-            contagem = {resultado[2]: resultados.count(resultado) for resultado in resultados}
+            contagem = {}
+            for resultado in resultados:
+                presenca = resultado[2]
+                if presenca in contagem:
+                    contagem[presenca] += 1
+                else:
+                    contagem[presenca] = 1
 
             # Apagar as labels anteriores
             for widget in self.filtro_frame_2.winfo_children():
@@ -617,7 +634,6 @@ class Aba_relatorio_mes:
                 quantidade_label.grid(row=row, column=2, padx=10, pady=5)
                 row += 1
 
-            self.button.configure(text='Limpar Filtro')
 
         except pyodbc.Error as e:
             print(f'Error: {e}')
@@ -640,7 +656,7 @@ class Aba_relatorio_mes:
         # Adiciona um botão para fechar a nova janela e maximizar a janela principal
         btn_fechar = ctk.CTkButton(self.new_window, text="Fechar", command=self.fechar_janela_graficos)
         btn_fechar.pack(pady=20)
-        btn_teste = ctk.CTkButton(self.new_window, text="Fechar", command=self.gerar_graficos)
+        btn_teste = ctk.CTkButton(self.new_window, text="btn grafico", command=self.gerar_graficos)
         btn_teste.pack(pady=20)
     
     def gerar_graficos(self):
