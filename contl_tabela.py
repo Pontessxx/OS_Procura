@@ -3,6 +3,8 @@ import datetime
 import pyodbc
 from tkinter import ttk
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.gridspec import GridSpec
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 from tkinter import messagebox
@@ -621,7 +623,7 @@ class Aba_relatorio_mes:
 
 
     def abrir_janela_graficos(self):
-        self.figura = plt.Figure()
+        self.figura = plt.Figure(figsize=(10, 8))
         # Minimiza a janela principal
         self.parent.root.iconify()
         # Cria uma nova janela
@@ -637,11 +639,10 @@ class Aba_relatorio_mes:
         # Adiciona um botão para fechar a nova janela e maximizar a janela principal
         btn_fechar = ctk.CTkButton(self.new_window, text="Fechar", command=self.fechar_janela_graficos)
         btn_fechar.pack(pady=20)
-        btn_teste = ctk.CTkButton(self.new_window, text="Fechar", command=self.gerar_grafico_pizza)
+        btn_teste = ctk.CTkButton(self.new_window, text="Fechar", command=self.gerar_graficos)
         btn_teste.pack(pady=20)
     
-    def gerar_grafico_pizza(self):
-        
+    def gerar_graficos(self):
         mes = self.mes_combobox.get()
         ano = self.ano_combobox.get()
 
@@ -663,9 +664,25 @@ class Aba_relatorio_mes:
             tipos_presenca = [row[0] for row in dados]
             quantidades = [row[1] for row in dados]
 
-            ax = self.figura.subplots()
-            ax.pie(quantidades, labels=tipos_presenca, autopct='%1.1f%%', startangle=90)
-            ax.axis('equal')
+            # Cria subplots
+            axs = self.figura.subplots(1, 3)
+
+            # Gráfico de Pizza
+            axs[0].pie(quantidades, labels=tipos_presenca, autopct='%1.1f%%', startangle=90)
+            axs[0].set_title('Tipo de Presença')
+
+            # Gráfico de Barras
+            axs[1].bar(tipos_presenca, quantidades)
+            axs[1].set_title('Tipo de Presença')
+            axs[1].set_xlabel('Tipo')
+            axs[1].set_ylabel('Quantidade')
+
+            # Gráfico de Linha (exemplo, ajuste conforme necessário)
+            dias = range(1, len(quantidades) + 1)
+            axs[2].plot(dias, quantidades, marker='o')
+            axs[2].set_title('Presença ao Longo dos Dias')
+            axs[2].set_xlabel('Dias')
+            axs[2].set_ylabel('Quantidade')
 
             # Adicionar o gráfico ao Tkinter
             chart = FigureCanvasTkAgg(self.figura, self.new_window)
@@ -674,6 +691,7 @@ class Aba_relatorio_mes:
         except pyodbc.Error as e:
             print(f'Error: {e}')
 
+            
     def fechar_janela_graficos(self):
         # Fecha a nova janela
         self.new_window.destroy()
