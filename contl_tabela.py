@@ -533,7 +533,7 @@ class Aba_relatorio_mes:
         tabela_frame = ctk.CTkFrame(self.frame_superior, fg_color=my_dict['preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
 
-        self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença", 'Dia da Semana'), show='headings')
+        self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings')
         self.style_treeview.theme_use('clam')
         self.style_treeview.configure("Treeview.Heading", background=my_dict['preto'], foreground=my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 10))
         self.style_treeview.map("Treeview.Heading", background=[('active', my_dict['hover_treeview'])])
@@ -664,25 +664,28 @@ class Aba_relatorio_mes:
             tipos_presenca = [row[0] for row in dados]
             quantidades = [row[1] for row in dados]
 
-            # Cria subplots
-            axs = self.figura.subplots(1, 3)
-
+            # Cria subplots com GridSpec
+            gs = GridSpec(2, 2, figure=self.figura)
+            
             # Gráfico de Pizza
-            axs[0].pie(quantidades, labels=tipos_presenca, autopct='%1.1f%%', startangle=90)
-            axs[0].set_title('Tipo de Presença')
+            ax1 = self.figura.add_subplot(gs[0, 0])
+            ax1.pie(quantidades, labels=tipos_presenca, autopct='%1.1f%%', startangle=90)
+            ax1.set_title('Tipo de Presença')
 
             # Gráfico de Barras
-            axs[1].bar(tipos_presenca, quantidades)
-            axs[1].set_title('Tipo de Presença')
-            axs[1].set_xlabel('Tipo')
-            axs[1].set_ylabel('Quantidade')
+            ax2 = self.figura.add_subplot(gs[0, 1])
+            ax2.bar(tipos_presenca, quantidades)
+            ax2.set_title('Tipo de Presença')
+            ax2.set_xlabel('Tipo')
+            ax2.set_ylabel('Quantidade')
 
             # Gráfico de Linha (exemplo, ajuste conforme necessário)
+            ax3 = self.figura.add_subplot(gs[1, :])
             dias = range(1, len(quantidades) + 1)
-            axs[2].plot(dias, quantidades, marker='o')
-            axs[2].set_title('Presença ao Longo dos Dias')
-            axs[2].set_xlabel('Dias')
-            axs[2].set_ylabel('Quantidade')
+            ax3.plot(dias, quantidades, marker='o')
+            ax3.set_title('Presença ao Longo dos Dias')
+            ax3.set_xlabel('Dias')
+            ax3.set_ylabel('Quantidade')
 
             # Adicionar o gráfico ao Tkinter
             chart = FigureCanvasTkAgg(self.figura, self.new_window)
