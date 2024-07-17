@@ -520,7 +520,7 @@ class Aba_relatorio_mes:
         spacer = ctk.CTkLabel(filtro_frame_1, text='')
         spacer.grid(row=3, column=0)
 
-        self.button = ctk.CTkButton(filtro_frame_1, text="Filtrar", width=160, height=30, command=self.toggle_filter)
+        self.button = ctk.CTkButton(filtro_frame_1, text="Filtrar", width=160, height=30, command=self.contar_presencas)
         self.button.grid(row=5, column=0, padx=10, pady=10, columnspan=2)
 
         self.btn_gerar_graficos = ctk.CTkButton(filtro_frame_1, text="Mostrar Gráficos", width=160, height=30,command=self.abrir_janela_graficos)
@@ -575,11 +575,6 @@ class Aba_relatorio_mes:
             print(f'Error: {e}')
             return []
 
-    def toggle_filter(self):
-        if self.filter_mode:
-            self.limpar_filtro()
-        else:
-            self.contar_presencas()
     
     def limpar_filtro(self):
         self.filter_mode = False
@@ -593,13 +588,21 @@ class Aba_relatorio_mes:
 
         try:
             cursor = self.conn.cursor()
-            query = "SELECT PRESENCA, COUNT(*) FROM tblControle WHERE MONTH(DATA)=? AND YEAR(DATA)=? GROUP BY PRESENCA"
+            query = "SELECT DATA, NOMES, PRESENCA FROM tblControle WHERE MONTH(DATA)=? AND YEAR(DATA)=?"
             cursor.execute(query, (mes, ano))
 
             resultados = cursor.fetchall()
-            contagem = {resultado[0]: resultado[1] for resultado in resultados}
 
-            # apagar as labels anteriores
+            # Atualiza a Treeview com os dados filtrados
+            self.tabela.delete(*self.tabela.get_children())  # Limpa a tabela antes de carregar novos dados
+            for row in resultados:
+                data, nome, presenca = row
+                data_formatada = data.strftime('%d/%m/%Y')
+                self.tabela.insert("", "end", values=[data_formatada, nome, presenca])
+
+            contagem = {resultado[2]: resultados.count(resultado) for resultado in resultados}
+
+            # Apagar as labels anteriores
             for widget in self.filtro_frame_2.winfo_children():
                 widget.destroy()
 
@@ -613,10 +616,8 @@ class Aba_relatorio_mes:
                 quantidade_label = ctk.CTkLabel(self.filtro_frame_2, text=str(quantidade), text_color='#c2c2c2')
                 quantidade_label.grid(row=row, column=2, padx=10, pady=5)
                 row += 1
-            
-            self.filter_mode = True
+
             self.button.configure(text='Limpar Filtro')
-            # print(contagem)
 
         except pyodbc.Error as e:
             print(f'Error: {e}')
