@@ -11,10 +11,11 @@ class ControleApp:
     def __init__(self, root):
         self.root = root
         ctk.set_appearance_mode('dark')
-        root.geometry('1100x600')
+        root.geometry('1130x600')
+        # root.eval('tk::PlaceWindow . center')
         root.title('Busca de arquivos')
-        root.minsize(1110, 600)
-
+        root.minsize(1130, 600)
+        # root.state('zoomed')
         self.center_window(1100, 600)  # Centraliza a janela
 
         self.my_dict = {
@@ -130,7 +131,7 @@ class Aba_Controle:
 
         # tipo presenca
         tipo_presenca_label = ctk.CTkLabel(combobox_frame, text="Presença :", text_color=my_dict['font'])
-        tipo_presenca_label.grid(row=0, column=1, padx=10, pady=5)
+        tipo_presenca_label.grid(row=0, column=1, padx=5, pady=5)
         self.tipo_presenca_combobox = ctk.CTkComboBox(combobox_frame, values=self.get_presenca(), state='readonly')
         self.tipo_presenca_combobox.grid(row=0, column=2, padx=10, pady=5)
        
@@ -162,16 +163,16 @@ class Aba_Controle:
         self.ano_combobox.set(str(ano_atual))
         
 
-        spacer = ctk.CTkLabel(combobox_frame, text='')
-        spacer.grid(padx=20,row=0, column=9)
+        # spacer = ctk.CTkLabel(combobox_frame, text='')
+        # spacer.grid(padx=20,row=0, column=9)
 
-        button = ctk.CTkButton(combobox_frame, text="Adicionar", width=75, height=30, command=self.adicionar_frequencia)
+        button = ctk.CTkButton(combobox_frame, text="Adicionar", width=55, height=30, command=self.adicionar_frequencia)
         button.grid(row=0, column=10, padx=10, pady=5)
-        button = ctk.CTkButton(combobox_frame, text="Deletar", width=75, height=30, command=self.remover_frequencia)
+        button = ctk.CTkButton(combobox_frame, text="Deletar", width=55, height=30, command=self.remover_frequencia)
         button.grid(row=0, column=11, padx=10, pady=5)
         spacer = ctk.CTkLabel(combobox_frame, text='')
-        spacer.grid(padx=20,row=0, column=12)
-        self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=75, height=30, command=self.toggle_filter)
+        spacer.grid(padx=0,row=0, column=12)
+        self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=55, height=30, command=self.toggle_filter)
         self.filter_button.grid(row=0, column=13, padx=5, pady=5)
 
         # Tabela (Treeview)
@@ -540,7 +541,6 @@ class Aba_relatorio_mes:
         self.tabela.heading("Data", text="Data")
         self.tabela.heading("Nome", text="Nome")
         self.tabela.heading("Presença", text="Presença")
-        self.tabela.heading("Dia da Semana", text="Dia da Semana")
         self.tabela.pack(fill='both', expand=True)
 
         
@@ -618,25 +618,9 @@ class Aba_relatorio_mes:
         except pyodbc.Error as e:
             print(f'Error: {e}')
 
-    def conectar_bd(self):
-        # Caminho para o banco de dados Access
-        db_path = './ControleDataBase.accdb'
-        
-        # Conexão com o banco de dados Access
-        conn_str = r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=' + db_path
-        conn = pyodbc.connect(conn_str)
-        
-        return conn
-    def ler_dados(self):
-        conn = self.conectar_bd()
-        
-        # Ler uma tabela do banco de dados
-        query = "SELECT * FROM tblControle"
-        df = pd.read_sql(query, conn)
-        
-        return df
 
     def abrir_janela_graficos(self):
+        self.figura = plt.Figure()
         # Minimiza a janela principal
         self.parent.root.iconify()
         # Cria uma nova janela
@@ -648,14 +632,46 @@ class Aba_relatorio_mes:
         # Adiciona conteúdo à nova janela
         label = ctk.CTkLabel(self.new_window, text="Aqui estarão os gráficos gerados", text_color='#c2c2c2')
         label.pack(pady=20)
-        df = self.ler_dados()
-
-        # Exibir as primeiras linhas do dataframe
-        print(df.head())
         
         # Adiciona um botão para fechar a nova janela e maximizar a janela principal
         btn_fechar = ctk.CTkButton(self.new_window, text="Fechar", command=self.fechar_janela_graficos)
         btn_fechar.pack(pady=20)
+        btn_teste = ctk.CTkButton(self.new_window, text="Fechar", command=self.gerar_grafico_pizza)
+        btn_teste.pack(pady=20)
+    
+    def gerar_grafico_pizza(self):
+        
+        mes = self.mes_combobox.get()
+        ano = self.ano_combobox.get()
+
+        try:
+            cursor = self.conn.cursor()
+            query = """
+                SELECT PRESENCA, COUNT(*)
+                FROM tblControle
+                WHERE MONTH(DATA)=? AND YEAR(DATA)=?
+                GROUP BY PRESENCA
+            """
+            cursor.execute(query, (list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano))
+            dados = cursor.fetchall()
+
+            if not dados:
+                print("Nenhum dado encontrado para o mês e ano selecionados.")
+                return
+
+            tipos_presenca = [row[0] for row in dados]
+            quantidades = [row[1] for row in dados]
+
+            ax = self.figura.subplots()
+            ax.pie(quantidades, labels=tipos_presenca, autopct='%1.1f%%', startangle=90)
+            ax.axis('equal')
+
+            # Adicionar o gráfico ao Tkinter
+            chart = FigureCanvasTkAgg(self.figura, self.new_window)
+            chart.get_tk_widget().pack()
+        
+        except pyodbc.Error as e:
+            print(f'Error: {e}')
 
     def fechar_janela_graficos(self):
         # Fecha a nova janela
@@ -666,3 +682,39 @@ if __name__ == '__main__':
     root = ctk.CTk()
     app = ControleApp(root)
     root.mainloop()
+
+
+
+
+
+
+# 
+
+
+
+
+# 
+
+
+
+
+
+
+
+
+
+# 
+
+
+
+
+
+
+# 
+
+
+
+
+
+
+# 
