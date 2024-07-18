@@ -24,6 +24,7 @@ class ControleApp:
         self.my_dict = {
             'font': '#c2c2c2',
             'preto': '#111',
+            'Heading_color':'#434343' ,
             'frames_ajuste': '#666',
             'frames_ajuste2': '#777',
             'hover': '#111',
@@ -183,19 +184,24 @@ class Aba_Controle:
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
 
         self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings',)
-        self.style_treeview.theme_use('clam')
+        self.style_treeview.theme_use('alt')
+        # self.style_treeview.theme_use('clam')
+
+        # scrollbar
+        self.treeScrollbar = ctk.CTkScrollbar(tabela_frame,command=self.tabela.yview,)
+        self.treeScrollbar.pack(side='right', fill='y',)
+
         #configurando a cor da treeview para ajustar ao tema
-        self.style_treeview.configure("Treeview.Heading", background=my_dict['preto'], foreground=my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 10))
+        self.style_treeview.configure("Treeview.Heading", background=my_dict['Heading_color'], foreground=my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 12),bordercolor=my_dict['Heading_color'])
         self.style_treeview.map("Treeview.Heading", background=[('active', my_dict['hover_treeview'])])
 
-        self.style_treeview.configure("Treeview", background=my_dict['preto'], foreground=my_dict['font'], fieldbackground=my_dict['preto'], rowheight=25, borderwidth=1, relief='solid')
+        self.style_treeview.configure("Treeview", background=my_dict['preto'], foreground=my_dict['font'], fieldbackground=my_dict['preto'], rowheight=25, borderwidth=1, relief='solid',bordercolor=my_dict['preto'])
         self.style_treeview.map("Treeview", background=[('selected', my_dict['hover_treeview'])], fieldbackground=[('!selected', my_dict['preto'])])
         
         self.tabela.heading("Data", text="Data", command=lambda: self.ordenar_dados("Data", False))
         self.tabela.heading("Nome", text="Nome", command=lambda: self.ordenar_dados("Nome", False))
         self.tabela.heading("Presença", text="Presença", command=lambda: self.ordenar_dados("Presença", False))
         self.tabela.pack(fill='both', expand=True)
-
         self.tabela.bind("<ButtonRelease-1>", self.linha_selecionada_treeview)
 
         self.carregar_dados()
@@ -290,25 +296,30 @@ class Aba_Controle:
                 print(f'Error: {e}')
 
     def remover_frequencia(self):
-            dia = self.dia_combobox.get()
-            mes = list(self.meses_dict.keys())[list(self.meses_dict.values()).index(self.mes_combobox.get())]
-            ano = self.ano_combobox.get()
+        dia = self.dia_combobox.get()
+        mes = list(self.meses_dict.keys())[list(self.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = self.ano_combobox.get()
 
-            data = datetime.datetime(int(ano), int(mes), int(dia))
+        data = datetime.datetime(int(ano), int(mes), int(dia))
 
-            if dia and mes and ano:
-                try:
-                    cursor = self.conn.cursor()
-                    for nome, var in self.checkbox_vars.items():
-                        if var.get() == 'on':
-                            cursor.execute("DELETE FROM tblControle WHERE Nomes=? AND DATA=?", (nome, data))
-                    
-                    self.dia_combobox.set('')
-                    self.tipo_presenca_combobox.set('')
-                    self.conn.commit()
-                    self.carregar_dados()
-                except pyodbc.Error as e:
-                    print(f'Error: {e}')
+        if dia and mes and ano:
+            try:
+                cursor = self.conn.cursor()
+                # Verifica se pelo menos uma checkbox está selecionada
+                if any(var.get() == 'on' for var in self.checkbox_vars.values()):
+                    resposta = messagebox.askquestion(title="Deletar Controle", message=f"deletar presença: {data.strftime('%d/%m/%Y')}")
+                    if resposta=='yes':
+                        for nome, var in self.checkbox_vars.items():
+                            if var.get() == 'on':
+                                cursor.execute("DELETE FROM tblControle WHERE Nomes=? AND DATA=?", (nome, data))
+                        self.dia_combobox.set('')
+                        self.tipo_presenca_combobox.set('')
+                        self.conn.commit()
+                        self.carregar_dados()
+                else:
+                    messagebox.showerror(title="Erro", message="Nenhum nome selecionado.")
+            except pyodbc.Error as e:
+                print(f'Error: {e}')
 
     def toggle_filter(self):
         if self.filter_mode:
@@ -534,18 +545,20 @@ class Aba_relatorio_mes:
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
 
         self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings')
-        self.style_treeview.theme_use('clam')
-        self.style_treeview.configure("Treeview.Heading", background=my_dict['preto'], foreground=my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 10))
+        self.style_treeview.theme_use('alt')
+        self.treeScrollbar = ctk.CTkScrollbar(tabela_frame,command=self.tabela.yview,)
+        self.treeScrollbar.pack(side='right', fill='y',)
+
+        self.style_treeview.configure("Treeview.Heading", background=my_dict['Heading_color'], foreground=my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 12),bordercolor=my_dict['Heading_color'])
         self.style_treeview.map("Treeview.Heading", background=[('active', my_dict['hover_treeview'])])
 
-        self.style_treeview.configure("Treeview", background=my_dict['preto'], foreground=my_dict['font'], fieldbackground=my_dict['preto'], rowheight=25, borderwidth=1, relief='solid')
+        self.style_treeview.configure("Treeview",bordercolor=my_dict['preto'], background=my_dict['preto'], foreground=my_dict['font'], fieldbackground=my_dict['preto'], rowheight=25, borderwidth=1, relief='solid',)
         self.style_treeview.map("Treeview", background=[('selected', my_dict['hover_treeview'])], fieldbackground=[('!selected', my_dict['preto'])])
         
         self.tabela.heading("Data", text="Data")
         self.tabela.heading("Nome", text="Nome")
         self.tabela.heading("Presença", text="Presença")
         self.tabela.pack(fill='both', expand=True)
-
         
 
     def add_checkboxes(self):
@@ -645,19 +658,26 @@ class Aba_relatorio_mes:
         self.parent.root.iconify()
         # Cria uma nova janela
         self.new_window = ctk.CTkToplevel(self.parent.root)
+        # Adiciona conteúdo à nova janela
+        label = ctk.CTkLabel(self.new_window, text=f"GRÁFICOS : {self.mes_combobox.get().upper()}", text_color='#c2c2c2')
+        label.pack(pady=20)
+
+        # frame graficos
+        self.frame_teste = ctk.CTkFrame(self.new_window, fg_color=self.parent.my_dict['preto'])
+        self.frame_teste.pack(pady=10, padx=10, fill='both', expand=True,side='left')
+        self.frame_2 = ctk.CTkFrame(self.new_window, fg_color=self.parent.my_dict['frames_ajuste'])
+        self.frame_2.pack(pady=10, padx=10, fill='both', expand=True,side='left')
+
         self.new_window.title(f"Gráficos - {self.mes_combobox.get()}")
         self.new_window.geometry("800x600")
+        self.new_window.minsize(1120, 600)
         # expande a nova janela
         self.new_window.state('zoomed')
-        # Adiciona conteúdo à nova janela
-        label = ctk.CTkLabel(self.new_window, text="Aqui estarão os gráficos gerados", text_color='#c2c2c2')
-        label.pack(pady=20)
         
         # Adiciona um botão para fechar a nova janela e maximizar a janela principal
         btn_fechar = ctk.CTkButton(self.new_window, text="Fechar", command=self.fechar_janela_graficos)
         btn_fechar.pack(pady=20)
-        btn_teste = ctk.CTkButton(self.new_window, text="btn grafico", command=self.gerar_graficos)
-        btn_teste.pack(pady=20)
+        self.gerar_graficos()
     
     def gerar_graficos(self):
         mes = self.mes_combobox.get()
@@ -705,7 +725,7 @@ class Aba_relatorio_mes:
             ax3.set_ylabel('Quantidade')
 
             # Adicionar o gráfico ao Tkinter
-            chart = FigureCanvasTkAgg(self.figura, self.new_window)
+            chart = FigureCanvasTkAgg(self.figura, self.frame_teste)
             chart.get_tk_widget().pack()
         
         except pyodbc.Error as e:
