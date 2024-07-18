@@ -690,6 +690,8 @@ class Aba_relatorio_mes:
         mes = self.mes_combobox.get()
         ano = self.ano_combobox.get()
 
+       
+
         try:
             cursor = self.conn.cursor()
             query = """
@@ -723,18 +725,46 @@ class Aba_relatorio_mes:
             ax2.set_xlabel('Tipo')
             ax2.set_ylabel('Quantidade')
 
-            # Gráfico de Linha (exemplo, ajuste conforme necessário)
+            # Gráfico de Dispersão
+            query = """
+                SELECT DATA, NOMES, PRESENCA
+                FROM tblControle
+                WHERE MONTH(DATA)=? AND YEAR(DATA)=?
+            """
+            cursor.execute(query, (list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano))
+            dados_dispersao = cursor.fetchall()
+
+            if not dados_dispersao:
+                print("Nenhum dado encontrado para o mês e ano selecionados.")
+                return
+
+            datas = [row[0] for row in dados_dispersao]
+            nomes = [row[1] for row in dados_dispersao]
+            presencas = [row[2] for row in dados_dispersao]
+
+            dias = [data.day for data in datas]
+            unique_names = list(set(nomes))
+
+            # Mapear os tipos de presença para cores
+            presenca_to_color = {tipo: plt.cm.tab20(i) for i, tipo in enumerate(set(presencas))}
+            colors = [presenca_to_color[presenca] for presenca in presencas]
+
             ax3 = self.figura.add_subplot(gs[1, :])
-            dias = range(1, len(quantidades) + 1)
-            ax3.plot(dias, quantidades, marker='o')
+            scatter = ax3.scatter(dias, nomes, c=colors, marker='o')
             ax3.set_title('Presença ao Longo dos Dias')
             ax3.set_xlabel('Dias')
-            ax3.set_ylabel('Quantidade')
+            ax3.set_ylabel('Nomes')
+            ax3.set_xticks(dias)
+            ax3.set_yticks(range(len(unique_names)))
+            ax3.set_yticklabels(unique_names)
+            
+            # Adicionar legenda
+            legend_elements = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=presenca_to_color[presenca], markersize=10, label=presenca) for presenca in presenca_to_color]
+            ax3.legend(handles=legend_elements, title="Tipo de Presença")
 
             # Adicionar o gráfico ao Tkinter
             chart = FigureCanvasTkAgg(self.figura, self.frame_teste)
             chart.get_tk_widget().pack()
-        
         except pyodbc.Error as e:
             print(f'Error: {e}')
 
