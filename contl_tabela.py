@@ -8,6 +8,7 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 from tkinter import messagebox
+import calendar
 
 class ControleApp:
     def __init__(self, root):
@@ -263,6 +264,12 @@ class Aba_Controle:
 
         data = datetime.datetime(int(ano), int(mes), int(dia))
 
+        # Verifica se a data cai em um sábado ou domingo
+        dia_da_semana = calendar.weekday(int(ano), int(mes), int(dia))
+        if dia_da_semana == 5 or dia_da_semana == 6:
+            messagebox.showerror("Erro", "A data selecionada cai em um sábado ou domingo. Por favor, selecione um dia útil.")
+            return
+
         if tipo_presenca and dia and mes and ano:
             try:
                 cursor = self.conn.cursor()
@@ -273,7 +280,7 @@ class Aba_Controle:
                         
                         if result:  # Se o registro existir, atualize-o
                             resposta = messagebox.askquestion(title="Dados já existentes", message=f"nome: {nome}\n data: {data.strftime('%d/%m/%Y')}")
-                            if resposta=='yes':
+                            if resposta == 'yes':
                                 cursor.execute("UPDATE tblControle SET PRESENCA=? WHERE ID=?", (tipo_presenca, result[0]))
                                 for nome, var in self.checkbox_vars.items():
                                     var.set('off')
