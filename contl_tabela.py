@@ -6,10 +6,12 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
 from tkinter import messagebox
 import calendar
-
+import os
+import subprocess
 class ControleApp:
     def __init__(self, root):
         self.root = root
@@ -684,6 +686,11 @@ class Aba_relatorio_mes:
         # Adiciona um botão para fechar a nova janela e maximizar a janela principal
         btn_fechar = ctk.CTkButton(self.new_window, text="Fechar", command=self.fechar_janela_graficos)
         btn_fechar.pack(pady=20)
+
+        # Adiciona um botão para salvar os gráficos em PDF
+        btn_salvar_pdf = ctk.CTkButton(self.new_window, text="Salvar PDF", command=self.salvar_pdf)
+        btn_salvar_pdf.pack(pady=20)
+
         self.gerar_graficos()
     
     def gerar_graficos(self):
@@ -767,6 +774,30 @@ class Aba_relatorio_mes:
             chart.get_tk_widget().pack()
         except pyodbc.Error as e:
             print(f'Error: {e}')
+
+    def salvar_pdf(self):
+        # Obter o caminho para a pasta de Downloads
+        downloads_path = os.path.join(os.path.expanduser("~"), "Downloads")
+        
+        # Nome do arquivo PDF
+        pdf_filename = f"graficos_{self.mes_combobox.get()}_{self.ano_combobox.get()}.pdf"
+        pdf_filepath = os.path.join(downloads_path, pdf_filename)
+        
+        # Salvar o PDF
+        with PdfPages(pdf_filepath) as pdf:
+            pdf.savefig(self.figura)
+        
+        # Exibir mensagem informando que o PDF foi salvo
+        messagebox.showinfo("PDF Salvo", f"PDF salvo com sucesso em: {pdf_filepath}")
+
+        # Abrir a pasta Downloads
+        try:
+            if os.name == 'nt':  # Windows
+                subprocess.Popen(f'explorer "{downloads_path}"')
+            elif os.name == 'posix':  # macOS, Linux
+                subprocess.Popen(['xdg-open', downloads_path])
+        except Exception as e:
+            print(f"Erro ao abrir a pasta Downloads: {e}")
 
             
     def fechar_janela_graficos(self):
