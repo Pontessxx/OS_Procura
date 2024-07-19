@@ -262,6 +262,30 @@ class SimpleApp(ctk.CTk):
                     "01 - JANEIRO":"OS EE ",
                 },
                 "MANUTENÇÃO":{}
+            },
+            "Predio Vermelho e Prata":{
+                "Elétrica":"OS EEV ",
+                "Lógica":{
+                    "01 - Janeiro":"0S EE ",
+                    "02 - Fevereiro":"OS EEv ",
+                    "03 - Março":"OS EEV ",
+                    "04 - Abril":"OS EEv ",
+                    "05 - Maio":"OS EEv ",
+                    "06 - Junho":"OS EEv ",
+                    "07 - Julho":"OS EEv ",
+                    "08 - Agosto":"OS EEp ",
+                    "09 - Setembro":"OS EEv ",
+                    "10 - Outubro":"OS EEv ",
+                    "11 - Novembro":"OS EEV ",
+                    "10 - Dezembro":"OS EEv ",
+                },
+                "Manutenção":{
+                    "03-Março":"OS EEV ",
+                    "04-Abril":"OS EEV ",
+                    "08-Agosto":"EEm ",
+                    "10-Outubro":"EEm ",
+                    "11 - Novembro":"OS EEm "
+                }
             }
         },
         "2012":{
@@ -392,6 +416,20 @@ class SimpleApp(ctk.CTk):
                 },
                 "ELÉTRICA":{},
                 "MANUTENÇÃO":{}
+            },
+            "Predio Vermelho e Prata":{
+                "01-Janeiro":"OS EEp ",
+                "02-Fevereiro":"OS EEp ",
+                "03-Março":"OS EEp ",
+                "04-Abril":"OS EE p",
+                "05-Maio":"OS EEp ",
+                "06-Junho":"OS EEp ",
+                "07-Julho":"OS EEv ",
+                "08-Agosto":"OS EEv ",
+                "09-Setembro":"OS EEp ",
+                "10-Outubro":"OS EEv ",
+                "11-Novembro":"OS EEp ",
+                "12-Dezembro":"OS EEp ",
             }
         },
         "2013":{
@@ -522,8 +560,21 @@ class SimpleApp(ctk.CTk):
                 },
                 "ELÉTRICA":{},
                 "MANUTENÇÃO":{}
-            }
-
+            },
+            "Prédios Prata e Vermelho":{
+                "01-Janeiro":"OS EEp ",
+                "02-Fevereiro":"OS EEp ",
+                "03-Março":"OS EEp ",
+                "04-Abril":"OS EEp ",
+                "05-Maio":"OS EEmp ",
+                "06-Junho":"Os EEmp ",
+                "07-Julho":"Os EEmp ",
+                "08-Agosto":"",
+                "09-Setembro":"",
+                "10-Outubro":"",
+                "11-Novembro":"",
+                "12-Dezembro":"",
+            },
         },
         "2014":{
             "01 - CTI":{
@@ -657,7 +708,14 @@ class SimpleApp(ctk.CTk):
                 },
                 "ELÉTRICA":{},
                 "MANUTENÇÃO":{}
-            }
+            },
+            "PRÉDIO PRATA E VERMELHO":{
+                "01 - JANEIRO":"", 
+                "02 - FEVEREIRO":"OS EEp ", 
+                "08 - AGOSTO":" ", 
+                "09 - SETEMBRO":"OS EEv ",
+                "11 - NOVEMBRO":"OS EEp ",
+            },
 
         },
         "2015":{
@@ -798,7 +856,11 @@ class SimpleApp(ctk.CTk):
                 },
                 "ELÉTRICA":{},
                 "MANUTENÇÃO":{}
-            }
+            },
+            "PRÉDIO PRATA E VERMELHO":{
+                "Cabeamento":("Dezembro", "EEPV"),
+                "Serviços gerais":"EEmp",
+            },
 
         },
         "2016":{
@@ -956,7 +1018,13 @@ class SimpleApp(ctk.CTk):
                 },
                 "ELÉTRICA":{},
                 "MANUTENÇÃO":{}
-            }
+            },
+            "PRÉDIO PRATA E VERMELHO":{
+                "02 - fevereiro":"EEc",
+                "03 - março":"EEc",
+                "05 - Maio":"EEPR",
+                "12 - dezembro":"EEc"
+            },
 
         },
         "2017":{
@@ -1138,7 +1206,11 @@ class SimpleApp(ctk.CTk):
                 },
                 "ELÉTRICA":{},
                 "MANUTENÇÃO":{}
-            }
+            },
+            "PRÉDIO PRATA E VERMELHO":{
+                "01 - janeiro":"EEc Pv",
+                "05 - Maio": "EEc Pv"
+            },
 
         },
         "2018":{
@@ -2244,17 +2316,14 @@ class SimpleApp(ctk.CTk):
             'Frame_Ajsute': '#666',
             'font': '#c2c2c2',
         }
-        self.title("Aloritimo de busca de OS")
+        self.iconbitmap('\\\\mz-vv-fs-087\\D4250_4\\Compartilhado\\Entre_Secoes\\D4250S657\\Publica\\Cabling\\Busca OS\\img\\bradimg.ico')
+        self.title("Algoritimo de busca de OS")
         self.style_treeview = ttk.Style()
 
         self.geometry("500x200")
         self._set_appearance_mode('System')
         self.minsize(width=500,height=500)
         self.maxsize(width=500,height=500)
-
-        # img_searching
-        # self.img_arquivo = Image.open('C:\\Users\\i442101\\OneDrive - Banco Bradesco S.A\\Meus_Anexos\\vscode\\Projeto_tkinter_OS\\DICIONARIO\\img\\image.png').convert("RGBA")
-        # self.ctk_img_arquivo = ctk.CTkImage(self.img_arquivo, size=(16,16))
 
 
         # Frame principal
@@ -2269,7 +2338,7 @@ class SimpleApp(ctk.CTk):
         entry.grid(row=0, column=1, padx=20, pady=20)
         
         # Site Combobox
-        self.site_combobox = ctk.CTkComboBox(self.frame, values=['01 - CTI', '02 - ALPHAVILLE', '03 - XAXIM', '04 - REDE LAN'], state='readonly')
+        self.site_combobox = ctk.CTkComboBox(self.frame, values=['01 - CTI', '02 - ALPHAVILLE', '03 - XAXIM', '04 - REDE LAN', 'PRÉDIO PRATA E VERMELHO'], state='readonly')
         self.site_combobox.grid(row=0, column=2, padx=20, pady=20)
         # tipo Combobox
         self.label2 = ctk.CTkLabel(self.frame, text="Tipo da OS: ")
@@ -2280,15 +2349,28 @@ class SimpleApp(ctk.CTk):
         self.tipo_cabeamento = ctk.CTkComboBox(self.frame, values=[''], state='readonly')
         self.tipo_cabeamento.grid(row=1, column=2, padx=20, pady=20)
         
+        # button = ctk.CTkButton(self.frame, image=self.ctk_img_arquivo, text="Buscar Arquivo", command=self.mostrar_resultado)
         button = ctk.CTkButton(self.frame, text="Buscar Arquivo", command=self.mostrar_resultado)
         button.grid(row=2, column=2, padx=20, pady=20, )
-        
+
+
+
         self.site_combobox.set('01 - CTI')
         
         # Tabela (Treeview) - frame
         tabela_frame = ctk.CTkFrame(self, fg_color=self.my_dic['Frame_Preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
+
+
+        
         self.tabela = ttk.Treeview(tabela_frame, columns="Diretorio", show='headings',)
+
+
+        self.treeScrollbar = ctk.CTkScrollbar(tabela_frame,command=self.tabela.yview,)
+        self.treeScrollbar.pack(side='right', fill='y',)
+
+        # Tree configuration
+        self.tabela.configure(yscrollcommand=self.treeScrollbar.set,)
         self.style_treeview.theme_use('clam')
         self.style_treeview.configure("Treeview.Heading", background=self.my_dic['Frame_Preto'], foreground=self.my_dic['font'], borderwidth=1, relief='solid', font=('Arial', 10))
         self.style_treeview.map("Treeview.Heading", background=[('active', self.my_dic['Vermelho_Brad'])])
@@ -2301,7 +2383,7 @@ class SimpleApp(ctk.CTk):
         self.tabela.bind("<ButtonRelease-1>", self.linha_selecionada_treeview)
 
         self.center_window(500, 500)
-
+        
     def print_section_header(self,title, description):
         """ Função para imprimir cabeçalhos de seção com estilo Markdown usando o rich. """
         title_text = Text(title, style="bold yellow")
@@ -2322,7 +2404,6 @@ class SimpleApp(ctk.CTk):
             treeview.delete(*treeview.get_children())
             for item in lista_paths:
                 treeview.insert('', 'end', values=[item])
-
 
 
     def separar_input(self):
@@ -2358,7 +2439,6 @@ class SimpleApp(ctk.CTk):
     def mostrar_resultado(self):
         resultado = self.separar_input()
         console.print(resultado)
-
     
 
     def trocar_combobox(self, choice):
@@ -2729,8 +2809,3 @@ class SimpleApp(ctk.CTk):
 if __name__ == "__main__":
     app = SimpleApp()
     app.mainloop()
-
-
-
-
-
