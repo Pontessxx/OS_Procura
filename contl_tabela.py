@@ -720,7 +720,9 @@ class Aba_relatorio_mes:
             
             # Gráfico de Pizza
             ax1 = self.figura.add_subplot(gs[0, 0])
-            ax1.pie(quantidades, labels=tipos_presenca, autopct=lambda p: f'{int(p * sum(quantidades) / 100)}', startangle=90)
+            ax1.pie(quantidades, labels=tipos_presenca, autopct=lambda p: f'{int(p * sum(quantidades) / 100)}', startangle=0,
+                    pctdistance = 0.8, wedgeprops=dict(width=0.4),
+                      textprops=dict(size=12, fontweight="bold", color='w'))
             ax1.set_title('Tipo de Presença')
 
             # Gráfico de Barras
