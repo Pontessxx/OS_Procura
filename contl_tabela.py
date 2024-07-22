@@ -695,8 +695,6 @@ class Aba_relatorio_mes:
         mes = self.mes_combobox.get()
         ano = self.ano_combobox.get()
 
-       
-
         try:
             cursor = self.conn.cursor()
             query = """
@@ -715,19 +713,31 @@ class Aba_relatorio_mes:
             tipos_presenca = [row[0] for row in dados]
             quantidades = [row[1] for row in dados]
 
+            # Define as cores para cada tipo de presença
+            color_map = {
+                'OK': '#0C8040',
+                'FALTA': '#C3514E',
+                'ATESTADO': '#F79747',
+            }
+            colors = [color_map.get(tipo, 'grey') for tipo in tipos_presenca]  # Define 'grey' como padrão para tipos desconhecidos
+
             # Cria subplots com GridSpec
             gs = GridSpec(2, 2, figure=self.figura)
             
             # Gráfico de Pizza
             ax1 = self.figura.add_subplot(gs[0, 0])
-            ax1.pie(quantidades, labels=tipos_presenca, autopct=lambda p: f'{int(p * sum(quantidades) / 100)}', startangle=0,
-                    pctdistance = 0.8, wedgeprops=dict(width=0.4),
-                      textprops=dict(size=12, fontweight="bold", color='w'))
+            wedges, texts, autotexts = ax1.pie(quantidades, labels=tipos_presenca, autopct=lambda p: f'{int(p * sum(quantidades) / 100)}', startangle=0,
+                                                pctdistance=0.8, wedgeprops=dict(width=0.4), colors=colors)
+
+            # Ajusta as cores dos textos para corresponder às fatias
+            for autotext in autotexts:
+                autotext.set_color('white')  # Define a cor do texto em branco
+
             ax1.set_title('Tipo de Presença')
 
             # Gráfico de Barras
             ax2 = self.figura.add_subplot(gs[0, 1])
-            ax2.bar(tipos_presenca, quantidades)
+            ax2.bar(tipos_presenca, quantidades, color=colors)
             ax2.set_title('Tipo de Presença')
             ax2.set_xlabel('Tipo')
             ax2.set_ylabel('Quantidade')
@@ -752,12 +762,11 @@ class Aba_relatorio_mes:
             dias = [data.day for data in datas]
             unique_names = list(set(nomes))
 
-            # Mapear os tipos de presença para cores
-            presenca_to_color = {tipo: plt.cm.tab20(i) for i, tipo in enumerate(set(presencas))}
-            colors = [presenca_to_color[presenca] for presenca in presencas]
+            # Aplicar cores ao gráfico de dispersão
+            scatter_colors = [color_map.get(presenca, 'grey') for presenca in presencas]
 
             ax3 = self.figura.add_subplot(gs[1, :])
-            scatter = ax3.scatter(dias, nomes, c=colors, marker='o')
+            scatter = ax3.scatter(dias, nomes, c=scatter_colors, marker='o')
             ax3.set_title('Presença ao Longo dos Dias')
             ax3.set_xlabel('Dias')
             ax3.set_ylabel('Nomes')
@@ -766,12 +775,13 @@ class Aba_relatorio_mes:
             ax3.set_yticklabels(unique_names)
             
             # Adicionar legenda
-            legend_elements = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=presenca_to_color[presenca], markersize=10, label=presenca) for presenca in presenca_to_color]
+            legend_elements = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color_map[tipo], markersize=10, label=tipo) for tipo in color_map]
             ax3.legend(handles=legend_elements, title="Tipo de Presença")
 
             # Adicionar o gráfico ao Tkinter
             chart = FigureCanvasTkAgg(self.figura, self.frame_teste)
             chart.get_tk_widget().pack()
+        
         except pyodbc.Error as e:
             print(f'Error: {e}')
 
