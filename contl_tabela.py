@@ -277,17 +277,14 @@ class Aba_Controle:
                 cursor = self.conn.cursor()
                 for nome, var in self.checkbox_vars.items():
                     if var.get() == 'on':
-                        cursor.execute("SELECT ID FROM tblControle WHERE Nomes=? AND DATA=?", (nome, data))
+                        cursor.execute("SELECT ID FROM tblControle WHERE NOMES=? AND DATA=?", (nome, data))
                         result = cursor.fetchone()
                         
-                        if result:  # Se o registro existir, atualize-o
+                        if result:  # Se o registro existir, pergunte se deseja atualizar
                             resposta = messagebox.askquestion(title="Dados já existentes", message=f"nome: {nome}\n data: {data.strftime('%d/%m/%Y')}")
                             if resposta == 'yes':
                                 cursor.execute("UPDATE tblControle SET PRESENCA=? WHERE ID=?", (tipo_presenca, result[0]))
-                                for nome, var in self.checkbox_vars.items():
-                                    var.set('off')
-                            else: 
-                                break
+                                self.conn.commit()  # Comita a atualização
                         else:  # Se o registro não existir, insira um novo
                             cursor.execute("SELECT MAX(ID) FROM tblControle")
                             last_id = cursor.fetchone()[0]
@@ -295,14 +292,15 @@ class Aba_Controle:
                                 last_id = 0
                             new_id = last_id + 1
                             cursor.execute("INSERT INTO tblControle (ID, DATA, NOMES, PRESENCA) VALUES (?, ?, ?, ?)", (new_id, data, nome, tipo_presenca))
-                            for nome, var in self.checkbox_vars.items():
-                                var.set('off')
-                       
+                            self.conn.commit()  # Comita a inserção
+                        
+                        # Resetar a checkbox após processar o nome
+                        var.set('off')
 
-                self.conn.commit()
                 self.carregar_dados()
             except pyodbc.Error as e:
                 print(f'Error: {e}')
+
 
     def remover_frequencia(self):
         dia = self.dia_combobox.get()
