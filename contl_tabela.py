@@ -735,7 +735,7 @@ class Aba_relatorio_mes:
 
             ax1.set_title('Tipo de Presença')
 
-            # Gráfico de Barras - Contagem de Tipos de Presença por Nome
+           # Gráfico de Barras Empilhadas - Contagem de Tipos de Presença por Nome
             query = """
                 SELECT NOMES, PRESENCA, COUNT(*)
                 FROM tblControle
@@ -762,20 +762,29 @@ class Aba_relatorio_mes:
                 nome, presenca, contagem = row
                 contagens[nome][presenca] = contagem
 
-            bar_width = 0.2
+            bar_width = 0.35
             bar_positions = list(range(len(nomes)))
 
             ax2 = self.figura.add_subplot(gs[0, 1])
-            for i, presenca in enumerate(presencas):
-                counts = [contagens[nome][presenca] for nome in nomes]
-                bar_positions_offset = [pos + i * bar_width for pos in bar_positions]
-                ax2.barh(bar_positions_offset, counts, height=bar_width, label=presenca, color=color_map.get(presenca, 'grey'))
+            bottom_values = [0] * len(nomes)
 
-            ax2.set_yticks([pos + bar_width for pos in bar_positions])
+            for presenca in presencas:
+                counts = [contagens[nome][presenca] for nome in nomes]
+                bars = ax2.barh(bar_positions, counts, height=bar_width, label=presenca, color=color_map.get(presenca, 'grey'), left=bottom_values)
+                for bar, count in zip(bars, counts):
+                    if count > 0:
+                        ax2.text(bar.get_width() + bar.get_x() - bar.get_width() / 2, bar.get_y() + bar.get_height() / 2, str(count), ha='center', va='center', color='white', fontsize=10)
+                bottom_values = [i + j for i, j in zip(bottom_values, counts)]
+
+            ax2.set_yticks(bar_positions)
             ax2.set_yticklabels(nomes)
-            ax2.set_xlabel('Contagem')
+            ax2.tick_params(axis='both', which='both', length=0)
+            ax2.set_frame_on(False)
+            ax2.set_xlabel('')
+            ax2.set_xticklabels([])
             ax2.set_title('Contagem de Tipos de Presença por Nome')
-            ax2.legend(title='Tipo de Presença')
+            # Remove o fundo branco
+            ax2.set_facecolor('none')
 
             # Gráfico de Dispersão
             query = """
