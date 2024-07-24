@@ -660,7 +660,7 @@ class Aba_relatorio_mes:
 
 
     def abrir_janela_graficos(self):
-        self.figura = plt.Figure(figsize=(10, 8))
+        self.figura = plt.Figure(figsize=(12, 8))
         # Minimiza a janela principal
         self.parent.root.iconify()
         # Cria uma nova janela
@@ -713,13 +713,16 @@ class Aba_relatorio_mes:
             tipos_presenca = [row[0] for row in dados]
             quantidades = [row[1] for row in dados]
 
-            # Define as cores para cada tipo de presença
+            # Define as cores e marcadores para cada tipo de presença
             color_map = {
-                'OK': '#0C8040',
-                'FALTA': '#C3514E',
-                'ATESTADO': '#F79747',
+                'OK': ('#0C8040', 'o'),
+                'FALTA': ('#C3514E', 'x'),
+                'ATESTADO': ('#F79747', 'd'),
+                'FÉRIAS': ('#F7DC6F', 's'),
+                'ALPHAVILLE': ('#5DADE2', 'p'),
+                'CURSO': ('#A569BD', '*'),
             }
-            colors = [color_map.get(tipo, 'grey') for tipo in tipos_presenca]  # Define 'grey' como padrão para tipos desconhecidos
+            colors = [color_map.get(tipo, ('grey', 'o'))[0] for tipo in tipos_presenca]  # Define 'grey' como padrão para tipos desconhecidos
 
             # Cria subplots com GridSpec
             gs = GridSpec(2, 2, figure=self.figura)
@@ -735,7 +738,7 @@ class Aba_relatorio_mes:
 
             ax1.set_title('Tipo de Presença')
 
-           # Gráfico de Barras Empilhadas - Contagem de Tipos de Presença por Nome
+        # Gráfico de Barras Empilhadas - Contagem de Tipos de Presença por Nome
             query = """
                 SELECT NOMES, PRESENCA, COUNT(*)
                 FROM tblControle
@@ -770,7 +773,7 @@ class Aba_relatorio_mes:
 
             for presenca in presencas:
                 counts = [contagens[nome][presenca] for nome in nomes]
-                bars = ax2.barh(bar_positions, counts, height=bar_width, label=presenca, color=color_map.get(presenca, 'grey'), left=bottom_values)
+                bars = ax2.barh(bar_positions, counts, height=bar_width, label=presenca, color=color_map.get(presenca, ('grey', 'o'))[0], left=bottom_values)
                 for bar, count in zip(bars, counts):
                     if count > 0:
                         ax2.text(bar.get_width() + bar.get_x() - bar.get_width() / 2, bar.get_y() + bar.get_height() / 2, str(count), ha='center', va='center', color='white', fontsize=10)
@@ -819,11 +822,13 @@ class Aba_relatorio_mes:
 
             dias = [data.day for data in datas]
 
-            # Aplicar cores ao gráfico de dispersão
-            scatter_colors = [color_map.get(presenca, 'grey') for presenca in presencas_dispersao]
+            # Aplicar cores e marcadores ao gráfico de dispersão
+            scatter_colors = [color_map.get(presenca, ('grey', 'o'))[0] for presenca in presencas_dispersao]
+            scatter_markers = [color_map.get(presenca, ('grey', 'o'))[1] for presenca in presencas_dispersao]
 
             ax3 = self.figura.add_subplot(gs[1, :])
-            scatter = ax3.scatter(dias, nomes_indices, c=scatter_colors, marker='o')
+            for i, (x, y, color, marker) in enumerate(zip(dias, nomes_indices, scatter_colors, scatter_markers)):
+                ax3.scatter(x, y, c=color, marker=marker, label=presencas_dispersao[i] if i == 0 or presencas_dispersao[i] != presencas_dispersao[i-1] else "")
             ax3.set_title('Presença ao Longo dos Dias')
             ax3.set_xlabel('Dias')
             ax3.set_ylabel('Nomes')
@@ -831,11 +836,15 @@ class Aba_relatorio_mes:
             ax3.set_yticks(range(len(nome_to_index)))
             ax3.set_yticklabels([nome for nome in nomes_ordenados if nome in nomes_com_dados])
 
+            # Adicionar legenda
+            handles, labels = ax3.get_legend_handles_labels()
+            by_label = dict(zip(labels, handles))
+            ax3.legend(by_label.values(), by_label.keys(), title="Tipo de Presença")
 
             # Adicionar o gráfico ao Tkinter
             chart = FigureCanvasTkAgg(self.figura, self.frame_teste)
             chart.get_tk_widget().pack()
-        
+
         except pyodbc.Error as e:
             print(f'Error: {e}')
 
