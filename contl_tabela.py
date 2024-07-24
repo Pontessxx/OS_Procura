@@ -735,12 +735,47 @@ class Aba_relatorio_mes:
 
             ax1.set_title('Tipo de Presença')
 
-            # Gráfico de Barras
+            # Gráfico de Barras - Contagem de Tipos de Presença por Nome
+            query = """
+                SELECT NOMES, PRESENCA, COUNT(*)
+                FROM tblControle
+                WHERE MONTH(DATA)=? AND YEAR(DATA)=?
+                GROUP BY NOMES, PRESENCA
+                ORDER BY NOMES
+            """
+            cursor.execute(query, (list(self.meses_dict.keys())[list(self.meses_dict.values()).index(mes)], ano))
+            dados_barras = cursor.fetchall()
+
+            if not dados_barras:
+                print("Nenhum dado encontrado para o mês e ano selecionados.")
+                return
+
+            # Excluir os tipos "OK" e "ALPHAVILLE"
+            dados_barras_filtrados = [row for row in dados_barras if row[1] not in ["OK", "ALPHAVILLE"]]
+
+            nomes = list(set([row[0] for row in dados_barras_filtrados]))
+            nomes.sort()
+            presencas = list(set([row[1] for row in dados_barras_filtrados]))
+            contagens = {nome: {presenca: 0 for presenca in presencas} for nome in nomes}
+
+            for row in dados_barras_filtrados:
+                nome, presenca, contagem = row
+                contagens[nome][presenca] = contagem
+
+            bar_width = 0.2
+            bar_positions = list(range(len(nomes)))
+
             ax2 = self.figura.add_subplot(gs[0, 1])
-            ax2.bar(tipos_presenca, quantidades, color=colors)
-            ax2.set_title('Tipo de Presença')
-            ax2.set_xlabel('Tipo')
-            ax2.set_ylabel('Quantidade')
+            for i, presenca in enumerate(presencas):
+                counts = [contagens[nome][presenca] for nome in nomes]
+                bar_positions_offset = [pos + i * bar_width for pos in bar_positions]
+                ax2.barh(bar_positions_offset, counts, height=bar_width, label=presenca, color=color_map.get(presenca, 'grey'))
+
+            ax2.set_yticks([pos + bar_width for pos in bar_positions])
+            ax2.set_yticklabels(nomes)
+            ax2.set_xlabel('Contagem')
+            ax2.set_title('Contagem de Tipos de Presença por Nome')
+            ax2.legend(title='Tipo de Presença')
 
             # Gráfico de Dispersão
             query = """
@@ -755,28 +790,38 @@ class Aba_relatorio_mes:
                 print("Nenhum dado encontrado para o mês e ano selecionados.")
                 return
 
+            # Ordenar os nomes conforme a tabela tblNomes
+            query_nomes = "SELECT DISTINCT Nomes FROM tblNomes"
+            cursor.execute(query_nomes)
+            nomes_ordenados = [row[0] for row in cursor.fetchall()]
+
             datas = [row[0] for row in dados_dispersao]
-            nomes = [row[1] for row in dados_dispersao]
-            presencas = [row[2] for row in dados_dispersao]
+            nomes_dispersao = [row[1] for row in dados_dispersao]
+            presencas_dispersao = [row[2] for row in dados_dispersao]
+
+            # Filtrar nomes que possuem dados no mês selecionado
+            nomes_com_dados = list(set(nomes_dispersao))
+
+            # Mapear nomes para índices com base em nomes_ordenados, filtrando apenas aqueles com dados
+            nome_to_index = {nome: i for i, nome in enumerate(nomes_ordenados) if nome in nomes_com_dados}
+
+            # Convertendo nomes_dispersao para seus respectivos índices
+            nomes_indices = [nome_to_index[nome] for nome in nomes_dispersao]
 
             dias = [data.day for data in datas]
-            unique_names = list(set(nomes))
 
             # Aplicar cores ao gráfico de dispersão
-            scatter_colors = [color_map.get(presenca, 'grey') for presenca in presencas]
+            scatter_colors = [color_map.get(presenca, 'grey') for presenca in presencas_dispersao]
 
             ax3 = self.figura.add_subplot(gs[1, :])
-            scatter = ax3.scatter(dias, nomes, c=scatter_colors, marker='o')
+            scatter = ax3.scatter(dias, nomes_indices, c=scatter_colors, marker='o')
             ax3.set_title('Presença ao Longo dos Dias')
             ax3.set_xlabel('Dias')
             ax3.set_ylabel('Nomes')
-            ax3.set_xticks(dias)
-            ax3.set_yticks(range(len(unique_names)))
-            ax3.set_yticklabels(unique_names)
-            
-            # Adicionar legenda
-            legend_elements = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color_map[tipo], markersize=10, label=tipo) for tipo in color_map]
-            ax3.legend(handles=legend_elements, title="Tipo de Presença")
+            ax3.set_xticks(sorted(list(set(dias))))
+            ax3.set_yticks(range(len(nome_to_index)))
+            ax3.set_yticklabels([nome for nome in nomes_ordenados if nome in nomes_com_dados])
+
 
             # Adicionar o gráfico ao Tkinter
             chart = FigureCanvasTkAgg(self.figura, self.frame_teste)
