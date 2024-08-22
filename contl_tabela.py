@@ -26,8 +26,8 @@ class ControleApp:
 
         self.my_dict = {
             'font': '#c2c2c2',
-            'preto': '#111',
             'Heading_color':'#434343' ,
+            'preto': '#111',
             'frames_ajuste': '#666',
             'frames_ajuste2': '#777',
             'hover': '#111',
@@ -188,10 +188,10 @@ class Aba_Controle:
 
         self.tabela = ttk.Treeview(tabela_frame, columns=("Data", "Nome", "Presença"), show='headings',)
         self.style_treeview.theme_use('alt')
-        # self.style_treeview.theme_use('clam')
 
         # scrollbar
         self.treeScrollbar = ctk.CTkScrollbar(tabela_frame,command=self.tabela.yview,)
+        self.tabela.configure(yscrollcommand=self.treeScrollbar.set, )
         self.treeScrollbar.pack(side='right', fill='y',)
 
         #configurando a cor da treeview para ajustar ao tema
@@ -213,7 +213,7 @@ class Aba_Controle:
         nomes = self.get_nomes()
         self.checkbox_vars = {}  # Dicionário para armazenar as variáveis das checkboxes
         row, col = 0, 0
-        max_columns = 11  # Defina o número máximo de colunas por linha
+        max_columns = 9  # Defina o número máximo de colunas por linha
 
         for nome in nomes:
             var = ctk.StringVar(value='off')
@@ -300,7 +300,6 @@ class Aba_Controle:
                 self.carregar_dados()
             except pyodbc.Error as e:
                 print(f'Error: {e}')
-
 
     def remover_frequencia(self):
         dia = self.dia_combobox.get()
@@ -555,6 +554,7 @@ class Aba_relatorio_mes:
         self.style_treeview.theme_use('alt')
         self.treeScrollbar = ctk.CTkScrollbar(tabela_frame,command=self.tabela.yview,)
         self.treeScrollbar.pack(side='right', fill='y',)
+        self.tabela.configure(yscrollcommand=self.treeScrollbar.set, )
 
         self.style_treeview.configure("Treeview.Heading", background=my_dict['Heading_color'], foreground=my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 12),bordercolor=my_dict['Heading_color'])
         self.style_treeview.map("Treeview.Heading", background=[('active', my_dict['hover_treeview'])])
@@ -660,17 +660,15 @@ class Aba_relatorio_mes:
 
 
     def abrir_janela_graficos(self):
-        self.figura = plt.Figure(figsize=(12, 8))
+        self.figura = plt.Figure(figsize=(15, 8))
+
         # Minimiza a janela principal
         self.parent.root.iconify()
         # Cria uma nova janela
         self.new_window = ctk.CTkToplevel(self.parent.root)
-        # Adiciona conteúdo à nova janela
-        label = ctk.CTkLabel(self.new_window, text=f"GRÁFICOS : {self.mes_combobox.get().upper()}", text_color='#c2c2c2')
-        label.pack(pady=20)
-
+        
         # frame graficos
-        self.frame_teste = ctk.CTkFrame(self.new_window, fg_color=self.parent.my_dict['preto'])
+        self.frame_teste = ctk.CTkFrame(self.new_window, fg_color='#FFF')
         self.frame_teste.pack(pady=10, padx=10, fill='both', expand=True,side='left')
         self.frame_2 = ctk.CTkFrame(self.new_window, fg_color=self.parent.my_dict['frames_ajuste'])
         self.frame_2.pack(pady=10, padx=10, fill='both', expand=True,side='left')
@@ -682,13 +680,14 @@ class Aba_relatorio_mes:
         self.new_window.state('zoomed')
         
         # Adiciona um botão para fechar a nova janela e maximizar a janela principal
-        btn_fechar = ctk.CTkButton(self.new_window, text="Fechar", command=self.fechar_janela_graficos)
+        btn_fechar = ctk.CTkButton(self.frame_2, text="Fechar", command=self.fechar_janela_graficos)
         btn_fechar.pack(pady=20)
 
         # Adiciona um botão para salvar os gráficos em PDF
-        btn_salvar_pdf = ctk.CTkButton(self.new_window, text="Salvar PDF", command=self.salvar_pdf)
+        btn_salvar_pdf = ctk.CTkButton(self.frame_2, text="Salvar PDF", command=self.salvar_pdf)
         btn_salvar_pdf.pack(pady=20)
-
+        
+        
         self.gerar_graficos()
     
     def gerar_graficos(self):
@@ -715,7 +714,7 @@ class Aba_relatorio_mes:
 
             # Define as cores e marcadores para cada tipo de presença
             color_map = {
-                'OK': ('#0C8040', 'o'),
+                'OK': ('#cfcfcf', 'o'),
                 'FALTA': ('#C3514E', 'x'),
                 'ATESTADO': ('#F79747', 'd'),
                 'FÉRIAS': ('#F7DC6F', 's'),
@@ -725,20 +724,23 @@ class Aba_relatorio_mes:
             colors = [color_map.get(tipo, ('grey', 'o'))[0] for tipo in tipos_presenca]  # Define 'grey' como padrão para tipos desconhecidos
 
             # Cria subplots com GridSpec
-            gs = GridSpec(2, 2, figure=self.figura)
+            gs = GridSpec(2, 2, figure=self.figura,)
+
+            self.figura.patch.set_facecolor('none')
             
             # Gráfico de Pizza
             ax1 = self.figura.add_subplot(gs[0, 0])
             wedges, texts, autotexts = ax1.pie(quantidades, labels=tipos_presenca, autopct=lambda p: f'{int(p * sum(quantidades) / 100)}', startangle=0,
-                                                pctdistance=0.8, wedgeprops=dict(width=0.4), colors=colors)
+                                                pctdistance=0.8, wedgeprops=dict(width=0.4), colors=colors,
+                                                )
 
             # Ajusta as cores dos textos para corresponder às fatias
             for autotext in autotexts:
                 autotext.set_color('white')  # Define a cor do texto em branco
 
-            ax1.set_title('Tipo de Presença')
+            ax1.set_title('Tipo de Presença',)
 
-        # Gráfico de Barras Empilhadas - Contagem de Tipos de Presença por Nome
+            # Gráfico de Barras Empilhadas - Contagem de Tipos de Presença por Nome
             query = """
                 SELECT NOMES, PRESENCA, COUNT(*)
                 FROM tblControle
@@ -765,10 +767,11 @@ class Aba_relatorio_mes:
                 nome, presenca, contagem = row
                 contagens[nome][presenca] = contagem
 
-            bar_width = 0.35
+            bar_width = 0.5  # Aumentar a espessura das barras
             bar_positions = list(range(len(nomes)))
 
             ax2 = self.figura.add_subplot(gs[0, 1])
+            ax2.set_facecolor('none')  # Fundo transparente para o subplot
             bottom_values = [0] * len(nomes)
 
             for presenca in presencas:
@@ -785,7 +788,7 @@ class Aba_relatorio_mes:
             ax2.set_frame_on(False)
             ax2.set_xlabel('')
             ax2.set_xticklabels([])
-            ax2.set_title('Contagem de Tipos de Presença por Nome')
+            ax2.set_title('Contagem de Tipos de Presença por Nome',)
             # Remove o fundo branco
             ax2.set_facecolor('none')
 
@@ -813,7 +816,9 @@ class Aba_relatorio_mes:
 
             # Filtrar nomes que possuem dados no mês selecionado
             nomes_com_dados = list(set(nomes_dispersao))
-
+            self.nomes = ctk.CTkComboBox(self.frame_2, values=nomes_com_dados)
+            self.nomes.pack()
+            self.nomes.set('')
             # Mapear nomes para índices com base em nomes_ordenados, filtrando apenas aqueles com dados
             nome_to_index = {nome: i for i, nome in enumerate(nomes_ordenados) if nome in nomes_com_dados}
 
@@ -827,19 +832,18 @@ class Aba_relatorio_mes:
             scatter_markers = [color_map.get(presenca, ('grey', 'o'))[1] for presenca in presencas_dispersao]
 
             ax3 = self.figura.add_subplot(gs[1, :])
+            ax3.set_facecolor('none')  # Fundo transparente para o subplot
             for i, (x, y, color, marker) in enumerate(zip(dias, nomes_indices, scatter_colors, scatter_markers)):
-                ax3.scatter(x, y, c=color, marker=marker, label=presencas_dispersao[i] if i == 0 or presencas_dispersao[i] != presencas_dispersao[i-1] else "")
-            ax3.set_title('Presença ao Longo dos Dias')
-            ax3.set_xlabel('Dias')
-            ax3.set_ylabel('Nomes')
+                ax3.scatter(x, y, c=color, marker=marker, label=presencas_dispersao[i] if i == 0 or presencas_dispersao[i] != presencas_dispersao[i-1] else "",)
+            ax3.set_title(f'Presença ao Longo dos Dias - {mes}')
             ax3.set_xticks(sorted(list(set(dias))))
             ax3.set_yticks(range(len(nome_to_index)))
             ax3.set_yticklabels([nome for nome in nomes_ordenados if nome in nomes_com_dados])
 
-            # Adicionar legenda
+            # Adicionar legenda fora do gráfico
             handles, labels = ax3.get_legend_handles_labels()
             by_label = dict(zip(labels, handles))
-            ax3.legend(by_label.values(), by_label.keys(), title="Tipo de Presença")
+            ax3.legend(by_label.values(), by_label.keys(), title="Tipo de Presença", bbox_to_anchor=(1, 1), loc='upper left')
 
             # Adicionar o gráfico ao Tkinter
             chart = FigureCanvasTkAgg(self.figura, self.frame_teste)
@@ -847,6 +851,8 @@ class Aba_relatorio_mes:
 
         except pyodbc.Error as e:
             print(f'Error: {e}')
+
+
 
     def salvar_pdf(self):
         # Obter o caminho para a pasta de Downloads
@@ -872,49 +878,14 @@ class Aba_relatorio_mes:
         except Exception as e:
             print(f"Erro ao abrir a pasta Downloads: {e}")
 
-            
+
     def fechar_janela_graficos(self):
         # Fecha a nova janela
         self.new_window.destroy()
         # Maximiza a janela principal
         self.parent.root.state('zoomed')
+        
 if __name__ == '__main__':
     root = ctk.CTk()
     app = ControleApp(root)
     root.mainloop()
-
-
-
-
-
-
-# 
-
-
-
-
-# 
-
-
-
-
-
-
-
-
-
-# 
-
-
-
-
-
-
-# 
-
-
-
-
-
-
-# 
