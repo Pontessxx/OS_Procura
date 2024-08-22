@@ -72,16 +72,16 @@ class ControleApp:
         janela = self.root
 
         # Frame lateral com botões
-        frame_menu_inferior = ctk.CTkFrame(janela, width=150, fg_color=self.my_dict['menu-inf'], bg_color=self.my_dict['preto'])
-        frame_menu_inferior.pack(side='left', fill='y')
+        frame_menu_lateral = ctk.CTkFrame(janela, width=150, fg_color=self.my_dict['menu-inf'], bg_color=self.my_dict['preto'])
+        frame_menu_lateral.pack(side='left', fill='y')
 
         # Frame principal que mudará de acordo com os botões
         self.frame_tela = ctk.CTkFrame(janela, fg_color=self.my_dict['preto'], bg_color=self.my_dict['preto'])
         self.frame_tela.pack(side='left', fill='both', expand=True)
 
         # Adicionar botões ao frame lateral
-        self.add_buttons_menu(frame_menu_inferior)
-
+        self.add_buttons_menu(frame_menu_lateral)
+        
         # Abrir Controle de Frequencia por padrão
         self.show_frame("Controle de Frequencia")
 
