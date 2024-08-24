@@ -3,220 +3,304 @@ import pyodbc
 from tkinter import ttk
 
 class ControleApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.iconbitmap('C:\\Users\\Henrique\\OneDrive\\Anexos\\FIAP_2024\\OS_Procura\\Busca_os\\img\\bradimg.ico')
-        ctk.set_appearance_mode('dark')
-        root.geometry('1130x600')
-        root.title('Controle de Frequência')
-        root.minsize(1130, 600)
-        self.center_window(1100, 600)
+  def __init__(self, root):
+    self.root = root
+    ctk.set_appearance_mode('dark')
+    root.geometry('1130x600')
+    root.title('Controle de Frequência')
+    root.minsize(1130, 600)
+    self.center_window(1100, 600)
 
-        self.my_dict = {
-            'font': '#c2c2c2',
-            'Heading_color': '#434343',
-            'preto': '#111',
-            'frames_ajuste': '#666',
-            'frames_ajuste2': '#777',
-            'hover': '#111',
-            'selecionado': '#111',
-            'menu-sup': '#333',
-            'menu-inf': '#222',
-            'borda': '#a3a3a3',
-            'adicionar_btn': 'green',
-            'remover_btn': 'red',
-            'hover_treeview': '#cc092f',
-        }
+    self.my_dict = {
+      'font': '#c2c2c2',
+      'Heading_color': '#434343',
+      'preto': '#111',
+      'frames_ajuste': '#666',
+      'frames_ajuste2': '#777',
+      'hover': '#111',
+      'selecionado': '#111',
+      'menu-sup': '#333',
+      'menu-inf': '#222',
+      'borda': '#a3a3a3',
+      'adicionar_btn': 'green',
+      'remover_btn': 'red',
+      'hover_treeview': '#cc092f',
+    }
 
-        self.buttons = {}
-        self.conn = self.connect_to_db()
-        self.selected_site = None
-        self.selected_empresa = None
-        self.setup_auto()
+    self.buttons = {}
+    self.conn = self.connect_to_db()
+    self.selected_site_id = None # Armazena o ID do site selecionado
+    self.selected_empresa_id = None # Armazena o ID da empresa selecionada
+    self.selected_siteempresa_id = None # Armazena o ID_SiteEmpresa correspondente
+    self.setup_auto()
 
-    def connect_to_db(self):
-        try:
-            con_string =r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\Henrique\Downloads\Controle.accdb'
-            conn = pyodbc.connect(con_string)
-            return conn
-        except pyodbc.Error as e:
-            print(f'Error: {e}')
-            return None
+  def connect_to_db(self):
+    try:
+      con_string = r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\Henrique\Downloads\Controle.accdb'
+      conn = pyodbc.connect(con_string)
+      return conn
+    except pyodbc.Error as e:
+      print(f'Error: {e}')
+      return None
 
-    def center_window(self, width, height):
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
+  def center_window(self, width, height):
+    screen_width = self.root.winfo_screenwidth()
+    screen_height = self.root.winfo_screenheight()
 
-        x = (screen_width // 2) - (width // 2)
-        y = (screen_height // 2) - (height // 2)
+    x = (screen_width // 2) - (width // 2)
+    y = (screen_height // 2) - (height // 2)
 
-        self.root.geometry(f'{width}x{height}+{x}+{y}')
+    self.root.geometry(f'{width}x{height}+{x}+{y}')
 
-    def setup_auto(self):
-        janela = self.root
+  def setup_auto(self):
+    janela = self.root
 
-        # Frame lateral com botões
-        frame_menu_lateral = ctk.CTkFrame(janela, width=150, fg_color=self.my_dict['menu-inf'], bg_color=self.my_dict['preto'])
-        frame_menu_lateral.pack(side='left', fill='y')
+    # Frame lateral com botões
+    frame_menu_lateral = ctk.CTkFrame(janela, width=150, fg_color=self.my_dict['menu-inf'], bg_color=self.my_dict['preto'])
+    frame_menu_lateral.pack(side='left', fill='y')
 
-        # Frame principal que mudará de acordo com os botões
-        self.frame_tela = ctk.CTkFrame(janela, fg_color=self.my_dict['preto'], bg_color=self.my_dict['preto'])
-        self.frame_tela.pack(side='left', fill='both', expand=True)
+    # Frame principal que mudará de acordo com os botões
+    self.frame_tela = ctk.CTkFrame(janela, fg_color=self.my_dict['preto'], bg_color=self.my_dict['preto'])
+    self.frame_tela.pack(side='left', fill='both', expand=True)
 
-        # Adicionar ComboBoxes ao frame lateral
-        self.add_comboboxes(frame_menu_lateral)
-        
-        # Adicionar botões ao frame lateral
-        self.add_buttons_menu(frame_menu_lateral)
-        
-        # Mostrar a mensagem inicial solicitando a seleção de um site e empresa
+    # Adicionar ComboBoxes ao frame lateral
+    self.add_comboboxes(frame_menu_lateral)
+   
+    # Adicionar botões ao frame lateral
+    self.add_buttons_menu(frame_menu_lateral)
+   
+    # Mostrar a mensagem inicial solicitando a seleção de um site e empresa
+    self.show_initial_message()
+
+  def add_comboboxes(self, frame):
+    # ComboBox para os sites
+    sites = self.get_sites()
+    self.combo_sites = ttk.Combobox(frame, values=sites)
+    self.combo_sites.pack(pady=10, padx=10, fill='x')
+    self.combo_sites.bind("<<ComboboxSelected>>", self.on_site_selected)
+
+    # ComboBox para as empresas (inicia vazia)
+    self.combo_empresas = ttk.Combobox(frame, values=[])
+    self.combo_empresas.pack(pady=10, padx=10, fill='x')
+    self.combo_empresas.bind("<<ComboboxSelected>>", self.on_empresa_selected)
+
+  def get_sites(self):
+    if self.conn is None:
+      return []
+
+    cursor = self.conn.cursor()
+    cursor.execute("SELECT ID_Site, Sites FROM SITE")
+    sites = [row[1] for row in cursor.fetchall()]
+    return sites
+
+  def get_site_id(self, site_name):
+    """Obtém o ID do site com base no nome do site."""
+    cursor = self.conn.cursor()
+    cursor.execute("SELECT ID_Site FROM SITE WHERE Sites = ?", (site_name,))
+    result = cursor.fetchone()
+    return result[0] if result else None
+
+  def get_empresas(self, site_id):
+    # Obtém as empresas associadas ao ID_Site.
+    if self.conn is None or not site_id:
+      return []
+
+    cursor = self.conn.cursor()
+    query = """
+      SELECT EMPRESA.ID_Empresa, EMPRESA.Empresas
+      FROM SITE_EMPRESA
+      INNER JOIN EMPRESA ON SITE_EMPRESA.ID_Empresa = EMPRESA.ID_Empresa
+      WHERE SITE_EMPRESA.ID_Site = ?
+    """
+    cursor.execute(query, (site_id,))
+    empresas = [(row[0], row[1]) for row in cursor.fetchall()]
+    return empresas
+
+  def get_siteempresa_id(self, site_id, empresa_id):
+    # Obtém o ID_SiteEmpresas com base no site e empresa selecionados.
+    cursor = self.conn.cursor()
+    cursor.execute("SELECT ID_SiteEmpresas FROM SITE_EMPRESA WHERE ID_Site = ? AND ID_Empresa = ?", (site_id, empresa_id))
+    result = cursor.fetchone()
+    return result[0] if result else None
+
+  def get_nomes(self, siteempresa_id):
+    # Obtém os nomes associados ao ID_SiteEmpresas.
+    cursor = self.conn.cursor()
+    query = """
+      SELECT NOME.Nome
+      FROM SITE_EMPRESA
+      INNER JOIN NOME ON SITE_EMPRESA.ID_SiteEmpresas = NOME.ID_SiteEmpresa
+      WHERE SITE_EMPRESA.ID_SiteEmpresas = ?
+    """
+    cursor.execute(query, (siteempresa_id,))
+    nomes = [row[0] for row in cursor.fetchall()]
+    return nomes
+
+  def on_site_selected(self, event):
+    site_name = self.combo_sites.get()
+    #print(f'Site selecionado: {site_name}')
+
+    # Obter o ID do site selecionado
+    self.selected_site_id = self.get_site_id(site_name)
+    #print(f'ID do site selecionado: {self.selected_site_id}')
+
+    # Atualiza a ComboBox de empresas com base no site selecionado
+    empresas = self.get_empresas(self.selected_site_id)
+    self.combo_empresas['values'] = [empresa[1] for empresa in empresas]
+    self.combo_empresas.set('') # Reseta a seleção de empresas
+    self.selected_empresa_id = None
+    self.selected_siteempresa_id = None
+
+    # Desativa os botões até que a empresa seja selecionada
+    self.toggle_buttons(state="disabled")
+
+  def on_empresa_selected(self, event):
+    empresa_name = self.combo_empresas.get()
+    #print(f'Empresa selecionada: {empresa_name}')
+
+    # Obter o ID da empresa selecionada
+    empresas = self.get_empresas(self.selected_site_id)
+    self.selected_empresa_id = next((emp[0] for emp in empresas if emp[1] == empresa_name), None)
+    #print(f'ID da empresa selecionada: {self.selected_empresa_id}')
+
+    # Obter o ID_SiteEmpresas correspondente
+    self.selected_siteempresa_id = self.get_siteempresa_id(self.selected_site_id, self.selected_empresa_id)
+    #print(f'ID_SiteEmpresas correspondente: {self.selected_siteempresa_id}')
+
+    # Ativa os botões apenas após a seleção do site e da empresa
+    if self.selected_siteempresa_id:
+      self.toggle_buttons(state="normal")
+      self.show_frame('Controle de Frequencia')
+
+  def toggle_buttons(self, state):
+    """Ativa ou desativa os botões."""
+    for button in self.buttons.values():
+      button.configure(state=state)
+
+  def add_buttons_menu(self, frame):
+    button_texts = ["Controle de Frequencia", "Empresas", "Relatorio Mensal",]
+
+    for text in button_texts:
+      button = ctk.CTkButton(frame, text=text, command=lambda t=text: self.show_frame(t), hover_color=self.my_dict['hover'], border_width=2, border_color=self.my_dict['menu-sup'], state="disabled")
+      button.pack(pady=10, padx=10, fill='x')
+      self.buttons[text] = button # Armazena o botão no dicionário
+
+  def show_initial_message(self):
+    # Exibe uma mensagem inicial solicitando que o usuário selecione um site e uma empresa
+    label = ctk.CTkLabel(self.frame_tela, text="Por favor, selecione um site e uma empresa no menu à esquerda.", text_color=self.my_dict['font'])
+    label.pack(pady=20)
+
+  def show_frame(self, frame_name):
+    # Limpa o frame atual
+    for widget in self.frame_tela.winfo_children():
+      widget.destroy()
+   
+    # Atualiza a cor dos botões
+    for name, button in self.buttons.items():
+      if name == frame_name:
+        button.configure(fg_color=self.my_dict['selecionado'], border_color=self.my_dict['selecionado'])
+      else:
+        button.configure(fg_color='transparent', border_color=self.my_dict['menu-sup'])
+
+    # Adiciona novo conteúdo baseado no botão pressionado
+    if frame_name == "Controle de Frequencia":
+      if self.selected_siteempresa_id:
+        Aba_Controle(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
+      else:
+        self.show_initial_message() # Volta a mostrar a mensagem caso nenhum site ou empresa esteja selecionado
+    elif frame_name == "Empresas":
+      if self.selected_siteempresa_id:
+        Aba_empresas(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
+      else:
+        self.show_initial_message()
+    elif frame_name == "Relatorio Mensal":
+      if self.selected_siteempresa_id:
+        Aba_relatorio_mes(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
+      else:
         self.show_initial_message()
 
-    def add_comboboxes(self, frame):
-        # ComboBox para os sites
-        sites = self.get_sites()
-        self.combo_sites = ttk.Combobox(frame, values=sites)
-        self.combo_sites.pack(pady=10, padx=10, fill='x')
-        self.combo_sites.bind("<<ComboboxSelected>>", self.on_site_selected)
 
-        # ComboBox para as empresas (inicia vazia)
-        self.combo_empresas = ttk.Combobox(frame, values=[])
-        self.combo_empresas.pack(pady=10, padx=10, fill='x')
-        self.combo_empresas.bind("<<ComboboxSelected>>", self.on_empresa_selected)
-
-    def get_sites(self):
-        if self.conn is None:
-            return []
-
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT Sites FROM SITE")
-        sites = [row[0] for row in cursor.fetchall()]
-        return sites
-
-    def get_empresas(self, site):
-        if self.conn is None or not site:
-            return []
-
-        cursor = self.conn.cursor()
-        query = """
-            SELECT EMPRESA.Empresas 
-            FROM SITE_EMPRESA 
-            INNER JOIN SITE ON SITE_EMPRESA.ID_Sites = SITE.ID_Site 
-            INNER JOIN EMPRESA ON SITE_EMPRESA.ID_Empresas = EMPRESA.ID_Empresa
-            WHERE SITE.Sites = ?
-        """
-        cursor.execute(query, (site,))
-        empresas = [row[0] for row in cursor.fetchall()]
-        return empresas
-
-
-    def on_site_selected(self, event):
-        self.selected_site = self.combo_sites.get()
-        print(f'Site selecionado: {self.selected_site}')
-
-        # Atualiza a ComboBox de empresas com base no site selecionado
-        empresas = self.get_empresas(self.selected_site)
-        self.combo_empresas['values'] = empresas
-        self.combo_empresas.set('')  # Reseta a seleção de empresas
-        self.selected_empresa = None
-
-    def on_empresa_selected(self, event):
-        self.selected_empresa = self.combo_empresas.get()
-        print(f'Empresa selecionada: {self.selected_empresa}')
-
-        # Agora você pode carregar a aba de controle após a seleção da empresa
-        if self.selected_empresa:
-            self.show_frame("Controle de Frequencia")
-
-    def add_buttons_menu(self, frame):
-        button_texts = ["Controle de Frequencia", "Inserir Nomes", "Relatorio Mensal"]
-
-        for text in button_texts:
-            button = ctk.CTkButton(frame, text=text, command=lambda t=text: self.show_frame(t), hover_color=self.my_dict['hover'], border_width=2, border_color=self.my_dict['borda'])
-            button.pack(pady=10, padx=10, fill='x')
-            self.buttons[text] = button  # Armazena o botão no dicionário
-
-    def show_initial_message(self):
-        # Exibe uma mensagem inicial solicitando que o usuário selecione um site e uma empresa
-        label = ctk.CTkLabel(self.frame_tela, text="Por favor, selecione um site e uma empresa no menu à esquerda.", text_color=self.my_dict['font'])
-        label.pack(pady=20)
-
-    def show_frame(self, frame_name):
-        # Limpa o frame atual
-        for widget in self.frame_tela.winfo_children():
-            widget.destroy()
-        
-        # Atualiza a cor dos botões
-        for name, button in self.buttons.items():
-            if name == frame_name:
-                button.configure(fg_color=self.my_dict['selecionado'], border_color=self.my_dict['selecionado'])
-            else:
-                button.configure(fg_color='transparent', border_color=self.my_dict['borda'])
-
-        # Adiciona novo conteúdo baseado no botão pressionado
-        if frame_name == "Controle de Frequencia":
-            if self.selected_site and self.selected_empresa:
-                Aba_Controle(self, self.frame_tela, self.my_dict, self.conn, self.selected_site, self.selected_empresa)
-            else:
-                self.show_initial_message()  # Volta a mostrar a mensagem caso nenhum site ou empresa esteja selecionado
-        elif frame_name == "Inserir Nomes":
-            if self.selected_site and self.selected_empresa:
-                Aba_adiciona_remove_nomes(self, self.frame_tela, self.my_dict, self.conn, self.selected_site, self.selected_empresa)
-            else:
-                self.show_initial_message()
-        elif frame_name == "Relatorio Mensal":
-            if self.selected_site and self.selected_empresa:
-                Aba_relatorio_mes(self, self.frame_tela, self.my_dict, self.conn, self.selected_site, self.selected_empresa)
-            else:
-                self.show_initial_message()
-
-# Exemplo de como passar o selected_site e selected_empresa para as outras classes/abas
 class Aba_Controle:
-    def __init__(self, app, frame, my_dict, conn, selected_site, selected_empresa):
-        self.app = app
-        self.frame = frame
-        self.my_dict = my_dict
-        self.conn = conn
-        self.selected_site = selected_site
-        self.selected_empresa = selected_empresa
-        self.setup()
+  def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
+    self.app = app
+    self.frame = frame
+    self.my_dict = my_dict
+    self.conn = conn
+    self.selected_siteempresa_id = selected_siteempresa_id
 
-    def setup(self):
-        # Exemplo de uso do selected_site e selected_empresa
-        label = ctk.CTkLabel(self.frame, text=f"Controle de Frequência para o site: {self.selected_site}, Empresa: {self.selected_empresa}", text_color=self.my_dict['font'])
-        label.pack(pady=20)
+    self.setup()
+
+  def setup(self):
+    # Obter os nomes relacionados ao ID_SiteEmpresas
+    nomes = self.app.get_nomes(self.selected_siteempresa_id)
+
+    # Exibir os nomes na aba de controle
+    label = ctk.CTkLabel(self.frame, text=f"Nomes associados ao site e empresa selecionados:", text_color=self.my_dict['font'])
+    label.pack(pady=10)
+
+    self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'],height=50)
+    self.frame_checkbox.pack(pady=10, padx=10, fill='x')
+
+    self.checkbox_vars = {} # Dicionário para armazenar as variáveis das checkboxes
+    row, col = 0, 0
+    max_columns = 9 # Defina o número máximo de colunas por linha
+
+    for nome in nomes:
+      var = ctk.StringVar(value='off')
+      checkbox = ctk.CTkCheckBox(self.frame_checkbox, text=nome, variable=var, onvalue='on', offvalue='off', font=('Arial', 15), hover_color=self.my_dict['menu-sup'])
+      checkbox.grid(row=row, column=col, padx=5, pady=5)
+      self.checkbox_vars[nome] = var # Armazena a variável da checkbox
+      col += 1
+
+      if col >= max_columns:
+        col = 0
+        row += 1
 
 # O mesmo pode ser feito para as outras classes de abas
-class Aba_adiciona_remove_nomes:
-    def __init__(self, app, frame, my_dict, conn, selected_site, selected_empresa):
-        self.app = app
-        self.frame = frame
-        self.my_dict = my_dict
-        self.conn = conn
-        self.selected_site = selected_site
-        self.selected_empresa = selected_empresa
-        self.setup()
+class Aba_empresas:
+  def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
+    self.app = app
+    self.frame = frame
+    self.my_dict = my_dict
+    self.conn = conn
+    self.selected_siteempresa_id = selected_siteempresa_id
+    self.setup()
 
-    def setup(self):
-        label = ctk.CTkLabel(self.frame, text=f"Inserir Nomes para o site: {self.selected_site}, Empresa: {self.selected_empresa}", text_color=self.my_dict['font'])
-        label.pack(pady=20)
+  def setup(self):
+    label = ctk.CTkLabel(self.frame, text=f"Inserir Nomes para o site e empresa selecionados", text_color=self.my_dict['font'])
+    label.pack(pady=20)
+   
+    # frame para o conteudo desta aba
+    self.frame_inputs = ctk.CTkFrame(self.frame, fg_color=self.my_dict['frames_ajuste'], )
+    self.frame_inputs.pack(pady=10, padx=10, fill='x')
+
+    nome_label = ctk.CTkLabel(self.frame_inputs, text="Inserir Nome :", text_color=self.my_dict['preto'],)
+    nome_label.grid(row=0, column=0, padx=5, pady=5)
+
+    self.nome_entry = ctk.CTkEntry(self.frame_inputs, fg_color=self.my_dict['font'], placeholder_text="Insira o Nome aqui!")
+    self.nome_entry.grid(row=0, column=1, padx=5, pady=5)
+
+    empresa_label = ctk.CTkLabel(self.frame_inputs, text="Inserir Empresa :", text_color=self.my_dict['preto'],)
+    empresa_label.grid(row=1, column=0, padx=5, pady=5)
+
+    self.empresa_entry = ctk.CTkEntry(self.frame_inputs, fg_color=self.my_dict['font'], placeholder_text="Insira o Nome aqui!")
+    self.empresa_entry.grid(row=1, column=1, padx=5, pady=5)
 
 class Aba_relatorio_mes:
-    def __init__(self, app, frame, my_dict, conn, selected_site, selected_empresa):
-        self.app = app
-        self.frame = frame
-        self.my_dict = my_dict
-        self.conn = conn
-        self.selected_site = selected_site
-        self.selected_empresa = selected_empresa
-        self.setup()
+  def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
+    self.app = app
+    self.frame = frame
+    self.my_dict = my_dict
+    self.conn = conn
+    self.selected_siteempresa_id = selected_siteempresa_id
+    self.setup()
 
-    def setup(self):
-        label = ctk.CTkLabel(self.frame, text=f"Relatório Mensal para o site: {self.selected_site}, Empresa: {self.selected_empresa}", text_color=self.my_dict['font'])
-        label.pack(pady=20)
+  def setup(self):
+    label = ctk.CTkLabel(self.frame, text=f"Relatório Mensal para o site e empresa selecionados", text_color=self.my_dict['font'])
+    label.pack(pady=20)
 
 # Para rodar o app:
 if __name__ == "__main__":
-    root = ctk.CTk()
-    app = ControleApp(root)
-    root.mainloop()
+  root = ctk.CTk()
+  app = ControleApp(root)
+  root.mainloop()
