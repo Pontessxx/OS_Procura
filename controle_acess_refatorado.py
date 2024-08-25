@@ -264,6 +264,12 @@ class Aba_Controle:
         self.setup()
 
     def setup(self):
+        self.style = ttk.Style()
+        # Configurando o estilo da Treeview
+        self.style.theme_use('alt')  # Use 'clam' ou outro tema que suporte estilos personalizados
+
+        
+
         # Obter os nomes relacionados ao ID_SiteEmpresas
         nomes = self.app.get_nomes(self.selected_siteempresa_id)
 
@@ -271,7 +277,7 @@ class Aba_Controle:
         label = ctk.CTkLabel(self.frame, text=f"Nomes associados ao site e empresa selecionados:", text_color=self.my_dict['font'])
         label.pack(pady=10)
 
-        self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'],height=50)
+        self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'], height=50)
         self.frame_checkbox.pack(pady=10, padx=10, fill='x')
 
         self.checkbox_vars = {}  # Dicionário para armazenar as variáveis das checkboxes
@@ -288,6 +294,7 @@ class Aba_Controle:
             if col >= max_columns:
                 col = 0
                 row += 1
+
         combobox_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'],)
         combobox_frame.pack(pady=10, padx=10, fill='x')
 
@@ -296,7 +303,7 @@ class Aba_Controle:
         tipo_presenca_label.grid(row=0, column=1, padx=5, pady=5)
         self.tipo_presenca_combobox = ctk.CTkComboBox(combobox_frame, values=self.app.get_presenca(), state='readonly')
         self.tipo_presenca_combobox.grid(row=0, column=2, padx=10, pady=5)
-       
+
         # Dia
         dias = [str(i) for i in range(1, 32)]
 
@@ -314,12 +321,61 @@ class Aba_Controle:
         self.mes_combobox.set(self.app.meses_dict[mes_atual])
 
         # Ano
-        
         ano_label = ctk.CTkLabel(combobox_frame, text="Ano :", text_color=self.my_dict['font'])
         ano_label.grid(row=0, column=7, padx=10, pady=5)
         self.ano_combobox = ctk.CTkComboBox(combobox_frame, values=self.app.get_anos(), state='readonly')
         self.ano_combobox.grid(row=0, column=8, padx=10, pady=5)
         self.ano_combobox.set(str(datetime.datetime.now().year))
+
+        # Tabela (Treeview)
+        tabela_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
+        tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
+
+        self.tabela = ttk.Treeview(tabela_frame, columns=("Nome", "Presença", "Data"), show='headings')
+        self.treeScrollbar = ctk.CTkScrollbar(tabela_frame, command=self.tabela.yview)
+        self.treeScrollbar.pack(side='right', fill='y')
+        self.tabela.heading("Nome", text="Nome")
+        self.tabela.heading("Presença", text="Presença")
+        self.tabela.heading("Data", text="Data")
+        # Scrollbar
+        self.tabela.configure(yscrollcommand=self.treeScrollbar.set)
+        self.tabela.pack(fill='both', expand=True)
+
+        # Configurando as cores da Treeview
+        self.style.configure("Treeview.Heading", background=self.my_dict['Heading_color'], foreground=self.my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 12),bordercolor=self.my_dict['Heading_color'])
+        self.style.map("Treeview.Heading", background=[('active', self.my_dict['hover_treeview'])])
+        self.style.configure("Treeview", background=self.my_dict['preto'], foreground=self.my_dict['font'], fieldbackground=self.my_dict['preto'], rowheight=25)
+        self.style.map("Treeview", background=[('selected', self.my_dict['hover_treeview'])])
+        # Preencher a Treeview com dados
+        self.preencher_tabela()
+
+    def preencher_tabela(self):
+        """Preenche a Treeview com os dados da consulta SQL."""
+        query = """
+            SELECT Nome.Nome, Presenca.Presenca, Controle.Data, Controle.id_SiteEmpresa
+            FROM Presenca 
+            INNER JOIN (Nome 
+            INNER JOIN Controle ON Nome.id_Nomes = Controle.id_Nome) 
+            ON Presenca.id_Presenca = Controle.id_Presenca
+            WHERE Controle.id_SiteEmpresa = ?;
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(query, (self.selected_siteempresa_id,))
+
+        # Limpar a Treeview antes de adicionar novos dados
+        for row in self.tabela.get_children():
+            self.tabela.delete(row)
+
+        # Adicionar os dados à Treeview
+        for row in cursor.fetchall():
+            nome = row[0]  # Nome do funcionário
+            presenca = row[1]  # Status de presença
+            data = row[2].strftime("%d/%m/%Y")  # Formatar data
+            self.tabela.insert("", "end", values=(nome, presenca, data))
+
+
+
+
 class Aba_empresas:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
         self.app = app
