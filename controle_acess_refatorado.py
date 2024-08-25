@@ -89,7 +89,7 @@ class ControleApp:
       return []
 
     cursor = self.conn.cursor()
-    cursor.execute("SELECT ID_Site, Sites FROM SITE")
+    cursor.execute("SELECT ID_Site, Sites FROM Site")
     sites = [row[1] for row in cursor.fetchall()]
     return sites
 
@@ -107,10 +107,10 @@ class ControleApp:
 
     cursor = self.conn.cursor()
     query = """
-      SELECT EMPRESA.ID_Empresa, EMPRESA.Empresas
-      FROM SITE_EMPRESA
-      INNER JOIN EMPRESA ON SITE_EMPRESA.ID_Empresa = EMPRESA.ID_Empresa
-      WHERE SITE_EMPRESA.ID_Site = ?
+      SELECT Empresa.ID_Empresa, Empresa.Empresas
+      FROM Site_Empresa
+      INNER JOIN Empresa ON Site_Empresa.ID_Empresa = Empresa.ID_Empresa
+      WHERE Site_Empresa.ID_Site = ?
     """
     cursor.execute(query, (site_id,))
     empresas = [(row[0], row[1]) for row in cursor.fetchall()]
@@ -119,7 +119,7 @@ class ControleApp:
   def get_siteempresa_id(self, site_id, empresa_id):
     # Obtém o ID_SiteEmpresas com base no site e empresa selecionados.
     cursor = self.conn.cursor()
-    cursor.execute("SELECT ID_SiteEmpresas FROM SITE_EMPRESA WHERE ID_Site = ? AND ID_Empresa = ?", (site_id, empresa_id))
+    cursor.execute("SELECT ID_SiteEmpresas FROM Site_Empresa WHERE ID_Site = ? AND ID_Empresa = ?", (site_id, empresa_id))
     result = cursor.fetchone()
     return result[0] if result else None
 
@@ -127,10 +127,10 @@ class ControleApp:
     # Obtém os nomes associados ao ID_SiteEmpresas.
     cursor = self.conn.cursor()
     query = """
-      SELECT NOME.Nome
-      FROM SITE_EMPRESA
-      INNER JOIN NOME ON SITE_EMPRESA.ID_SiteEmpresas = NOME.ID_SiteEmpresa
-      WHERE SITE_EMPRESA.ID_SiteEmpresas = ?
+      SELECT Nome.Nome
+      FROM Site_Empresa
+      INNER JOIN Nome ON Site_Empresa.ID_SiteEmpresas = Nome.ID_SiteEmpresa
+      WHERE Site_Empresa.ID_SiteEmpresas = ?
     """
     cursor.execute(query, (siteempresa_id,))
     nomes = [row[0] for row in cursor.fetchall()]
@@ -280,11 +280,23 @@ class Aba_empresas:
     self.nome_entry = ctk.CTkEntry(self.frame_inputs, fg_color=self.my_dict['font'], placeholder_text="Insira o Nome aqui!")
     self.nome_entry.grid(row=0, column=1, padx=5, pady=5)
 
+    
+    button_add = ctk.CTkButton(self.frame_inputs, text="Adicionar", fg_color=self.my_dict['adicionar_btn'])
+    button_add.grid(row=0, column=2, padx=5, pady=5)
+    
     empresa_label = ctk.CTkLabel(self.frame_inputs, text="Inserir Empresa :", text_color=self.my_dict['preto'],)
-    empresa_label.grid(row=1, column=0, padx=5, pady=5)
-
-    self.empresa_entry = ctk.CTkEntry(self.frame_inputs, fg_color=self.my_dict['font'], placeholder_text="Insira o Nome aqui!")
-    self.empresa_entry.grid(row=1, column=1, padx=5, pady=5)
+    empresa_label.grid(row=2, column=0, padx=5, pady=5)
+    
+    self.empresa_entry = ctk.CTkEntry(self.frame_inputs, fg_color=self.my_dict['font'], placeholder_text="Insira a empresa aqui!")
+    self.empresa_entry.grid(row=2, column=1, padx=5, pady=5)
+    
+    nome_label = ctk.CTkLabel(self.frame_inputs, text="Remover Nome :", text_color=self.my_dict['preto'],)
+    nome_label.grid(row=1, column=0, padx=5, pady=5)
+    self.nome_combobox = ctk.CTkComboBox(self.frame_inputs, values=self.app.get_nomes(self.selected_siteempresa_id), state='readonly')
+    self.nome_combobox.grid(row=1, column=1, padx=5, pady=5)
+    
+    button_remove = ctk.CTkButton(self.frame_inputs, text="Remover", fg_color=self.my_dict['remover_btn'])
+    button_remove.grid(row=1, column=2, padx=5, pady=5)
 
 class Aba_relatorio_mes:
   def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
