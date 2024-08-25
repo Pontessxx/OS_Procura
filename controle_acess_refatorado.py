@@ -159,6 +159,14 @@ class ControleApp:
         cursor.execute(query)
         anos = [str(row[0]) for row in cursor.fetchall()]
         return anos
+    def get_presenca(self):
+        if self.conn is None:
+            return []
+        query = """ SELECT Presenca.Presenca FROM Presenca """
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        presenca = [row[0] for row in cursor.fetchall()]
+        return presenca
 
     def on_site_selected(self, event):
         site_name = self.combo_sites.get()
@@ -280,6 +288,38 @@ class Aba_Controle:
             if col >= max_columns:
                 col = 0
                 row += 1
+        combobox_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'],)
+        combobox_frame.pack(pady=10, padx=10, fill='x')
+
+        # tipo presenca
+        tipo_presenca_label = ctk.CTkLabel(combobox_frame, text="Presença :", text_color=self.my_dict['font'])
+        tipo_presenca_label.grid(row=0, column=1, padx=5, pady=5)
+        self.tipo_presenca_combobox = ctk.CTkComboBox(combobox_frame, values=self.app.get_presenca(), state='readonly')
+        self.tipo_presenca_combobox.grid(row=0, column=2, padx=10, pady=5)
+       
+        # Dia
+        dias = [str(i) for i in range(1, 32)]
+
+        dia_label = ctk.CTkLabel(combobox_frame, text="Dia :", text_color=self.my_dict['font'])
+        dia_label.grid(row=0, column=3, padx=10, pady=5)
+        self.dia_combobox = ctk.CTkComboBox(combobox_frame, values=dias, state='readonly')
+        self.dia_combobox.grid(row=0, column=4, padx=10, pady=5)
+
+        # Mês
+        mes_label = ctk.CTkLabel(combobox_frame, text="Mês :", text_color=self.my_dict['font'])
+        mes_label.grid(row=0, column=5, padx=10, pady=5)
+        self.mes_combobox = ctk.CTkComboBox(combobox_frame, values=list(self.app.meses_dict.values()), state='readonly')
+        self.mes_combobox.grid(row=0, column=6, padx=10, pady=5)
+        mes_atual = datetime.datetime.now().month
+        self.mes_combobox.set(self.app.meses_dict[mes_atual])
+
+        # Ano
+        
+        ano_label = ctk.CTkLabel(combobox_frame, text="Ano :", text_color=self.my_dict['font'])
+        ano_label.grid(row=0, column=7, padx=10, pady=5)
+        self.ano_combobox = ctk.CTkComboBox(combobox_frame, values=self.app.get_anos(), state='readonly')
+        self.ano_combobox.grid(row=0, column=8, padx=10, pady=5)
+        self.ano_combobox.set(str(datetime.datetime.now().year))
 class Aba_empresas:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
         self.app = app
