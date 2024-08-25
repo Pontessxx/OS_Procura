@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import pyodbc
 from tkinter import ttk
-
+from tkinter import messagebox  # Importando o messagebox do tkinter
 class ControleApp:
     def __init__(self, root):
         self.root = root
@@ -112,6 +112,7 @@ class ControleApp:
             INNER JOIN Empresa ON Site_Empresa.id_Empresas = Empresa.id_Empresa
             WHERE Site_Empresa.id_Sites = ? AND Site_Empresa.Ativo = True
         """
+        print(query)
         cursor.execute(query, (site_id,))
         empresas = [(row[0], row[1]) for row in cursor.fetchall()]
         return empresas
@@ -119,7 +120,9 @@ class ControleApp:
     def get_siteempresa_id(self, site_id, empresa_id):
         """Obtém o ID_SiteEmpresas com base no site e empresa selecionados, considerando apenas empresas ativas."""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT id_SiteEmpresa FROM Site_Empresa WHERE id_Sites = ? AND id_Empresas = ? AND Ativo = True", (site_id, empresa_id))
+        query = """SELECT id_SiteEmpresa FROM Site_Empresa WHERE id_Sites = ? AND id_Empresas = ? AND Ativo = True"""
+        print(query)
+        cursor.execute(query, (site_id, empresa_id))
         result = cursor.fetchone()
         return result[0] if result else None
 
@@ -131,6 +134,7 @@ class ControleApp:
             FROM Nome
             WHERE id_SiteEmpresa = ?
         """
+        print(query)
         cursor.execute(query, (siteempresa_id,))
         nomes = [row[0] for row in cursor.fetchall()]
         return nomes
@@ -263,38 +267,76 @@ class Aba_empresas:
         self.my_dict = my_dict
         self.conn = conn
         self.selected_siteempresa_id = selected_siteempresa_id
+        self.selected_site_id = None
         self.setup()
 
     def setup(self):
         label = ctk.CTkLabel(self.frame, text=f"Inserir Nomes para o site e empresa selecionados", text_color=self.my_dict['font'])
         label.pack(pady=20)
         
-        # frame para o conteudo desta aba
+        # frame para o conteúdo desta aba
         self.frame_inputs = ctk.CTkFrame(self.frame, fg_color=self.my_dict['frames_ajuste'])
         self.frame_inputs.pack(pady=10, padx=10, fill='x')
 
-        nome_label = ctk.CTkLabel(self.frame_inputs, text="Inserir Nome :", text_color=self.my_dict['preto'])
+        nome_label = ctk.CTkLabel(self.frame_inputs, text="Inserir Nome:", text_color=self.my_dict['preto'])
         nome_label.grid(row=0, column=0, padx=5, pady=5)
 
         self.nome_entry = ctk.CTkEntry(self.frame_inputs, fg_color=self.my_dict['font'], placeholder_text="Insira o Nome aqui!")
         self.nome_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        button_add = ctk.CTkButton(self.frame_inputs, text="Adicionar", fg_color=self.my_dict['adicionar_btn'])
-        button_add.grid(row=0, column=2, padx=5, pady=5)
+        empresa_label = ctk.CTkLabel(self.frame_inputs, text="Inserir Empresa:", text_color=self.my_dict['preto'])
+        empresa_label.grid(row=1, column=0, padx=5, pady=5)
 
-        empresa_label = ctk.CTkLabel(self.frame_inputs, text="Inserir Empresa :", text_color=self.my_dict['preto'])
-        empresa_label.grid(row=2, column=0, padx=5, pady=5)
-        
         self.empresa_entry = ctk.CTkEntry(self.frame_inputs, fg_color=self.my_dict['font'], placeholder_text="Insira a empresa aqui!")
-        self.empresa_entry.grid(row=2, column=1, padx=5, pady=5)
+        self.empresa_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        nome_label = ctk.CTkLabel(self.frame_inputs, text="Remover Nome :", text_color=self.my_dict['preto'])
-        nome_label.grid(row=1, column=0, padx=5, pady=5)
+        button_add = ctk.CTkButton(self.frame_inputs, text="Adicionar", fg_color=self.my_dict['adicionar_btn'], command=self.add_empresa)
+        button_add.grid(row=1, column=2, padx=5, pady=5)
+
+        nome_label = ctk.CTkLabel(self.frame_inputs, text="Remover Nome:", text_color=self.my_dict['preto'])
+        nome_label.grid(row=2, column=0, padx=5, pady=5)
+
         self.nome_combobox = ctk.CTkComboBox(self.frame_inputs, values=self.app.get_nomes(self.selected_siteempresa_id), state='readonly')
-        self.nome_combobox.grid(row=1, column=1, padx=5, pady=5)
+        self.nome_combobox.grid(row=2, column=1, padx=5, pady=5)
 
         button_remove = ctk.CTkButton(self.frame_inputs, text="Remover", fg_color=self.my_dict['remover_btn'])
-        button_remove.grid(row=1, column=2, padx=5, pady=5)
+        button_remove.grid(row=2, column=2, padx=5, pady=5)
+
+    def add_empresa(self):
+        # Recuperar os valores inseridos
+        empresa_nome = self.empresa_entry.get().strip()
+        siteempresa_id = self.selected_siteempresa_id
+        
+        if not empresa_nome:
+            messagebox.showerror("Erro", "O nome da empresa não pode estar vazio.")
+            return
+
+        try:
+            cursor = self.conn.cursor()
+            
+            # Inserir a nova empresa na tabela Empresa
+            cursor.execute("INSERT INTO Empresa (Empresas) VALUES (?)", (empresa_nome,))
+            self.conn.commit()
+
+            # Recuperar o id_Empresa da nova empresa inserida
+            cursor.execute("SELECT @@IDENTITY AS ID_Empresa")
+            id_empresa = cursor.fetchone()[0]
+
+            # Obter o id_Site do Site_Empresa selecionado
+            cursor.execute("SELECT id_Sites FROM Site_Empresa WHERE id_SiteEmpresa = ?", (siteempresa_id,))
+            id_site = cursor.fetchone()[0]
+
+            # Inserir na tabela Site_Empresa com Ativo=TRUE
+            cursor.execute("INSERT INTO Site_Empresa (id_Sites, id_Empresas, Ativo) VALUES (?, ?, True)", (id_site, id_empresa))
+            self.conn.commit()
+
+            messagebox.showinfo("Sucesso", "Empresa adicionada com sucesso!")
+
+            # Limpar as entradas
+            self.empresa_entry.delete(0, 'end')
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao adicionar empresa: {e}")
 
 class Aba_relatorio_mes:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
