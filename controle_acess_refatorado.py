@@ -257,7 +257,6 @@ class Aba_Controle:
             if col >= max_columns:
                 col = 0
                 row += 1
-                
 class Aba_empresas:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
         self.app = app
@@ -271,67 +270,68 @@ class Aba_empresas:
         label = ctk.CTkLabel(self.frame, text="Gerenciar Empresas e Nomes", text_color=self.my_dict['font'])
         label.pack(pady=20)
         
-        # Frame para o conteúdo desta aba
+        # Frame para o conteúdo de Nomes
         self.frame_input_nome = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
-        self.frame_input_nome.pack(pady=10, padx=10, fill='x')
+        self.frame_input_nome.pack(pady=10, padx=10, fill='both', expand=True,side='left')
 
-        # Campo para inserir nome
+        # Inserir Nome
         nome_label = ctk.CTkLabel(self.frame_input_nome, text="Inserir Nome:", text_color=self.my_dict['font'])
-        nome_label.grid(row=0, column=0, padx=5, pady=5)
+        nome_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         self.nome_entry = ctk.CTkEntry(self.frame_input_nome, fg_color=self.my_dict['preto'],
                                        placeholder_text="Insira o Nome aqui!", placeholder_text_color=self.my_dict['frames_ajuste'])
-        self.nome_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.nome_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-        # Botão para adicionar nome
         button_add_nome = ctk.CTkButton(self.frame_input_nome, text="Adicionar Nome", fg_color=self.my_dict['adicionar_btn'], command=self.add_nome)
-        button_add_nome.grid(row=0, column=2, padx=5, pady=5)
+        button_add_nome.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
-        # Campo para remover nome
+        # Remover Nome
         nome_label_remove = ctk.CTkLabel(self.frame_input_nome, text="Remover Nome:", text_color=self.my_dict['font'])
-        nome_label_remove.grid(row=2, column=0, padx=5, pady=5)
+        nome_label_remove.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
         self.nome_combobox = ctk.CTkComboBox(self.frame_input_nome, values=self.app.get_nomes(self.selected_siteempresa_id), state='readonly')
-        self.nome_combobox.grid(row=2, column=1, padx=5, pady=5)
+        self.nome_combobox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
         button_remove_nome = ctk.CTkButton(self.frame_input_nome, text="Remover Nome", fg_color=self.my_dict['remover_btn'], command=self.remover_nome)
-        button_remove_nome.grid(row=2, column=2, padx=5, pady=5)
+        button_remove_nome.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
         
-        # Frame para o conteúdo desta aba
+        # Frame para o conteúdo de Empresas
         self.frame_input_empresa = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
-        self.frame_input_empresa.pack(pady=10, padx=10, fill='x')
+        self.frame_input_empresa.pack(pady=10, padx=10, fill='both', expand=True, side='left')
         
-        # Campo para inserir empresa
+        # Inserir Empresa
         empresa_label = ctk.CTkLabel(self.frame_input_empresa, text="Inserir Empresa:", text_color=self.my_dict['font'])
-        empresa_label.grid(row=1, column=0, padx=5, pady=5)
+        empresa_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         self.empresa_entry = ctk.CTkEntry(self.frame_input_empresa, fg_color=self.my_dict['preto'], placeholder_text="Insira a empresa aqui!",placeholder_text_color=self.my_dict['frames_ajuste'])
-        self.empresa_entry.grid(row=1, column=1, padx=5, pady=5)
+        self.empresa_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-        # Botão para adicionar empresa
         button_add_empresa = ctk.CTkButton(self.frame_input_empresa, text="Adicionar Empresa", fg_color=self.my_dict['adicionar_btn'], command=self.add_empresa)
-        button_add_empresa.grid(row=1, column=2, padx=5, pady=5)
+        button_add_empresa.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
-
-        # Campo para desativar empresa
+        # Desativar Empresa
         empresa_label_remove = ctk.CTkLabel(self.frame_input_empresa, text="Desativar Empresa:", text_color=self.my_dict['font'])
-        empresa_label_remove.grid(row=3, column=0, padx=5, pady=5)
+        empresa_label_remove.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
         self.empresa_combobox = ctk.CTkComboBox(self.frame_input_empresa, values=self.get_empresas_ativas(), state='readonly')
-        self.empresa_combobox.grid(row=3, column=1, padx=5, pady=5)
+        self.empresa_combobox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
         button_remove_empresa = ctk.CTkButton(self.frame_input_empresa, text="Desativar", fg_color=self.my_dict['remover_btn'], command=self.desativar_empresa)
-        button_remove_empresa.grid(row=3, column=2, padx=5, pady=5)
+        button_remove_empresa.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
 
-        # Campo para ativar empresa
+        # Ativar Empresa
         empresa_label_activate = ctk.CTkLabel(self.frame_input_empresa, text="Ativar Empresa:", text_color=self.my_dict['font'])
-        empresa_label_activate.grid(row=4, column=0, padx=5, pady=5)
+        empresa_label_activate.grid(row=2, column=0, padx=5, pady=5, sticky="w")
 
         self.empresa_inativa_combobox = ctk.CTkComboBox(self.frame_input_empresa, values=self.get_empresas_inativas(), state='readonly')
-        self.empresa_inativa_combobox.grid(row=4, column=1, padx=5, pady=5)
+        self.empresa_inativa_combobox.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
 
         button_ativar_empresa = ctk.CTkButton(self.frame_input_empresa, text="Ativar", fg_color=self.my_dict['adicionar_btn'], command=self.ativar_empresa)
-        button_ativar_empresa.grid(row=4, column=2, padx=5, pady=5)
+        button_ativar_empresa.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
+
+        # Ajustar colunas para se expandirem igualmente
+        self.frame_input_nome.grid_columnconfigure(1, weight=1)
+        self.frame_input_empresa.grid_columnconfigure(1, weight=1)
 
     def get_empresas_ativas(self):
         """Retorna a lista de empresas ativas associadas ao site selecionado."""
