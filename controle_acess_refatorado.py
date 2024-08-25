@@ -257,8 +257,7 @@ class Aba_Controle:
             if col >= max_columns:
                 col = 0
                 row += 1
-
-# O mesmo pode ser feito para as outras classes de abas
+                
 class Aba_empresas:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
         self.app = app
@@ -295,7 +294,7 @@ class Aba_empresas:
         self.empresa_entry.grid(row=1, column=1, padx=5, pady=5)
 
         # Botão para adicionar empresa
-        button_add_empresa = ctk.CTkButton(self.frame_inputs, text="Adicionar Empresa", fg_color=self.my_dict['adicionar_btn'], command=self.add_empresa,)
+        button_add_empresa = ctk.CTkButton(self.frame_inputs, text="Adicionar Empresa", fg_color=self.my_dict['adicionar_btn'], command=self.add_empresa)
         button_add_empresa.grid(row=1, column=2, padx=5, pady=5)
 
         # Campo para remover nome
@@ -305,8 +304,136 @@ class Aba_empresas:
         self.nome_combobox = ctk.CTkComboBox(self.frame_inputs, values=self.app.get_nomes(self.selected_siteempresa_id), state='readonly')
         self.nome_combobox.grid(row=2, column=1, padx=5, pady=5)
 
-        button_remove = ctk.CTkButton(self.frame_inputs, text="Remover", fg_color=self.my_dict['remover_btn'])
-        button_remove.grid(row=2, column=2, padx=5, pady=5)
+        button_remove_nome = ctk.CTkButton(self.frame_inputs, text="Remover Nome", fg_color=self.my_dict['remover_btn'], command=self.remover_nome)
+        button_remove_nome.grid(row=2, column=2, padx=5, pady=5)
+
+        # Campo para desativar empresa
+        empresa_label_remove = ctk.CTkLabel(self.frame_inputs, text="Desativar Empresa:", text_color=self.my_dict['preto'])
+        empresa_label_remove.grid(row=3, column=0, padx=5, pady=5)
+
+        self.empresa_combobox = ctk.CTkComboBox(self.frame_inputs, values=self.get_empresas_ativas(), state='readonly')
+        self.empresa_combobox.grid(row=3, column=1, padx=5, pady=5)
+
+        button_remove_empresa = ctk.CTkButton(self.frame_inputs, text="Desativar", fg_color=self.my_dict['remover_btn'], command=self.desativar_empresa)
+        button_remove_empresa.grid(row=3, column=2, padx=5, pady=5)
+
+        # Campo para ativar empresa
+        empresa_label_activate = ctk.CTkLabel(self.frame_inputs, text="Ativar Empresa:", text_color=self.my_dict['preto'])
+        empresa_label_activate.grid(row=4, column=0, padx=5, pady=5)
+
+        self.empresa_inativa_combobox = ctk.CTkComboBox(self.frame_inputs, values=self.get_empresas_inativas(), state='readonly')
+        self.empresa_inativa_combobox.grid(row=4, column=1, padx=5, pady=5)
+
+        button_ativar_empresa = ctk.CTkButton(self.frame_inputs, text="Ativar", fg_color=self.my_dict['adicionar_btn'], command=self.ativar_empresa)
+        button_ativar_empresa.grid(row=4, column=2, padx=5, pady=5)
+
+    def get_empresas_ativas(self):
+        """Retorna a lista de empresas ativas associadas ao site selecionado."""
+        empresas = self.app.get_empresas(self.app.selected_site_id)
+        return [empresa[1] for empresa in empresas]
+
+    def get_empresas_inativas(self):
+        """Retorna a lista de empresas inativas associadas ao site selecionado."""
+        if self.conn is None or not self.app.selected_site_id:
+            return []
+
+        cursor = self.conn.cursor()
+        query = """
+            SELECT Empresa.Empresas
+            FROM Site_Empresa
+            INNER JOIN Empresa ON Site_Empresa.id_Empresas = Empresa.id_Empresa
+            WHERE Site_Empresa.id_Sites = ? AND Site_Empresa.Ativo = False
+        """
+        cursor.execute(query, (self.app.selected_site_id,))
+        empresas_inativas = [row[0] for row in cursor.fetchall()]
+        return empresas_inativas
+
+    def ativar_empresa(self):
+        """Ativa uma empresa inativa."""
+        empresa_name = self.empresa_inativa_combobox.get().strip()
+        
+        if not empresa_name:
+            messagebox.showerror("Erro", "Selecione uma empresa para ativar.")
+            return
+
+        try:
+            # Obter o ID da empresa selecionada
+            cursor = self.conn.cursor()
+            query = """
+                SELECT id_Empresa 
+                FROM Empresa 
+                WHERE Empresas = ?
+            """
+            cursor.execute(query, (empresa_name,))
+            empresa_id = cursor.fetchone()[0]
+            
+            # Atualizar o campo Ativo para True na tabela Site_Empresa
+            cursor.execute("UPDATE Site_Empresa SET Ativo = True WHERE id_Sites = ? AND id_Empresas = ?", (self.app.selected_site_id, empresa_id))
+            self.conn.commit()
+
+            messagebox.showinfo("Sucesso", "Empresa ativada com sucesso!")
+
+            # Atualizar a combobox de empresas inativas e ativas
+            self.empresa_inativa_combobox['values'] = self.get_empresas_inativas()
+            self.empresa_combobox['values'] = self.get_empresas_ativas()
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao ativar empresa: {e}")
+
+    def remover_nome(self):
+        """Remove um nome da tabela Nome."""
+        nome = self.nome_combobox.get().strip()
+        
+        if not nome:
+            messagebox.showerror("Erro", "Selecione um nome para remover.")
+            return
+
+        try:
+            cursor = self.conn.cursor()
+
+            # Remover o nome da tabela Nome com base no id_SiteEmpresa e no nome
+            cursor.execute("DELETE FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+            self.conn.commit()
+
+            messagebox.showinfo("Sucesso", "Nome removido com sucesso!")
+
+            # Atualizar a combobox de nomes
+            self.nome_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id)
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao remover nome: {e}")
+
+    def desativar_empresa(self):
+        """Torna uma empresa não ativa."""
+        empresa_name = self.empresa_combobox.get().strip()
+        
+        if not empresa_name:
+            messagebox.showerror("Erro", "Selecione uma empresa para desativar.")
+            return
+
+        try:
+            # Obter o ID da empresa selecionada
+            empresas = self.app.get_empresas(self.app.selected_site_id)
+            empresa_id = next((emp[0] for emp in empresas if emp[1] == empresa_name), None)
+            
+            if not empresa_id:
+                messagebox.showerror("Erro", "Empresa não encontrada.")
+                return
+
+            cursor = self.conn.cursor()
+
+            # Desativar a empresa na tabela Site_Empresa
+            cursor.execute("UPDATE Site_Empresa SET Ativo = False WHERE id_Sites = ? AND id_Empresas = ?", (self.app.selected_site_id, empresa_id))
+            self.conn.commit()
+
+            messagebox.showinfo("Sucesso", "Empresa desativada com sucesso!")
+
+            # Atualizar a combobox de empresas ativas e inativas
+            self.empresa_combobox['values'] = self.get_empresas_ativas()
+            self.empresa_inativa_combobox['values'] = self.get_empresas_inativas()
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao desativar empresa: {e}")
 
     def add_nome(self):
         # Recuperar o nome inserido
@@ -367,9 +494,13 @@ class Aba_empresas:
             # Limpar as entradas
             self.empresa_entry.delete(0, 'end')
 
+            # Atualizar a combobox de empresas ativas e inativas
+            self.empresa_combobox['values'] = self.get_empresas_ativas()
+            self.empresa_inativa_combobox['values'] = self.get_empresas_inativas()
+
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao adicionar empresa: {e}")
-
+            
 class Aba_relatorio_mes:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
         self.app = app
