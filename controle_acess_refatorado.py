@@ -2,7 +2,7 @@ import customtkinter as ctk
 import pyodbc
 from tkinter import ttk
 from tkinter import messagebox  # Importando o messagebox do tkinter
-
+import datetime
 class ControleApp:
     def __init__(self, root):
         self.root = root
@@ -27,7 +27,12 @@ class ControleApp:
             'remover_btn': 'red',
             'hover_treeview': '#cc092f',
         }
-
+        self.meses_dict = {
+            1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+            5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+            9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+        }
+        
         self.buttons = {}
         self.conn = self.connect_to_db()
         self.selected_site_id = None  # Armazena o ID do site selecionado
@@ -137,6 +142,24 @@ class ControleApp:
         nomes = [row[0] for row in cursor.fetchall()]
         return nomes
 
+    def get_anos(self):
+        """Retorna uma lista de anos presentes na coluna de Data da tabela Controle."""
+        if self.conn is None:
+            return []
+
+        cursor = self.conn.cursor()
+        query = """
+            SELECT Ano
+            FROM (
+                SELECT DISTINCT YEAR(Data) AS Ano
+                FROM Controle
+            ) AS Subconsulta
+            ORDER BY Ano DESC
+        """
+        cursor.execute(query)
+        anos = [str(row[0]) for row in cursor.fetchall()]
+        return anos
+
     def on_site_selected(self, event):
         site_name = self.combo_sites.get()
         # Obter o ID do site selecionado
@@ -209,15 +232,15 @@ class ControleApp:
             if self.selected_siteempresa_id:
                 Aba_Controle(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
             else:
-                self.show_initial_message()  # Volta a mostrar a mensagem caso nenhum site ou empresa esteja selecionado
-        elif frame_name == "Empresas":
-            if self.selected_siteempresa_id:
-                Aba_empresas(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
-            else:
                 self.show_initial_message()
         elif frame_name == "Relatorio Mensal":
             if self.selected_siteempresa_id:
                 Aba_relatorio_mes(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
+            else:
+                self.show_initial_message()
+        elif frame_name == "Empresas":
+            if self.selected_siteempresa_id:
+                Aba_empresas(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
             else:
                 self.show_initial_message()
 
@@ -528,6 +551,25 @@ class Aba_relatorio_mes:
     def setup(self):
         label = ctk.CTkLabel(self.frame, text=f"Relatório Mensal para o site e empresa selecionados", text_color=self.my_dict['font'])
         label.pack(pady=20)
+        
+        filtro_frame = ctk.CTkFrame(self.frame, width=160, fg_color=self.my_dict['menu-inf'], bg_color=self.my_dict['preto'])
+        filtro_frame.pack(padx=20, pady=20, side='left', fill='y', expand=False)
+        
+        # Mês
+        mes_label = ctk.CTkLabel(filtro_frame, text="Mês:", text_color=self.my_dict['font'])
+        mes_label.grid(row=0, column=0, padx=10, pady=5)
+        self.mes_combobox = ctk.CTkComboBox(filtro_frame, values=list(self.app.meses_dict.values()), state='readonly')
+        self.mes_combobox.grid(row=0, column=1, padx=10, pady=5)
+        mes_atual = datetime.datetime.now().month
+        self.mes_combobox.set(self.app.meses_dict[mes_atual])
+
+        # Ano
+        anos = self.app.get_anos()
+        ano_label = ctk.CTkLabel(filtro_frame, text="Ano:", text_color=self.my_dict['font'])
+        ano_label.grid(row=1, column=0, padx=10, pady=5)
+        self.ano_combobox = ctk.CTkComboBox(filtro_frame, values=anos, state='readonly')
+        self.ano_combobox.grid(row=1, column=1, padx=10, pady=5)
+        self.ano_combobox.set(str(datetime.datetime.now().year))
 
 # Para rodar o app:
 if __name__ == "__main__":
