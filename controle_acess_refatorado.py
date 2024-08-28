@@ -130,14 +130,16 @@ class ControleApp:
         result = cursor.fetchone()
         return result[0] if result else None
 
-    def get_nomes(self, siteempresa_id):
-        """Obtém os nomes associados ao ID_SiteEmpresas."""
+    def get_nomes(self, siteempresa_id, ativos=True):
+        """Obtém os nomes associados ao ID_SiteEmpresas, filtrando por ativos se solicitado."""
         cursor = self.conn.cursor()
-        query = """
-            SELECT Nome.Nome
-            FROM Nome
-            WHERE id_SiteEmpresa = ?
-        """
+        query = "SELECT Nome.Nome FROM Nome WHERE id_SiteEmpresa = ?"
+        
+        if ativos:
+            query += " AND Ativo = True"
+        else:
+            query += " AND Ativo = False"
+        
         cursor.execute(query, (siteempresa_id,))
         nomes = [row[0] for row in cursor.fetchall()]
         return nomes
@@ -273,10 +275,9 @@ class Aba_Controle:
         # Configurando o estilo da Treeview
         self.style.theme_use('alt')  # Use 'clam' ou outro tema que suporte estilos personalizados
 
-        
-
         # Obter os nomes relacionados ao ID_SiteEmpresas
         nomes = self.app.get_nomes(self.selected_siteempresa_id)
+        print(nomes)
 
         # Exibir os nomes na aba de controle
         label = ctk.CTkLabel(self.frame, text=f"Nomes associados ao site e empresa selecionados:", text_color=self.my_dict['font'])
@@ -347,7 +348,7 @@ class Aba_Controle:
         self.tabela.pack(fill='both', expand=True)
 
         # Configurando as cores da Treeview
-        self.style.configure("Treeview.Heading", background=self.my_dict['Heading_color'], foreground=self.my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 12),bordercolor=self.my_dict['Heading_color'])
+        self.style.configure("Treeview.Heading", background=self.my_dict['Heading_color'], foreground=self.my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 12), bordercolor=self.my_dict['Heading_color'])
         self.style.map("Treeview.Heading", background=[('active', self.my_dict['hover_treeview'])])
         self.style.configure("Treeview", background=self.my_dict['preto'], foreground=self.my_dict['font'], fieldbackground=self.my_dict['preto'], rowheight=25)
         self.style.map("Treeview", background=[('selected', self.my_dict['hover_treeview'])])
@@ -378,6 +379,7 @@ class Aba_Controle:
             data = row[2].strftime("%d/%m/%Y")  # Formatar data
             self.tabela.insert("", "end", values=(nome, presenca, data))
 
+
 class Aba_Nomes:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
         self.app = app
@@ -392,29 +394,42 @@ class Aba_Nomes:
         label.pack(pady=20)
         
         # Frame para o conteúdo de Nomes
-        self.frame_input_nome = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
-        self.frame_input_nome.pack(pady=10, padx=10, fill='both', expand=True,side='left')
+        frame_input_nome = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
+        frame_input_nome.pack(pady=10, padx=10, fill='both', expand=True, side='left')
 
         # Inserir Nome
-        nome_label = ctk.CTkLabel(self.frame_input_nome, text="Inserir Nome:", text_color=self.my_dict['font'])
+        nome_label = ctk.CTkLabel(frame_input_nome, text="Inserir Nome:", text_color=self.my_dict['font'])
         nome_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-        self.nome_entry = ctk.CTkEntry(self.frame_input_nome, fg_color=self.my_dict['preto'],
+        self.nome_entry = ctk.CTkEntry(frame_input_nome, fg_color=self.my_dict['preto'],
                                        placeholder_text="Insira o Nome aqui!", placeholder_text_color=self.my_dict['frames_ajuste'])
         self.nome_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-        button_add_nome = ctk.CTkButton(self.frame_input_nome, text="Adicionar Nome", fg_color=self.my_dict['adicionar_btn'], command=self.add_nome)
+        button_add_nome = ctk.CTkButton(frame_input_nome, text="Adicionar Nome", fg_color=self.my_dict['adicionar_btn'], command=self.add_nome)
         button_add_nome.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
         # Remover Nome
-        nome_label_remove = ctk.CTkLabel(self.frame_input_nome, text="Remover Nome:", text_color=self.my_dict['font'])
+        nome_label_remove = ctk.CTkLabel(frame_input_nome, text="Remover Nome:", text_color=self.my_dict['font'])
         nome_label_remove.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
-        self.nome_combobox = ctk.CTkComboBox(self.frame_input_nome, values=self.app.get_nomes(self.selected_siteempresa_id), state='readonly')
+        self.nome_combobox = ctk.CTkComboBox(frame_input_nome, values=self.app.get_nomes(self.selected_siteempresa_id), state='readonly')
         self.nome_combobox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
-        button_remove_nome = ctk.CTkButton(self.frame_input_nome, text="Remover Nome", fg_color=self.my_dict['remover_btn'], command=self.remover_nome)
+        button_remove_nome = ctk.CTkButton(frame_input_nome, text="Remover Nome", fg_color=self.my_dict['remover_btn'], command=self.inativar_nome)
         button_remove_nome.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
+        
+        # Reativar Nome
+        reativar_nome_label = ctk.CTkLabel(frame_input_nome, text="Reativar Nome:", text_color=self.my_dict['font'])
+        reativar_nome_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
+
+        # Preenchendo a ComboBox de nomes inativos corretamente
+        self.nome_inativo_combobox = ctk.CTkComboBox(frame_input_nome, values=self.app.get_nomes(self.selected_siteempresa_id, ativos=False), state='readonly')
+        self.nome_inativo_combobox.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
+
+        button_reativar_nome = ctk.CTkButton(frame_input_nome, text="Reativar Nome", fg_color=self.my_dict['adicionar_btn'], command=self.reativar_nome)
+        button_reativar_nome.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
+
+
     
     def add_nome(self):
         # Recuperar o nome inserido
@@ -442,28 +457,66 @@ class Aba_Nomes:
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao adicionar nome: {e}")
     
-    def remover_nome(self):
-        """Remove um nome da tabela Nome."""
-        nome = self.nome_combobox.get().strip()
-        
+    def reativar_nome(self):
+        """Reativa um nome inativo na tabela Nome."""
+        nome = self.nome_inativo_combobox.get().strip()
+
         if not nome:
-            messagebox.showerror("Erro", "Selecione um nome para remover.")
+            messagebox.showerror("Erro", "Selecione um nome para reativar.")
             return
 
         try:
             cursor = self.conn.cursor()
 
-            # Remover o nome da tabela Nome com base no id_SiteEmpresa e no nome
-            cursor.execute("DELETE FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+            # Marcar o nome como ativo
+            cursor.execute("UPDATE Nome SET Ativo = True WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
             self.conn.commit()
 
-            messagebox.showinfo("Sucesso", "Nome removido com sucesso!")
+            messagebox.showinfo("Sucesso", "Nome reativado com sucesso!")
+
+            # Atualizar os ComboBoxes de nomes ativos e inativos
+            self.nome_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id)
+            self.nome_inativo_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id, ativos=False)
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao reativar nome: {e}")
+
+    
+    def inativar_nome(self):
+        """Inativa um nome na tabela Nome, garantindo que o site selecionado tenha pelo menos um nome ativo."""
+        nome = self.nome_combobox.get().strip()
+
+        if not nome:
+            messagebox.showerror("Erro", "Selecione um nome para inativar.")
+            return
+
+        try:
+            # Obter o ID do site_empresa e verificar quantos nomes ativos existem
+            cursor = self.conn.cursor()
+            query = """
+                SELECT COUNT(*) 
+                FROM Nome 
+                WHERE id_SiteEmpresa = ? AND Ativo = True
+            """
+            cursor.execute(query, (self.selected_siteempresa_id,))
+            count_ativos = cursor.fetchone()[0]
+
+            if count_ativos <= 1:
+                messagebox.showerror("Erro", "Não é possível inativar o último nome ativo do site.")
+                return
+
+            # Marcar o nome como inativo
+            cursor.execute("UPDATE Nome SET Ativo = False WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+            self.conn.commit()
+
+            messagebox.showinfo("Sucesso", "Nome inativado com sucesso!")
 
             # Atualizar a combobox de nomes
             self.nome_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id)
 
         except pyodbc.Error as e:
-            messagebox.showerror("Erro", f"Erro ao remover nome: {e}")
+            messagebox.showerror("Erro", f"Erro ao inativar nome: {e}")
+
 
 class Aba_empresas:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
@@ -534,9 +587,9 @@ class Aba_empresas:
         return empresas_inativas
 
     def ativar_empresa(self):
-        """Ativa uma empresa inativa."""
+        """Ativa uma empresa inativa, garantindo que o site tenha pelo menos uma empresa ativa."""
         empresa_name = self.empresa_inativa_combobox.get().strip()
-        
+
         if not empresa_name:
             messagebox.showerror("Erro", "Selecione uma empresa para ativar.")
             return
@@ -551,7 +604,13 @@ class Aba_empresas:
             """
             cursor.execute(query, (empresa_name,))
             empresa_id = cursor.fetchone()[0]
-            
+
+            # Verificar se a empresa já está ativa
+            active_empresas = self.get_empresas_ativas()
+            if empresa_name in active_empresas:
+                messagebox.showinfo("Informação", "Essa empresa já está ativa.")
+                return
+
             # Atualizar o campo Ativo para True na tabela Site_Empresa
             cursor.execute("UPDATE Site_Empresa SET Ativo = True WHERE id_Sites = ? AND id_Empresas = ?", (self.app.selected_site_id, empresa_id))
             self.conn.commit()
@@ -565,12 +624,13 @@ class Aba_empresas:
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao ativar empresa: {e}")
 
+
     
 
     def desativar_empresa(self):
-        """Torna uma empresa não ativa."""
+        """Torna uma empresa não ativa, garantindo que o site selecionado tenha pelo menos uma empresa ativa."""
         empresa_name = self.empresa_combobox.get().strip()
-        
+
         if not empresa_name:
             messagebox.showerror("Erro", "Selecione uma empresa para desativar.")
             return
@@ -579,9 +639,14 @@ class Aba_empresas:
             # Obter o ID da empresa selecionada
             empresas = self.app.get_empresas(self.app.selected_site_id)
             empresa_id = next((emp[0] for emp in empresas if emp[1] == empresa_name), None)
-            
+
             if not empresa_id:
                 messagebox.showerror("Erro", "Empresa não encontrada.")
+                return
+
+            # Verificar se há mais de uma empresa ativa no site
+            if len(empresas) <= 1:
+                messagebox.showerror("Erro", "Não é possível desativar a última empresa ativa do site.")
                 return
 
             cursor = self.conn.cursor()
@@ -598,6 +663,7 @@ class Aba_empresas:
 
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao desativar empresa: {e}")
+
 
     def add_empresa(self):
         # Recuperar os valores inseridos
