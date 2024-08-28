@@ -203,7 +203,7 @@ class ControleApp:
             button.configure(state=state)
 
     def add_buttons_menu(self, frame):
-        button_texts = ["Controle de Frequencia", "Empresas", "Relatorio Mensal"]
+        button_texts = ["Controle de Frequencia","Nomes", "Empresas", "Relatorio Mensal"]
 
         for text in button_texts:
             button = ctk.CTkButton(
@@ -249,6 +249,11 @@ class ControleApp:
         elif frame_name == "Empresas":
             if self.selected_siteempresa_id:
                 Aba_empresas(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
+            else:
+                self.show_initial_message()
+        elif frame_name == "Nomes":
+            if self.selected_siteempresa_id:
+                Aba_Nomes(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
             else:
                 self.show_initial_message()
 
@@ -373,10 +378,7 @@ class Aba_Controle:
             data = row[2].strftime("%d/%m/%Y")  # Formatar data
             self.tabela.insert("", "end", values=(nome, presenca, data))
 
-
-
-
-class Aba_empresas:
+class Aba_Nomes:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
         self.app = app
         self.frame = frame
@@ -413,6 +415,68 @@ class Aba_empresas:
 
         button_remove_nome = ctk.CTkButton(self.frame_input_nome, text="Remover Nome", fg_color=self.my_dict['remover_btn'], command=self.remover_nome)
         button_remove_nome.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
+    
+    def add_nome(self):
+        # Recuperar o nome inserido
+        nome = self.nome_entry.get().strip()
+        
+        if not nome:
+            messagebox.showerror("Erro", "O nome não pode estar vazio.")
+            return
+
+        try:
+            cursor = self.conn.cursor()
+
+            # Inserir o nome na tabela Nome usando o id_SiteEmpresa selecionado
+            cursor.execute("INSERT INTO Nome (Nome, id_SiteEmpresa) VALUES (?, ?)", (nome, self.selected_siteempresa_id))
+            self.conn.commit()
+
+            messagebox.showinfo("Sucesso", "Nome adicionado com sucesso!")
+
+            # Limpar as entradas
+            self.nome_entry.delete(0, 'end')
+
+            # Atualizar a combobox de nomes
+            self.nome_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id)
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao adicionar nome: {e}")
+    
+    def remover_nome(self):
+        """Remove um nome da tabela Nome."""
+        nome = self.nome_combobox.get().strip()
+        
+        if not nome:
+            messagebox.showerror("Erro", "Selecione um nome para remover.")
+            return
+
+        try:
+            cursor = self.conn.cursor()
+
+            # Remover o nome da tabela Nome com base no id_SiteEmpresa e no nome
+            cursor.execute("DELETE FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+            self.conn.commit()
+
+            messagebox.showinfo("Sucesso", "Nome removido com sucesso!")
+
+            # Atualizar a combobox de nomes
+            self.nome_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id)
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao remover nome: {e}")
+
+class Aba_empresas:
+    def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
+        self.app = app
+        self.frame = frame
+        self.my_dict = my_dict
+        self.conn = conn
+        self.selected_siteempresa_id = selected_siteempresa_id
+        self.setup()
+
+    def setup(self):
+        label = ctk.CTkLabel(self.frame, text="Gerenciar Empresas e Nomes", text_color=self.my_dict['font'])
+        label.pack(pady=20)
         
         # Frame para o conteúdo de Empresas
         self.frame_input_empresa = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
@@ -447,10 +511,6 @@ class Aba_empresas:
 
         button_ativar_empresa = ctk.CTkButton(self.frame_input_empresa, text="Ativar", fg_color=self.my_dict['adicionar_btn'], command=self.ativar_empresa)
         button_ativar_empresa.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
-
-        # Ajustar colunas para se expandirem igualmente
-        self.frame_input_nome.grid_columnconfigure(1, weight=1)
-        self.frame_input_empresa.grid_columnconfigure(1, weight=1)
 
     def get_empresas_ativas(self):
         """Retorna a lista de empresas ativas associadas ao site selecionado."""
@@ -505,28 +565,7 @@ class Aba_empresas:
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao ativar empresa: {e}")
 
-    def remover_nome(self):
-        """Remove um nome da tabela Nome."""
-        nome = self.nome_combobox.get().strip()
-        
-        if not nome:
-            messagebox.showerror("Erro", "Selecione um nome para remover.")
-            return
-
-        try:
-            cursor = self.conn.cursor()
-
-            # Remover o nome da tabela Nome com base no id_SiteEmpresa e no nome
-            cursor.execute("DELETE FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
-            self.conn.commit()
-
-            messagebox.showinfo("Sucesso", "Nome removido com sucesso!")
-
-            # Atualizar a combobox de nomes
-            self.nome_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id)
-
-        except pyodbc.Error as e:
-            messagebox.showerror("Erro", f"Erro ao remover nome: {e}")
+    
 
     def desativar_empresa(self):
         """Torna uma empresa não ativa."""
@@ -559,32 +598,6 @@ class Aba_empresas:
 
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao desativar empresa: {e}")
-
-    def add_nome(self):
-        # Recuperar o nome inserido
-        nome = self.nome_entry.get().strip()
-        
-        if not nome:
-            messagebox.showerror("Erro", "O nome não pode estar vazio.")
-            return
-
-        try:
-            cursor = self.conn.cursor()
-
-            # Inserir o nome na tabela Nome usando o id_SiteEmpresa selecionado
-            cursor.execute("INSERT INTO Nome (Nome, id_SiteEmpresa) VALUES (?, ?)", (nome, self.selected_siteempresa_id))
-            self.conn.commit()
-
-            messagebox.showinfo("Sucesso", "Nome adicionado com sucesso!")
-
-            # Limpar as entradas
-            self.nome_entry.delete(0, 'end')
-
-            # Atualizar a combobox de nomes
-            self.nome_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id)
-
-        except pyodbc.Error as e:
-            messagebox.showerror("Erro", f"Erro ao adicionar nome: {e}")
 
     def add_empresa(self):
         # Recuperar os valores inseridos
