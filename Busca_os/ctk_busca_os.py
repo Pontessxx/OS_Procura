@@ -73,6 +73,10 @@ class SimpleApp(ctk.CTk):
         button = ctk.CTkButton(self.frame, text="Buscar Arquivo", command=self.separar_input)
         button.grid(row=3, column=2, padx=0, pady=20)
 
+        # Botão para abrir nova janela
+        self.new_window_button = ctk.CTkButton(self.frame, text="Abrir Nova Janela", command=self.abrir_nova_janela)
+        self.new_window_button.grid(row=3, column=1, padx=0, pady=20)
+
         # Tabela (Treeview) - frame
         tabela_frame = ctk.CTkFrame(self, fg_color=self.my_dic['Frame_Preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
@@ -281,6 +285,16 @@ class SimpleApp(ctk.CTk):
 
         self.categoria_secundaria.set('')
 
+    def trocar_combobox_nova_janela(self, choice, categoria_secundaria_combobox):
+        if choice == 'CABEAMENTO':
+            categoria_secundaria_combobox.configure(values=['', 'OPEN', 'MAINFRAME'])
+        elif choice == 'MANUTENÇÃO':
+            categoria_secundaria_combobox.configure(values=['', 'CORRETIVA', 'PREVENTIVA'])
+        else:
+            categoria_secundaria_combobox.configure(values=[''])
+
+        categoria_secundaria_combobox.set('')
+
     def separar_input(self):
         input_str = self.input_value.get()
 
@@ -345,7 +359,7 @@ class SimpleApp(ctk.CTk):
 
             cursor.execute(query)
             resultados = cursor.fetchall()
-
+            print(resultados)
             cursor.close()
 
             # Handle the results as necessary
@@ -367,6 +381,161 @@ class SimpleApp(ctk.CTk):
 
         except pyodbc.Error as e:
             print(f"Erro ao consultar a tabela OS_Referencia_teste: {e}")
+
+    # Updated method to handle inserting/updating the OS
+    def cadastrar_os(self):
+        cursor = self.conn.cursor()
+
+        # Obter os valores dos campos diretamente
+        tipo_os = self.tipo_combobox_nova.get()
+        site = self.site_combobox_nova.get()
+        ano = self.ano_combobox_nova.get()
+        mes = self.mes_combobox_nova.get()
+        categoria_primaria = self.categoria_primaria_nova.get()
+        categoria_secundaria = self.categoria_secundaria_nova.get()
+        path = self.path_entry.get()
+        codigo_os = self.codigo_os_entry.get()
+
+        # Verificar se o caminho especificado é válido
+        if not os.path.exists(path):
+            messagebox.showerror("Erro", "O caminho especificado não é válido. Verifique o caminho e tente novamente.")
+            self.input_value.set('')
+            return  # Não continuar o código se o caminho for inválido
+
+        try:
+            # Verificar se o ano está na tabela relacionada, caso contrário, inserir
+            cursor.execute("SELECT COUNT(*) FROM tblANOS WHERE ANOS = ?", (ano,))
+            ano_existe = cursor.fetchone()[0]
+            if not ano_existe:
+                cursor.execute("INSERT INTO tblANOS (ANOS) VALUES (?)", (ano,))
+                self.conn.commit()
+
+            # Verificar se já existe uma linha com os mesmos valores
+            verificar_query = """
+                SELECT * FROM Procura
+                WHERE OS = ? AND SITES = ? AND ANOS = ? AND MES = ? AND CATEGORIA_PRIMARIA = ? AND CATEGORIA_SECUNDARIA = ?
+            """
+            cursor.execute(verificar_query, (tipo_os, site, ano, mes, categoria_primaria, categoria_secundaria))
+            resultado_existente = cursor.fetchone()
+            print(resultado_existente)
+
+            if resultado_existente:
+                resposta = messagebox.askyesno("Atualizar OS", "Já existe uma OS com esses valores. Deseja atualizar?")
+                if resposta:
+                    update_query = """
+                        UPDATE Procura
+                        SET PATH = ?, PATH_error = ?
+                        WHERE OS = ? AND SITES = ? AND ANOS = ? AND MES = ? AND CATEGORIA_PRIMARIA = ? AND CATEGORIA_SECUNDARIA = ?
+                    """
+                    cursor.execute(update_query, (
+                        path, True, tipo_os, site, ano, mes, categoria_primaria, categoria_secundaria))
+                    self.conn.commit()
+                    messagebox.showinfo("Sucesso", "OS atualizada com sucesso!")
+                else:
+                    messagebox.showinfo("Ação Cancelada", "A atualização foi cancelada pelo usuário.")
+            else:
+                # Obter o próximo valor para a chave primária
+                cursor.execute("SELECT MAX(Código) FROM Procura")
+                max_codigo = cursor.fetchone()[0]
+                if max_codigo is None:
+                    max_codigo = 0
+                novo_codigo = max_codigo + 1
+
+                # Inserir a nova OS se não existir
+                insert_query = """
+                    INSERT INTO Procura (Código, [CODIGO OS], OS, SITES, ANOS, MES, CATEGORIA_PRIMARIA, CATEGORIA_SECUNDARIA, PATH, PATH_error)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """
+                cursor.execute(insert_query, (
+                    novo_codigo, codigo_os, tipo_os, site, ano, mes, categoria_primaria, categoria_secundaria, path,
+                    True))
+                #print(cursor.execute)
+                self.conn.commit()
+                messagebox.showinfo("Sucesso", "OS inserida com sucesso!")
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao inserir ou atualizar OS: {e}")
+            print(e)
+        finally:
+            cursor.close()
+
+    def abrir_nova_janela(self):
+
+        nova_janela = ctk.CTkToplevel(self)
+        nova_janela.title("INSERIR OS")
+        nova_janela.geometry("650x300")
+        nova_janela.resizable(False, False)
+
+        # Criando os comboboxes na nova janela
+        label_tipo_nova = ctk.CTkLabel(nova_janela, text="Tipo da OS:")
+        label_tipo_nova.grid(row=0, column=0, padx=20, pady=10)
+
+        self.tipo_combobox_nova = ctk.CTkComboBox(nova_janela, values=self.tipo_combobox.cget("values"), state='readonly')
+        self.tipo_combobox_nova.grid(row=0, column=1, padx=10, pady=10)
+
+        label_site_nova = ctk.CTkLabel(nova_janela, text="Site:")
+        label_site_nova.grid(row=0, column=2, padx=20, pady=10)
+
+        self.site_combobox_nova = ctk.CTkComboBox(nova_janela, values=self.site_combobox.cget("values"), state='readonly')
+        self.site_combobox_nova.grid(row=0, column=3, padx=10, pady=10)
+
+        # Adicionando a ComboBox para o ano
+        label_ano_nova = ctk.CTkLabel(nova_janela, text="Ano:")
+        label_ano_nova.grid(row=1, column=0, padx=20, pady=10)
+
+        self.ano_combobox_nova = ctk.CTkComboBox(nova_janela, values=[str(i) for i in range(2009, 2101)], state='readonly')
+        self.ano_combobox_nova.grid(row=1, column=1, padx=10, pady=10)
+
+        # Adicionando a ComboBox para o mês
+        label_mes_nova = ctk.CTkLabel(nova_janela, text="Mês:")
+        label_mes_nova.grid(row=1, column=2, padx=20, pady=10)
+
+        self.mes_combobox_nova = ctk.CTkComboBox(nova_janela, values=list(self.month_map.values()), state='readonly')
+        self.mes_combobox_nova.grid(row=1, column=3, padx=10, pady=10)
+
+        label_cat_nova = ctk.CTkLabel(nova_janela, text="Categoria Primária:")
+        label_cat_nova.grid(row=2, column=0, padx=20, pady=10)
+
+        self.categoria_primaria_nova = ctk.CTkComboBox(nova_janela, values=self.categoria_primaria.cget("values"),
+                                                  state='readonly')
+        self.categoria_primaria_nova.grid(row=2, column=1, padx=10, pady=10)
+
+        label_cat_sec_nova = ctk.CTkLabel(nova_janela, text="Categoria Secundária:")
+        label_cat_sec_nova.grid(row=2, column=2, padx=20, pady=10)
+
+        self.categoria_secundaria_nova = ctk.CTkComboBox(nova_janela, values=self.categoria_secundaria.cget("values"),
+                                                    state='readonly')
+        self.categoria_secundaria_nova.grid(row=2, column=3, padx=10, pady=10)
+
+        # Campo de entrada para o caminho com width ajustado e ocupando duas colunas
+        label_path = ctk.CTkLabel(nova_janela, text="Caminho:")
+        label_path.grid(row=3, column=0, padx=20, pady=10)
+
+        self.path_entry = ctk.CTkEntry(nova_janela)  # Ajuste do width
+        self.path_entry.grid(row=3, column=1, columnspan=3, padx=10, pady=10, sticky='w')
+        # Add this in the `abrir_nova_janela` method for creating a new window.
+        label_codigo_os = ctk.CTkLabel(nova_janela, text="Código OS:")
+        label_codigo_os.grid(row=3, column=2, padx=20, pady=10)
+
+        self.codigo_os_entry = ctk.CTkEntry(nova_janela)
+        self.codigo_os_entry.grid(row=3, column=3, padx=10, pady=10)
+
+        # Configuração das colunas para garantir que os botões fiquem nas extremidades
+        nova_janela.grid_columnconfigure(0, weight=1)
+        nova_janela.grid_columnconfigure(1, weight=1)
+        nova_janela.grid_columnconfigure(2, weight=1)
+        nova_janela.grid_columnconfigure(3, weight=1)
+
+
+        # Botão "Inserir OS"
+        inserir_os_button = ctk.CTkButton(nova_janela, text="Inserir OS", command=self.cadastrar_os)
+        inserir_os_button.grid(row=4, column=3, padx=10, pady=20, sticky='e')
+
+        # Vinculando a função de atualização para o combobox de categoria primária na nova janela
+        self.categoria_primaria_nova.configure(
+            command=lambda choice: self.trocar_combobox_nova_janela(choice, self.categoria_secundaria_nova))
+
+        self.iconify()
 
 
 if __name__ == "__main__":
