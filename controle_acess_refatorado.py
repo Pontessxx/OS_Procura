@@ -389,7 +389,7 @@ class Aba_Controle:
             presenca = row[1]  # Status de presença
             data = row[2].strftime("%d/%m/%Y")  # Formatar data
             self.tabela.insert("", "end", values=(nome, presenca, data))
-        
+            
     def adicionar_frequencia(self):
         # Obter o tipo de presença selecionado
         tipo_presenca = self.tipo_presenca_combobox.get()
@@ -402,6 +402,12 @@ class Aba_Controle:
         # Verificar se todos os campos necessários foram preenchidos
         if not tipo_presenca or not dia or not mes or not ano:
             messagebox.showerror("Erro", "Todos os campos de presença e data devem ser preenchidos.")
+            return
+
+         # Verificar se algum nome foi selecionado
+        nomes_selecionados = [nome for nome, var in self.checkbox_vars.items() if var.get() == 'on']
+        if not nomes_selecionados:
+            messagebox.showerror("Erro", "Nenhum nome foi selecionado.")
             return
 
         # Converter a data selecionada em um formato datetime
@@ -417,6 +423,7 @@ class Aba_Controle:
         # Verificar se já existem registros de presença para os nomes na data selecionada
         registros_existentes = []
         novos_registros = []
+        atestado_nomes = []  # Lista para armazenar os nomes com atestado
 
         try:
             cursor = self.conn.cursor()
@@ -427,64 +434,71 @@ class Aba_Controle:
                     cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
                     id_nome = cursor.fetchone()[0]
 
-                    # Verificar se já existe um registro para a data selecionada
+                    # Verificar o último registro de presença para este nome
                     cursor.execute("""
-                        SELECT id_Controle 
+                        SELECT TOP 1 Presenca.Presenca
                         FROM Controle
-                        WHERE id_Nome = ? AND Data = ? AND id_SiteEmpresa = ?
-                    """, (id_nome, data_selecionada, self.selected_siteempresa_id))
+                        INNER JOIN Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+                        WHERE id_Nome = ? AND id_SiteEmpresa = ?
+                        ORDER BY Controle.Data DESC
+                    """, (id_nome, self.selected_siteempresa_id))
 
-                    resultado = cursor.fetchone()
-                    if resultado:
-                        registros_existentes.append((resultado[0], nome))
+
+                    ultimo_registro = cursor.fetchone()
+                    
+                    if ultimo_registro and ultimo_registro[0].lower() == "atestado":
+                        atestado_nomes.append(nome)
                     else:
                         novos_registros.append((id_nome, nome))
 
-            if registros_existentes:
-                # Perguntar ao usuário se ele deseja substituir os registros existentes
-                resposta = messagebox.askyesno("Confirmação", f"Já existem registros para {', '.join([nome for _, nome in registros_existentes])} na data {data_selecionada.strftime('%d/%m/%Y')}. Deseja substituir?")
-                if not resposta:
-                    return
+            # Verificar se há nomes com atestado no último registro
+            if atestado_nomes:
+                resposta = messagebox.askyesno(
+                    "Confirmação",
+                    f"Os seguintes nomes possuem 'atestado' no último registro: {', '.join(atestado_nomes)}.\n"
+                    "Deseja marcar a nova frequência como 'atestado' clique em 'sim'.\n Quer colocar 'falta' para esses nomes, clique em 'não'."
+                )
+                tipo_presenca_atestado = "atestado" if resposta else "falta"
 
-            # Inserir novos registros na tabela Controle
+                # Inserir registros para os nomes com atestado
+                for nome in atestado_nomes:
+                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+                    id_nome = cursor.fetchone()[0]
+
+                    cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca_atestado,))
+                    id_presenca = cursor.fetchone()[0]
+
+                    cursor.execute("""
+                        INSERT INTO Controle (id_Nome, id_Presenca, Data, id_SiteEmpresa)
+                        VALUES (?, ?, ?, ?)
+                    """, (id_nome, id_presenca, data_selecionada, self.selected_siteempresa_id))
+
+                    detalhes_sucesso.append(f"{nome} - {tipo_presenca_atestado} em {data_selecionada.strftime('%d/%m/%Y')}")
+
+            # Inserir novos registros para os outros nomes
             for id_nome, nome in novos_registros:
-                # Obter o id_Presenca do tipo de presença selecionado
                 cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca,))
                 id_presenca = cursor.fetchone()[0]
 
-                # Inserir os dados na tabela Controle
                 cursor.execute("""
                     INSERT INTO Controle (id_Nome, id_Presenca, Data, id_SiteEmpresa)
                     VALUES (?, ?, ?, ?)
                 """, (id_nome, id_presenca, data_selecionada, self.selected_siteempresa_id))
-                
+
                 detalhes_sucesso.append(f"{nome} - {tipo_presenca} em {data_selecionada.strftime('%d/%m/%Y')}")
-
-            # Atualizar registros existentes na tabela Controle
-            for id_controle, nome in registros_existentes:
-                cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca,))
-                id_presenca = cursor.fetchone()[0]
-
-                cursor.execute("""
-                    UPDATE Controle
-                    SET id_Presenca = ?, Data = ?
-                    WHERE id_Controle = ?
-                """, (id_presenca, data_selecionada, id_controle))
-                
-                detalhes_sucesso.append(f"{nome} - {tipo_presenca} em {data_selecionada.strftime('%d/%m/%Y')} (atualizado)")
 
             self.conn.commit()  # Confirmar as alterações
 
             # Montar a mensagem de sucesso
-            mensagem_sucesso = "Frequência adicionada/atualizada com sucesso para:\n" + "\n".join(detalhes_sucesso)
+            mensagem_sucesso = "Frequência adicionada com sucesso para:\n" + "\n".join(detalhes_sucesso)
             messagebox.showinfo("Sucesso", mensagem_sucesso)
 
             # Atualizar a tabela após adicionar a frequência
             self.preencher_tabela()
 
         except pyodbc.Error as e:
-            messagebox.showerror("Erro", f"Erro ao adicionar frequência: {e}") 
-    
+            messagebox.showerror("Erro", f"Erro ao adicionar frequência: {e}")
+
     def remover_frequencia(self):
             # Obter o dia, mês e ano selecionados
             dia = self.dia_combobox.get()
