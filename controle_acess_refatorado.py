@@ -7,6 +7,9 @@ import calendar
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.dates as mdates
+import os
+import subprocess
+from fpdf import FPDF, XPos, YPos
 
 class ControleApp:
     def __init__(self, root):
@@ -994,16 +997,19 @@ class Aba_relatorio_mes:
         # Botão para aplicar o filtro
         filtro_button = ctk.CTkButton(filtro_frame, text="Aplicar Filtro", command=self.aplicar_filtro)
         filtro_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
+        
+        salvar_button = ctk.CTkButton(filtro_frame, text="Salvar como PDF", command=self.salvar_pdf)
+        salvar_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
         # Informações adicionais
         self.info_label = ctk.CTkLabel(filtro_frame, text="DIAS ÚTEIS: XXXX", text_color=self.my_dict['font'])
-        self.info_label.grid(row=3, column=0, columnspan=2, padx=10, pady=5)
+        self.info_label.grid(row=4, column=0, columnspan=2, padx=10, pady=5)
 
         self.faltas_label = ctk.CTkLabel(filtro_frame, text="FALTAS:", text_color=self.my_dict['font'])
-        self.faltas_label.grid(row=4, column=0, columnspan=2, padx=10, pady=5)
+        self.faltas_label.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
 
         self.atestados_label = ctk.CTkLabel(filtro_frame, text="ATESTADOS:", text_color=self.my_dict['font'])
-        self.atestados_label.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
+        self.atestados_label.grid(row=6, column=0, columnspan=2, padx=10, pady=5)
 
         # Frame para os gráficos e tabela
         self.frame_graficos = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
@@ -1304,6 +1310,303 @@ class Aba_relatorio_mes:
         # Adicionar o gráfico ao Tkinter
         self.chart_dispersao = FigureCanvasTkAgg(self.figura_dispersao, self.frame_grafico_dispersao)
         self.chart_dispersao.get_tk_widget().pack(expand=True, fill='both')
+ 
+    def salvar_pdf(self):
+        # Consulta SQL para obter os dados
+        query = """
+            SELECT 
+                Nome.Nome,
+                SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
+                SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
+                SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
+                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso
+            FROM 
+                (Controle
+            INNER JOIN 
+                Nome ON Controle.id_Nome = Nome.id_Nomes)
+            INNER JOIN 
+                Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+            WHERE 
+                Controle.id_SiteEmpresa = ? AND MONTH(Controle.Data) = ? AND YEAR(Controle.Data) = ?
+            GROUP BY 
+                Nome.Nome;
+        """
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = int(self.ano_combobox.get())
+        
+        cursor = self.conn.cursor()
+        cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
+
+        # Criar o PDF
+        pdf = FPDF()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+
+        # Configurar o título
+        pdf.set_font("Helvetica", size=12)
+        pdf.cell(200, 10, text=f"Relatório Mensal - {self.mes_combobox.get()} {self.ano_combobox.get()}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+
+        # Configurar os cabeçalhos da tabela
+        pdf.set_font("Helvetica", size=10)
+        pdf.cell(40, 10, text="Nome", border=1)
+        pdf.cell(30, 10, text="OK", border=1)
+        pdf.cell(30, 10, text="Falta", border=1)
+        pdf.cell(40, 10, text="Atestado", border=1)
+        pdf.cell(30, 10, text="Curso", border=1)
+        pdf.ln()
+
+        # Adicionar os dados ao PDF
+        for row in cursor.fetchall():
+            pdf.cell(40, 10, text=str(row[0]), border=1)
+            pdf.cell(30, 10, text=str(row[1]), border=1)
+            pdf.cell(30, 10, text=str(row[2]), border=1)
+            pdf.cell(40, 10, text=str(row[3]), border=1)
+            pdf.cell(30, 10, text=str(row[4]), border=1)
+            pdf.ln()
+
+        # Criar e salvar os gráficos de pizza por nome
+        imagens_pizza = self.criar_grafico_pizza_por_nome_pdf()
+        dispersao_img_path = self.criar_grafico_dispersao_pdf()
+
+        # Adicionar os gráficos de pizza ao PDF
+        for nome, img_path in imagens_pizza:
+            pdf.add_page()
+            pdf.set_font("Helvetica", size=12)
+            pdf.cell(200, 10, text=f"Gráfico de Pizza - {nome}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+            pdf.image(img_path, x=10, y=30, w=180)
+
+        # Adicionar o gráfico de dispersão ao PDF
+        pdf.add_page()
+        pdf.set_font("Helvetica", size=12)
+        pdf.cell(200, 10, text="Gráfico de Dispersão", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+        pdf.image(dispersao_img_path, x=10, y=30, w=180)
+
+        # Adicionar a tabela em uma nova página
+        pdf.add_page()
+        pdf.set_font("Helvetica", size=12)
+        pdf.cell(200, 10, text="Tabela de Presenças", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+        pdf.ln(10)
+
+        # Cabeçalhos da tabela
+        pdf.set_font("Helvetica", size=10)
+        pdf.cell(60, 10, text="Nome", border=1)
+        pdf.cell(60, 10, text="Tipo de Presença", border=1)
+        pdf.cell(60, 10, text="Data", border=1)
+        pdf.ln()
+
+        # Consultar os dados para a tabela
+        query_tabela = """
+            SELECT 
+                Nome.Nome, 
+                Presenca.Presenca, 
+                FORMAT(Controle.Data, 'dd/MM/yyyy') AS Data
+            FROM 
+                (Controle
+            INNER JOIN 
+                Nome ON Controle.id_Nome = Nome.id_Nomes)
+            INNER JOIN 
+                Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+            WHERE 
+                Controle.id_SiteEmpresa = ? AND MONTH(Controle.Data) = ? AND YEAR(Controle.Data) = ?
+            ORDER BY 
+                Controle.Data;
+        """
+        cursor.execute(query_tabela, (self.selected_siteempresa_id, mes, ano))
+
+        # Adicionar os dados da tabela ao PDF
+        for row in cursor.fetchall():
+            pdf.cell(60, 10, text=row[0], border=1)
+            pdf.cell(60, 10, text=row[1], border=1)
+            pdf.cell(60, 10, text=row[2], border=1)
+            pdf.ln()
+
+        # Salvar o PDF no diretório de downloads
+        downloads_path = os.path.join(os.path.expanduser("~"), "Downloads")
+        pdf_filename = f"relatorio_{self.mes_combobox.get()}_{self.ano_combobox.get()}.pdf"
+        pdf_filepath = os.path.join(downloads_path, pdf_filename)
+        pdf.output(pdf_filepath)
+
+        # Remover as imagens temporárias
+        for _, img_path in imagens_pizza:
+            os.remove(img_path)
+        os.remove(dispersao_img_path)
+
+        # Mostrar mensagem de confirmação
+        messagebox.showinfo("Sucesso", f"PDF salvo com sucesso em: {pdf_filepath}")
+
+        # Abrir a pasta Downloads
+        try:
+            if os.name == 'nt':  # Windows
+                subprocess.Popen(f'explorer "{downloads_path}"')
+            elif os.name == 'posix':  # macOS, Linux
+                subprocess.Popen(['xdg-open', downloads_path])
+        except Exception as e:
+            print(f"Erro ao abrir a pasta Downloads: {e}")
+
+
+
+
+    def criar_grafico_dispersao_pdf(self):
+        # Obter os dados de presença para o gráfico de dispersão
+        cursor = self.conn.cursor()
+        query = """
+            SELECT 
+                Nome.Nome,
+                Controle.Data,
+                Presenca.Presenca
+            FROM 
+                (Controle
+            INNER JOIN 
+                Nome ON Controle.id_Nome = Nome.id_Nomes)
+            INNER JOIN 
+                Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+            WHERE 
+                Controle.id_SiteEmpresa = ? AND MONTH(Controle.Data) = ? AND YEAR(Controle.Data) = ?
+            ORDER BY Controle.Data
+        """
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = int(self.ano_combobox.get())
+        cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
+
+        # Preparar os dados para o gráfico de dispersão
+        data_dict = {
+            'OK': {'datas': [], 'nomes': [], 'cor': '#4CAF50', 'marker': 'o'},
+            'FALTA': {'datas': [], 'nomes': [], 'cor': '#FF5733', 'marker': 'x'},
+            'ATESTADO': {'datas': [], 'nomes': [], 'cor': '#FFC300', 'marker': 'd'},
+            'CURSO': {'datas': [], 'nomes': [], 'cor': '#8E44AD', 'marker': '*'},
+        }
+        
+        nomes_unicos = set()
+        for row in cursor.fetchall():
+            nome = row[0]
+            data = row[1]
+            presenca = row[2].upper()
+            
+            nomes_unicos.add(nome)  # Armazena os nomes únicos para o eixo Y
+            if presenca in data_dict:
+                data_dict[presenca]['datas'].append(data)
+                data_dict[presenca]['nomes'].append(nome)
+
+        # Criar uma lista de todos os dias úteis no mês
+        cal = calendar.Calendar()
+        dias_uteis = [datetime.date(ano, mes, day) for day, weekday in cal.itermonthdays2(ano, mes) if day != 0 and weekday < 5]
+
+        # Criando a figura do gráfico com fundo branco
+        figura_dispersao = plt.Figure(figsize=(6, 4), facecolor='white')
+        ax = figura_dispersao.add_subplot(111)
+
+        # Plotar os dados
+        for tipo, info in data_dict.items():
+            if info['datas']:
+                # Para que os nomes apareçam corretamente no eixo Y, eles precisam ser numericamente codificados
+                y_positions = [list(nomes_unicos).index(nome) + 1 for nome in info['nomes']]
+                ax.scatter(info['datas'], y_positions, color=info['cor'], label=tipo, marker=info['marker'])
+
+        ax.set_yticks(range(1, len(nomes_unicos) + 1))
+        ax.set_yticklabels(list(nomes_unicos), fontsize=8, color='black')  # Nomes no eixo Y
+
+        # Configurar o eixo X para mostrar apenas os dias úteis
+        ax.set_xticks(dias_uteis)  # Define os dias úteis como pontos no eixo X
+        ax.set_xticklabels([date.strftime('%d') for date in dias_uteis], fontsize=8, color='black')
+
+        # Customizar o fundo do gráfico e os elementos
+        ax.set_facecolor('white')  # Fundo branco
+        figura_dispersao.patch.set_facecolor('white')
+        ax.spines['bottom'].set_color('black')
+        ax.spines['left'].set_color('black')
+        ax.tick_params(axis='x', colors='black')  # X ticks pretos
+        ax.tick_params(axis='y', colors='black')  # Y ticks pretos
+
+        # Adicionar a legenda
+        legend = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), facecolor='white', edgecolor='black', fontsize=8)
+        for text in legend.get_texts():
+            text.set_color("black")
+
+        # Salvar a figura como imagem
+        dispersao_img_path = os.path.join(os.path.expanduser("~"), "dispersion_chart.png")
+        figura_dispersao.savefig(dispersao_img_path, dpi=300, bbox_inches='tight')
+
+        return dispersao_img_path
+
+
+    def criar_grafico_pizza_por_nome_pdf(self):
+        # Obter os nomes e presenças relacionados
+        cursor = self.conn.cursor()
+        query = """
+            SELECT 
+                Nome.Nome,
+                SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
+                SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
+                SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
+                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso
+            FROM 
+                (Controle
+            INNER JOIN 
+                Nome ON Controle.id_Nome = Nome.id_Nomes)
+            INNER JOIN 
+                Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+            WHERE 
+                Controle.id_SiteEmpresa = ? AND MONTH(Controle.Data) = ? AND YEAR(Controle.Data) = ?
+            GROUP BY 
+                Nome.Nome;
+        """
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = int(self.ano_combobox.get())
+        cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
+
+        # Armazenar os caminhos das imagens geradas para cada nome
+        imagens_pizza = []
+
+        # Iterar sobre os resultados e criar um gráfico de pizza para cada nome
+        for row in cursor.fetchall():
+            nome = row[0]
+            sizes = [row[1], row[2], row[3], row[4]]
+            labels = ['OK', 'Falta', 'Atestado', 'Curso']
+            colors = ['#4CAF50', '#FF5733', '#FFC300', '#8E44AD']
+
+            # Filtrar as categorias com base em valores diferentes de zero
+            filtered_labels = []
+            filtered_sizes = []
+            filtered_colors = []
+
+            for i in range(len(sizes)):
+                if sizes[i] > 0:
+                    filtered_labels.append(labels[i])
+                    filtered_sizes.append(sizes[i])
+                    filtered_colors.append(colors[i])
+
+            # Criar gráfico de pizza apenas se houver valores
+            if filtered_sizes:
+                figura = plt.Figure(figsize=(4, 4), facecolor='white')
+                ax = figura.add_subplot(111)
+
+                wedges, texts, autotexts = ax.pie(
+                    filtered_sizes, labels=filtered_labels, colors=filtered_colors, 
+                    autopct=lambda p: f'{int(p * sum(filtered_sizes) / 100)}', 
+                    startangle=0, pctdistance=0.8, 
+                    wedgeprops=dict(width=0.4)
+                )
+
+                for text in autotexts:
+                    text.set_color('black')
+                    text.set_fontsize(12)
+
+                for text in texts:
+                    text.set_color('black')
+                    text.set_fontsize(12)
+
+                ax.axis('equal')
+                ax.set_facecolor('white')
+                figura.patch.set_facecolor('white')
+
+                # Salvar a figura como imagem
+                img_path = os.path.join(os.path.expanduser("~"), f"pizza_chart_{nome}.png")
+                figura.savefig(img_path, dpi=300, bbox_inches='tight')
+                imagens_pizza.append((nome, img_path))
+
+        return imagens_pizza
+
+
 
 
 
