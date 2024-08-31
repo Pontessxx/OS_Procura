@@ -127,6 +127,83 @@ class SimpleApp(ctk.CTk):
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao conectar ao banco de dados: {e}")
             return None
+    
+    """ def criar_tabela_os_referencia(self):
+    try:
+        cursor = self.conn.cursor()
+
+        # Criação da tabela OS_Referencia
+        cursor.execute(
+            CREATE TABLE OS_Referencia (
+                ID AUTOINCREMENT PRIMARY KEY,
+                OS_Referencia TEXT NOT NULL,
+                Codigo INTEGER NOT NULL,
+                Categoria_Primaria_OS TEXT,
+                Categoria_Secundaria_OS TEXT,
+                SITES TEXT,
+                OS TEXT,
+                PATH TEXT,
+                PATH_error BOOLEAN
+            )
+        )
+        self.conn.commit()
+        messagebox.showinfo("Sucesso", "Tabela OS_Referencia criada com sucesso!")
+
+    except pyodbc.Error as e:
+        messagebox.showerror("Erro", f"Erro ao criar a tabela OS_Referencia: {e}")
+    finally:
+        cursor.close() """  
+
+    def atualizar_ou_inserir_os_referencia(self):
+        try:
+            cursor = self.conn.cursor()
+
+            # Selecionar dados da tabela Procura
+            cursor.execute("""
+                SELECT 
+                    [CODIGO OS], 
+                    Código, 
+                    [CATEGORIA_PRIMARIA], 
+                    [CATEGORIA_SECUNDARIA], 
+                    SITES, 
+                    OS, 
+                    PATH, 
+                    PATH_error,
+                    [CODIGO OS] & Mid(CStr([ANOS]),3,2) & Left([MES],2) AS OS_Referencia
+                FROM Procura
+            """)
+            registros = cursor.fetchall()
+
+            for row in registros:
+                codigo_os, codigo, categoria_primaria, categoria_secundaria, sites, os_, path, path_error, os_referencia = row
+
+                # Verificar se o registro já existe na tabela OS_Referencia
+                cursor.execute("SELECT COUNT(*) FROM OS_Referencia WHERE Codigo=?", (codigo,))
+                registro_existe = cursor.fetchone()[0]
+
+                if registro_existe > 0:
+                    # Atualizar o registro existente
+                    cursor.execute("""
+                        UPDATE OS_Referencia 
+                        SET OS_Referencia=?, Categoria_Primaria_OS=?, Categoria_Secundaria_OS=?, SITES=?, OS=?, PATH=?, PATH_error=?
+                        WHERE Codigo=?
+                    """, (os_referencia, categoria_primaria, categoria_secundaria, sites, os_, path, path_error, codigo))
+                else:
+                    # Inserir um novo registro
+                    cursor.execute("""
+                        INSERT INTO OS_Referencia (OS_Referencia, Codigo, Categoria_Primaria_OS, Categoria_Secundaria_OS, SITES, OS, PATH, PATH_error)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (os_referencia, codigo, categoria_primaria, categoria_secundaria, sites, os_, path, path_error))
+
+            self.conn.commit()
+            print("Sucesso", "Tabela OS_Referencia atualizada com sucesso!")
+
+        except pyodbc.Error as e:
+            print("Erro", f"Erro ao atualizar ou inserir na tabela OS_Referencia: {e}")
+        finally:
+            cursor.close()
+
+
 
     def carregar_combobox_tipo(self):
         if self.conn:
@@ -342,45 +419,48 @@ class SimpleApp(ctk.CTk):
             input_str_trimmed = input_str[:-3]
             print(input_str_trimmed)
 
-            # Construct the query to search in "OS_Referencia_Teste"
-            query = f"""
+            # Construir a consulta para buscar na nova tabela OS_Referencia
+            query = """
                 SELECT 
-                    [CODIGO OS] & Mid(CStr([ANOS]),3,2) & Left([MES],2) AS OS_Referencia, 
-                    Procura.Código AS Codigo, 
-                    Procura.[CATEGORIA_PRIMARIA] AS Categoria_Primaria_OS, 
-                    Procura.[CATEGORIA_SECUNDARIA] AS Categoria_Secundaria_OS, 
-                    Procura.SITES,
-                    Procura.OS,
-                    Procura.PATH, 
-                    Procura.PATH_error
-                FROM Procura
-                WHERE ((([CODIGO OS] & Mid(CStr([ANOS]),3,2) & Left([MES],2))='{input_str_trimmed}'));
+                    OS_Referencia, 
+                    Codigo, 
+                    Categoria_Primaria_OS, 
+                    Categoria_Secundaria_OS, 
+                    SITES,
+                    OS,
+                    PATH, 
+                    PATH_error
+                FROM OS_Referencia
+                WHERE OS_Referencia = ?
             """
 
-            cursor.execute(query)
+            # Executar a consulta com o input do usuário
+            cursor.execute(query, input_str_trimmed)
             resultados = cursor.fetchall()
-            print(resultados)
             cursor.close()
 
-            # Handle the results as necessary
+            # Processar os resultados conforme necessário
             if resultados:
-                print("Resultados encontrados na tabela OS_Referencia_Teste:")
+                print("Resultados encontrados na tabela OS_Referencia:")
                 for row in resultados:
                     print(row)
-                    self.tipo_combobox.set(row[5])
-                    self.site_combobox.set(row[4])
-                    self.categoria_primaria.set(row[2])
-                    self.categoria_secundaria.set(row[3])
+                    self.tipo_combobox.set(row[5])  # OS
+                    self.site_combobox.set(row[4])  # SITES
+                    self.categoria_primaria.set(row[2])  # Categoria_Primaria_OS
+                    self.categoria_secundaria.set(row[3])  # Categoria_Secundaria_OS
 
-                    # You can add logic here to handle the retrieved rows.
-                    # Example: self.tabela.insert("", "end", values=row)
+                    # Inserir os resultados na tabela (Treeview) se necessário
+                    # Exemplo: self.tabela.insert("", "end", values=row)
                 self.imprimir_ultimas_colunas(resultados)
             else:
-                print("Nenhum resultado encontrado na tabela OS_Referencia_Teste.")
+                print("Nenhum resultado encontrado na tabela OS_Referencia.")
                 self.tabela.delete(*self.tabela.get_children())
+                messagebox.showwarning("Aviso", "Nenhum resultado encontrado na tabela OS_Referencia.")
 
         except pyodbc.Error as e:
-            print(f"Erro ao consultar a tabela OS_Referencia_teste: {e}")
+            print(f"Erro ao consultar a tabela OS_Referencia: {e}")
+            messagebox.showerror("Erro", f"Erro ao consultar a tabela OS_Referencia: {e}")
+
 
     # Updated method to handle inserting/updating the OS
     def cadastrar_os(self):
@@ -430,7 +510,7 @@ class SimpleApp(ctk.CTk):
                     cursor.execute(update_query, (
                         path, True, tipo_os, site, ano, mes, categoria_primaria, categoria_secundaria))
                     self.conn.commit()
-                    messagebox.showinfo("Sucesso", "OS atualizada com sucesso!")
+                    messagebox.showinfo("Sucesso", f"OS atualizada com sucesso!\n\nParâmetros:\nTipo OS: {tipo_os}\nSite: {site}\nAno: {ano}\nMês: {mes}\nCategoria Primária: {categoria_primaria}\nCategoria Secundária: {categoria_secundaria}\nCaminho: {path}")
                 else:
                     messagebox.showinfo("Ação Cancelada", "A atualização foi cancelada pelo usuário.")
             else:
@@ -449,15 +529,15 @@ class SimpleApp(ctk.CTk):
                 cursor.execute(insert_query, (
                     novo_codigo, codigo_os, tipo_os, site, ano, mes, categoria_primaria, categoria_secundaria, path,
                     True))
-                #print(cursor.execute)
                 self.conn.commit()
-                messagebox.showinfo("Sucesso", "OS inserida com sucesso!")
+                messagebox.showinfo("Sucesso", f"OS inserida com sucesso!\n\nParâmetros:\nTipo OS: {tipo_os}\nSite: {site}\nAno: {ano}\nMês: {mes}\nCategoria Primária: {categoria_primaria}\nCategoria Secundária: {categoria_secundaria}\nCaminho: {path}")
 
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao inserir ou atualizar OS: {e}")
             print(e)
         finally:
             cursor.close()
+
 
     def abrir_nova_janela(self):
 
@@ -540,4 +620,7 @@ class SimpleApp(ctk.CTk):
 
 if __name__ == "__main__":
     app = SimpleApp()
+
+    # Atualizar ou inserir dados na nova tabela
+    app.atualizar_ou_inserir_os_referencia()
     app.mainloop()
