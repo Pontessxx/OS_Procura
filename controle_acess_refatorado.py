@@ -6,6 +6,7 @@ import datetime
 import calendar
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.dates as mdates
 
 class ControleApp:
     def __init__(self, root):
@@ -1048,6 +1049,7 @@ class Aba_relatorio_mes:
         self.update_info()
         self.update_tabela()
         self.criar_grafico_pizza()
+        self.criar_grafico_dispersao()
 
     def update_info(self):
         # Obter o mês e ano selecionados nas ComboBoxes
@@ -1194,7 +1196,82 @@ class Aba_relatorio_mes:
         ax.set_facecolor(self.my_dict['preto'])
         self.figura.patch.set_facecolor(self.my_dict['preto'])
 
-    
+    def criar_grafico_dispersao(self):
+        # Obter os dados de presença para o gráfico de dispersão
+        cursor = self.conn.cursor()
+        query = """
+            SELECT 
+                Nome.Nome,
+                Controle.Data,
+                Presenca.Presenca
+            FROM 
+                (Controle
+            INNER JOIN 
+                Nome ON Controle.id_Nome = Nome.id_Nomes)
+            INNER JOIN 
+                Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+            WHERE 
+                Controle.id_SiteEmpresa = ? AND MONTH(Controle.Data) = ? AND YEAR(Controle.Data) = ?
+            ORDER BY Controle.Data
+        """
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = int(self.ano_combobox.get())
+        cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
+
+        # Preparar os dados para o gráfico de dispersão
+        data_dict = {
+            'OK': {'datas': [], 'nomes': [], 'cor': '#4CAF50', 'marker': 'o'},
+            'FALTA': {'datas': [], 'nomes': [], 'cor': '#FF5733', 'marker': 'x'},
+            'ATESTADO': {'datas': [], 'nomes': [], 'cor': '#FFC300', 'marker': 'd'},
+            'CURSO': {'datas': [], 'nomes': [], 'cor': '#8E44AD', 'marker': '*'},
+        }
+        
+        cal = calendar.Calendar()
+        dias_uteis = [day for day, weekday in cal.itermonthdays2(ano, mes) if day != 0 and weekday < 5]
+
+        for row in cursor.fetchall():
+            nome = row[0]
+            data = row[1]
+            presenca = row[2].upper()
+            
+            if data.day in dias_uteis:
+                data_dict[presenca]['datas'].append(data)
+                data_dict[presenca]['nomes'].append(nome)
+        
+        # Criando a figura do gráfico com fundo customizado
+        self.figura_dispersao = plt.Figure(figsize=(4, 4), facecolor=self.my_dict['preto'])
+        ax = self.figura_dispersao.add_subplot(111)
+
+        # Plotar os dados
+        for tipo, info in data_dict.items():
+            if info['datas']:
+                ax.scatter(info['datas'], info['nomes'], color=info['cor'], label=tipo, marker=info['marker'])
+
+        ax.set_facecolor(self.my_dict['preto'])
+        self.figura_dispersao.patch.set_facecolor(self.my_dict['preto'])
+
+        ax.spines['bottom'].set_color('white')
+        ax.spines['left'].set_color('white')
+        ax.xaxis.label.set_color('white')
+        ax.yaxis.label.set_color('white')
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
+
+        ax.set_xlabel("Data", fontsize=10, color='white')
+        ax.set_ylabel("Nome", fontsize=10, color='white')
+        ax.legend(loc='upper right', facecolor=self.my_dict['preto'], edgecolor='white')
+
+        # Formatação das datas no eixo X
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
+        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))  # Mostra a cada 2 dias
+        plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+
+        # Adicionar o gráfico ao Tkinter
+        chart = FigureCanvasTkAgg(self.figura_dispersao, self.frame_grafico_2)
+        chart.get_tk_widget().pack()
+
+
+
 
 
 
