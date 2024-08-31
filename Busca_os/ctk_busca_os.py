@@ -462,7 +462,7 @@ class SimpleApp(ctk.CTk):
             messagebox.showerror("Erro", f"Erro ao consultar a tabela OS_Referencia: {e}")
 
 
-    # Updated method to handle inserting/updating the OS
+    # adicionar essa parte ao meu codigo main
     def cadastrar_os(self):
         cursor = self.conn.cursor()
 
@@ -475,6 +475,7 @@ class SimpleApp(ctk.CTk):
         categoria_secundaria = self.categoria_secundaria_nova.get()
         path = self.path_entry.get()
         codigo_os = self.codigo_os_entry.get()
+        path_error = bool(self.path_error_var.get())  # Obtém o valor da CheckBox
 
         # Verificar se o caminho especificado é válido
         if not os.path.exists(path):
@@ -508,9 +509,9 @@ class SimpleApp(ctk.CTk):
                         WHERE OS = ? AND SITES = ? AND ANOS = ? AND MES = ? AND CATEGORIA_PRIMARIA = ? AND CATEGORIA_SECUNDARIA = ?
                     """
                     cursor.execute(update_query, (
-                        path, True, tipo_os, site, ano, mes, categoria_primaria, categoria_secundaria))
+                        path, path_error, tipo_os, site, ano, mes, categoria_primaria, categoria_secundaria))
                     self.conn.commit()
-                    messagebox.showinfo("Sucesso", f"OS atualizada com sucesso!\n\nParâmetros:\nTipo OS: {tipo_os}\nSite: {site}\nAno: {ano}\nMês: {mes}\nCategoria Primária: {categoria_primaria}\nCategoria Secundária: {categoria_secundaria}\nCaminho: {path}")
+                    messagebox.showinfo("Sucesso", f"OS atualizada com sucesso!\n\nParâmetros:\nTipo OS: {tipo_os}\nSite: {site}\nAno: {ano}\nMês: {mes}\nCategoria Primária: {categoria_primaria}\nCategoria Secundária: {categoria_secundaria}\nCaminho: {path}\nPath Error: {path_error}")
                 else:
                     messagebox.showinfo("Ação Cancelada", "A atualização foi cancelada pelo usuário.")
             else:
@@ -528,9 +529,9 @@ class SimpleApp(ctk.CTk):
                 """
                 cursor.execute(insert_query, (
                     novo_codigo, codigo_os, tipo_os, site, ano, mes, categoria_primaria, categoria_secundaria, path,
-                    True))
+                    path_error))
                 self.conn.commit()
-                messagebox.showinfo("Sucesso", f"OS inserida com sucesso!\n\nParâmetros:\nTipo OS: {tipo_os}\nSite: {site}\nAno: {ano}\nMês: {mes}\nCategoria Primária: {categoria_primaria}\nCategoria Secundária: {categoria_secundaria}\nCaminho: {path}")
+                messagebox.showinfo("Sucesso", f"OS inserida com sucesso!\n\nParâmetros:\nTipo OS: {tipo_os}\nSite: {site}\nAno: {ano}\nMês: {mes}\nCategoria Primária: {categoria_primaria}\nCategoria Secundária: {categoria_secundaria}\nCaminho: {path}\nPath Error: {path_error}")
 
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao inserir ou atualizar OS: {e}")
@@ -540,10 +541,9 @@ class SimpleApp(ctk.CTk):
 
 
     def abrir_nova_janela(self):
-
         nova_janela = ctk.CTkToplevel(self)
         nova_janela.title("INSERIR OS")
-        nova_janela.geometry("650x300")
+        nova_janela.geometry("650x350")
         nova_janela.resizable(False, False)
 
         # Criando os comboboxes na nova janela
@@ -577,7 +577,7 @@ class SimpleApp(ctk.CTk):
         label_cat_nova.grid(row=2, column=0, padx=20, pady=10)
 
         self.categoria_primaria_nova = ctk.CTkComboBox(nova_janela, values=self.categoria_primaria.cget("values"),
-                                                  state='readonly')
+                                                state='readonly')
         self.categoria_primaria_nova.grid(row=2, column=1, padx=10, pady=10)
 
         label_cat_sec_nova = ctk.CTkLabel(nova_janela, text="Categoria Secundária:")
@@ -593,7 +593,13 @@ class SimpleApp(ctk.CTk):
 
         self.path_entry = ctk.CTkEntry(nova_janela)  # Ajuste do width
         self.path_entry.grid(row=3, column=1, columnspan=3, padx=10, pady=10, sticky='w')
-        # Add this in the `abrir_nova_janela` method for creating a new window.
+
+        # Checkbox para PATH_error
+        self.path_error_var = ctk.IntVar()  # Variável que armazena o estado do checkbox
+        self.path_error_checkbox = ctk.CTkCheckBox(nova_janela, text="Path Error", variable=self.path_error_var)
+        self.path_error_checkbox.grid(row=4, column=0, columnspan=2, padx=20, pady=10)
+
+        # Campo de entrada para o código OS
         label_codigo_os = ctk.CTkLabel(nova_janela, text="Código OS:")
         label_codigo_os.grid(row=3, column=2, padx=20, pady=10)
 
@@ -606,10 +612,9 @@ class SimpleApp(ctk.CTk):
         nova_janela.grid_columnconfigure(2, weight=1)
         nova_janela.grid_columnconfigure(3, weight=1)
 
-
         # Botão "Inserir OS"
         inserir_os_button = ctk.CTkButton(nova_janela, text="Inserir OS", command=self.cadastrar_os)
-        inserir_os_button.grid(row=4, column=3, padx=10, pady=20, sticky='e')
+        inserir_os_button.grid(row=5, column=3, padx=10, pady=20, sticky='e')
 
         # Vinculando a função de atualização para o combobox de categoria primária na nova janela
         self.categoria_primaria_nova.configure(
