@@ -3,6 +3,8 @@ import pyodbc
 from tkinter import ttk
 from tkinter import messagebox  # Importando o messagebox do tkinter
 import datetime
+import calendar
+
 class ControleApp:
     def __init__(self, root):
         self.root = root
@@ -958,9 +960,11 @@ class Aba_relatorio_mes:
         self.setup()
 
     def setup(self):
+        # Título
         label = ctk.CTkLabel(self.frame, text=f"Relatório Mensal para o site e empresa selecionados", text_color=self.my_dict['font'])
         label.pack(pady=20)
         
+        # Frame para filtros e informações
         filtro_frame = ctk.CTkFrame(self.frame, width=160, fg_color=self.my_dict['menu-inf'], bg_color=self.my_dict['preto'])
         filtro_frame.pack(padx=20, pady=20, side='left', fill='y', expand=False)
         
@@ -979,6 +983,70 @@ class Aba_relatorio_mes:
         self.ano_combobox = ctk.CTkComboBox(filtro_frame, values=anos, state='readonly')
         self.ano_combobox.grid(row=1, column=1, padx=10, pady=5)
         self.ano_combobox.set(str(datetime.datetime.now().year))
+
+        # Botão para aplicar o filtro
+        filtro_button = ctk.CTkButton(filtro_frame, text="Aplicar Filtro", command=self.aplicar_filtro)
+        filtro_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
+
+        # Informações adicionais
+        self.info_label = ctk.CTkLabel(filtro_frame, text="DIAS ÚTEIS: XXXX", text_color=self.my_dict['font'])
+        self.info_label.grid(row=3, column=0, columnspan=2, padx=10, pady=5)
+
+        self.faltas_label = ctk.CTkLabel(filtro_frame, text="FALTAS:", text_color=self.my_dict['font'])
+        self.faltas_label.grid(row=4, column=0, columnspan=2, padx=10, pady=5)
+
+        self.atestados_label = ctk.CTkLabel(filtro_frame, text="ATESTADOS:", text_color=self.my_dict['font'])
+        self.atestados_label.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
+
+        # Atualizar informações iniciais
+        self.aplicar_filtro()
+
+    def aplicar_filtro(self):
+        # Esta função irá chamar as demais funções para atualizar as informações
+        self.update_info()
+
+    def update_info(self):
+        # Obter o mês e ano selecionados nas ComboBoxes
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = int(self.ano_combobox.get())
+
+        # Calcular e atualizar dias úteis
+        dias_uteis = self.calcular_dias_uteis(mes, ano)
+        self.info_label.configure(text=f"DIAS ÚTEIS: {dias_uteis}")
+
+        # Calcular e atualizar faltas e atestados
+        faltas, atestados = self.calcular_faltas_e_atestados(mes, ano)
+        self.faltas_label.configure(text=f"FALTAS: {faltas}")
+        self.atestados_label.configure(text=f"ATESTADOS: {atestados}")
+
+    def calcular_dias_uteis(self, mes, ano):
+        # Calcula o número de dias úteis (excluindo sábados e domingos) no mês e ano fornecidos
+        cal = calendar.Calendar()
+        dias_uteis = sum(1 for day in cal.itermonthdays2(ano, mes) if day[0] != 0 and day[1] < 5)
+        return dias_uteis
+
+    def calcular_faltas_e_atestados(self, mes, ano):
+        # Calcula o número de faltas e atestados no mês e ano fornecidos
+        cursor = self.conn.cursor()
+        query = """
+            SELECT Presenca.Presenca, COUNT(*)
+            FROM Controle
+            INNER JOIN Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+            WHERE id_SiteEmpresa = ? AND MONTH(Data) = ? AND YEAR(Data) = ?
+            GROUP BY Presenca.Presenca
+        """
+        cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
+
+        faltas = 0
+        atestados = 0
+        for row in cursor.fetchall():
+            if row[0].lower() == "falta":
+                faltas = row[1]
+            elif row[0].lower() == "atestado":
+                atestados = row[1]
+
+        return faltas, atestados
+
 
 # Para rodar o app:
 if __name__ == "__main__":
