@@ -1001,25 +1001,21 @@ class Aba_relatorio_mes:
         self.atestados_label = ctk.CTkLabel(filtro_frame, text="ATESTADOS:", text_color=self.my_dict['font'])
         self.atestados_label.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
 
-        # Frame para os gráficos
+        # Frame para os gráficos e tabela
         self.frame_graficos = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
         self.frame_graficos.pack(padx=20, pady=20, side='right', fill='both', expand=True)
 
-        # Frame para o Gráfico 1 (Pizza)
-        self.frame_grafico_1 = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
-        self.frame_grafico_1.place(relx=0.05, rely=0.05, relwidth=0.4, relheight=0.4)
+        # Frame para o Gráfico de Dispersão
+        self.frame_grafico_dispersao = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
+        self.frame_grafico_dispersao.place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.5)
 
-        # Frame para o Gráfico 2
-        self.frame_grafico_2 = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
-        self.frame_grafico_2.place(relx=0.55, rely=0.05, relwidth=0.4, relheight=0.4)
+        # Frame para o Gráfico de Pizza
+        self.frame_grafico_pizza = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
+        self.frame_grafico_pizza.place(relx=0.05, rely=0.6, relwidth=0.4, relheight=0.35)
 
-        # Frame para o Gráfico 3
-        self.frame_grafico_3 = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
-        self.frame_grafico_3.place(relx=0.05, rely=0.55, relwidth=0.4, relheight=0.4)
-
-        # Frame para a tabela
+        # Frame para a Tabela
         self.frame_tabela = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
-        self.frame_tabela.place(relx=0.55, rely=0.55, relwidth=0.4, relheight=0.4)
+        self.frame_tabela.place(relx=0.55, rely=0.6, relwidth=0.4, relheight=0.35)
 
         # Criando a Treeview para exibir a tabela de presença
         self.tabela = ttk.Treeview(self.frame_tabela, columns=("Nome", "OK", "Falta", "Atestado", "Curso"), show='headings')
@@ -1040,6 +1036,10 @@ class Aba_relatorio_mes:
 
         self.tabela.pack(fill='both', expand=True)
         self.tabela.configure(yscrollcommand=self.treeScrollbar.set)
+
+        # Inicializar variáveis de gráficos
+        self.chart_pizza = None
+        self.chart_dispersao = None
 
         # Atualizar informações iniciais
         self.aplicar_filtro()
@@ -1134,6 +1134,10 @@ class Aba_relatorio_mes:
             self.tabela.insert("", "end", values=(nome, ok, falta, atestado, curso))
 
     def criar_grafico_pizza(self):
+        # Remover o gráfico de pizza anterior, se existir
+        if self.chart_pizza:
+            self.chart_pizza.get_tk_widget().destroy()
+
         # Obter os dados de presenças para o gráfico de pizza
         cursor = self.conn.cursor()
         query = """
@@ -1189,14 +1193,18 @@ class Aba_relatorio_mes:
         ax.axis('equal')  # Assegura que o gráfico seja um círculo
 
         # Adicionar o gráfico ao Tkinter
-        chart = FigureCanvasTkAgg(self.figura, self.frame_grafico_1)
-        chart.get_tk_widget().pack()
+        self.chart_pizza = FigureCanvasTkAgg(self.figura, self.frame_grafico_pizza)
+        self.chart_pizza.get_tk_widget().pack()
 
         # Customizar o fundo do gráfico
         ax.set_facecolor(self.my_dict['preto'])
         self.figura.patch.set_facecolor(self.my_dict['preto'])
 
     def criar_grafico_dispersao(self):
+        # Remover o gráfico de dispersão anterior, se existir
+        if self.chart_dispersao:
+            self.chart_dispersao.get_tk_widget().destroy()
+
         # Obter os dados de presença para o gráfico de dispersão
         cursor = self.conn.cursor()
         query = """
@@ -1239,7 +1247,7 @@ class Aba_relatorio_mes:
                 data_dict[presenca]['nomes'].append(nome)
         
         # Criando a figura do gráfico com fundo customizado
-        self.figura_dispersao = plt.Figure(figsize=(4, 4), facecolor=self.my_dict['preto'])
+        self.figura_dispersao = plt.Figure(figsize=(6, 4), facecolor=self.my_dict['preto'])
         ax = self.figura_dispersao.add_subplot(111)
 
         # Plotar os dados
@@ -1259,7 +1267,11 @@ class Aba_relatorio_mes:
 
         ax.set_xlabel("Data", fontsize=10, color='white')
         ax.set_ylabel("Nome", fontsize=10, color='white')
-        ax.legend(loc='upper right', facecolor=self.my_dict['preto'], edgecolor='white')
+
+        # Posicionar a legenda fora do gráfico
+        legend = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), facecolor=self.my_dict['preto'], edgecolor='white', fontsize=8)
+        for text in legend.get_texts():
+            text.set_color("white")
 
         # Formatação das datas no eixo X
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
@@ -1267,9 +1279,8 @@ class Aba_relatorio_mes:
         plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
 
         # Adicionar o gráfico ao Tkinter
-        chart = FigureCanvasTkAgg(self.figura_dispersao, self.frame_grafico_2)
-        chart.get_tk_widget().pack()
-
+        self.chart_dispersao = FigureCanvasTkAgg(self.figura_dispersao, self.frame_grafico_dispersao)
+        self.chart_dispersao.get_tk_widget().pack()
 
 
 
