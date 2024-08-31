@@ -267,7 +267,8 @@ class Aba_Controle:
         self.my_dict = my_dict
         self.conn = conn
         self.selected_siteempresa_id = selected_siteempresa_id
-
+        self.filter_active = False  # Variável para controlar o estado do filtro
+        
         self.setup()
 
     def setup(self):
@@ -336,12 +337,12 @@ class Aba_Controle:
         # Botões
         button = ctk.CTkButton(combobox_frame, text="Adicionar", width=55, height=30, command=self.adicionar_frequencia)
         button.grid(row=0, column=10, padx=10, pady=5)
-        #button = ctk.CTkButton(combobox_frame, text="Deletar", width=55, height=30, command=self.remover_frequencia)
-        #button.grid(row=0, column=11, padx=10, pady=5)
+        button_delete = ctk.CTkButton(combobox_frame, text="Deletar", width=55, height=30, command=self.remover_frequencia)
+        button_delete.grid(row=0, column=11, padx=10, pady=5)
         #spacer = ctk.CTkLabel(combobox_frame, text='')
         #spacer.grid(padx=0,row=0, column=12)
-        #self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=55, height=30, command=self.toggle_filter)
-        #self.filter_button.grid(row=0, column=13, padx=5, pady=5)
+        self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=55, height=30, command=self.toggle_filter)
+        self.filter_button.grid(row=0, column=12, padx=5, pady=5)
         
         # Tabela (Treeview)
         tabela_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
@@ -482,9 +483,155 @@ class Aba_Controle:
             self.preencher_tabela()
 
         except pyodbc.Error as e:
-            messagebox.showerror("Erro", f"Erro ao adicionar frequência: {e}")
+            messagebox.showerror("Erro", f"Erro ao adicionar frequência: {e}") 
+    
+    def remover_frequencia(self):
+            # Obter o dia, mês e ano selecionados
+            dia = self.dia_combobox.get()
+            mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+            ano = self.ano_combobox.get()
+
+            # Verificar se o dia, mês e ano foram selecionados
+            if not dia or not mes or not ano:
+                messagebox.showerror("Erro", "Selecione um dia, mês e ano para remover registros.")
+                return
+
+            # Converter a data selecionada em um formato datetime
+            try:
+                data_selecionada = datetime.datetime(int(ano), mes, int(dia))
+            except ValueError:
+                messagebox.showerror("Erro", "Data inválida selecionada.")
+                return
+
+            # Inicializar a lista para acumular os detalhes dos registros a serem deletados
+            registros_para_deletar = []
+
+            try:
+                cursor = self.conn.cursor()
+
+                for nome, var in self.checkbox_vars.items():
+                    if var.get() == 'on':  # Verifica se a checkbox está marcada
+                        # Obter o id_Nome do nome selecionado
+                        cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+                        id_nome = cursor.fetchone()[0]
+
+                        # Verificar se já existe um registro para a data selecionada
+                        cursor.execute("""
+                            SELECT id_Controle, Presenca.Presenca 
+                            FROM Controle
+                            INNER JOIN Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+                            WHERE id_Nome = ? AND Data = ? AND id_SiteEmpresa = ?
+                        """, (id_nome, data_selecionada, self.selected_siteempresa_id))
+
+                        resultado = cursor.fetchone()
+                        if resultado:
+                            registros_para_deletar.append((resultado[0], nome, resultado[1], data_selecionada))
+
+                if not registros_para_deletar:
+                    messagebox.showinfo("Informação", "Não há registros para deletar na data selecionada.")
+                    return
+
+                # Preparar a mensagem de confirmação com os detalhes dos registros a serem deletados
+                detalhes_para_deletar = "\n".join([f"{nome} - {presenca} em {data.strftime('%d/%m/%Y')}" for _, nome, presenca, data in registros_para_deletar])
+                resposta = messagebox.askyesno("Confirmação", f"Os seguintes registros serão deletados:\n\n{detalhes_para_deletar}\n\nDeseja continuar?")
+                if not resposta:
+                    return
+
+                # Deletar os registros selecionados
+                for id_controle, _, _, _ in registros_para_deletar:
+                    cursor.execute("DELETE FROM Controle WHERE id_Controle = ?", (id_controle,))
+
+                self.conn.commit()  # Confirmar as alterações
+
+                messagebox.showinfo("Sucesso", "Registros deletados com sucesso.")
+                self.preencher_tabela()  # Atualizar a tabela após deletar os registros
+
+            except pyodbc.Error as e:
+                messagebox.showerror("Erro", f"Erro ao deletar registros: {e}")
 
 
+    def filtrar_frequencia(self):
+        # Obter o tipo de presença, dia, mês, ano e nomes selecionados
+        tipo_presenca = self.tipo_presenca_combobox.get()
+        dia = self.dia_combobox.get()
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = self.ano_combobox.get()
+        
+        nomes_selecionados = [nome for nome, var in self.checkbox_vars.items() if var.get() == 'on']
+        
+        # Verificar se algum critério foi selecionado
+        if not (tipo_presenca or dia or mes or ano or nomes_selecionados):
+            messagebox.showerror("Erro", "Selecione pelo menos um critério de filtragem.")
+            return
+        
+        # Construir a consulta SQL com base nos filtros selecionados
+        query = """
+            SELECT Nome.Nome, Presenca.Presenca, Controle.Data
+            FROM Presenca 
+            INNER JOIN (Nome 
+            INNER JOIN Controle ON Nome.id_Nomes = Controle.id_Nome) 
+            ON Presenca.id_Presenca = Controle.id_Presenca
+            WHERE Controle.id_SiteEmpresa = ?
+        """
+        
+        params = [self.selected_siteempresa_id]
+        
+        # Adicionar filtros conforme os critérios selecionados
+        if tipo_presenca:
+            query += " AND Presenca.Presenca = ?"
+            params.append(tipo_presenca)
+        
+        if dia:
+            query += " AND DAY(Controle.Data) = ?"
+            params.append(dia)
+        
+        if mes:
+            query += " AND MONTH(Controle.Data) = ?"
+            params.append(mes)
+        
+        if ano:
+            query += " AND YEAR(Controle.Data) = ?"
+            params.append(ano)
+        
+        if nomes_selecionados:
+            placeholders = ', '.join(['?'] * len(nomes_selecionados))
+            query += f" AND Nome.Nome IN ({placeholders})"
+            params.extend(nomes_selecionados)
+        
+        # Executar a consulta e preencher a tabela
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(query, params)
+
+            # Limpar a Treeview antes de adicionar os dados filtrados
+            for row in self.tabela.get_children():
+                self.tabela.delete(row)
+
+            # Adicionar os dados filtrados à Treeview
+            for row in cursor.fetchall():
+                nome = row[0]
+                presenca = row[1]
+                data = row[2].strftime("%d/%m/%Y")
+                self.tabela.insert("", "end", values=(nome, presenca, data))
+            
+            self.filter_active = True  # Sinalizar que o filtro está ativo
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao filtrar os dados: {e}")
+
+    
+    
+    def toggle_filter(self):
+        if self.filter_active:
+            self.preencher_tabela()  # Exibir todos os registros
+            self.filter_active = False
+            self.filter_button.configure(text="Filtrar")  # Alterar o texto do botão para "Filtrar"
+            messagebox.showinfo("Filtro", "Filtro removido.")
+            self.tipo_presenca_combobox.set('')
+        else:
+            self.filtrar_frequencia()  # Aplicar o filtro
+            self.filter_active = True
+            self.filter_button.configure(text="Limpar Filtro")  # Alterar o texto do botão para "Limpar Filtro"
 
 
 
@@ -590,43 +737,7 @@ class Aba_Nomes:
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao reativar nome: {e}")
 
-    
-    def inativar_nome(self):
-        """Inativa um nome na tabela Nome, garantindo que o site selecionado tenha pelo menos um nome ativo."""
-        nome = self.nome_combobox.get().strip()
-
-        if not nome:
-            messagebox.showerror("Erro", "Selecione um nome para inativar.")
-            return
-
-        try:
-            # Obter o ID do site_empresa e verificar quantos nomes ativos existem
-            cursor = self.conn.cursor()
-            query = """
-                SELECT COUNT(*) 
-                FROM Nome 
-                WHERE id_SiteEmpresa = ? AND Ativo = True
-            """
-            cursor.execute(query, (self.selected_siteempresa_id,))
-            count_ativos = cursor.fetchone()[0]
-
-            if count_ativos <= 1:
-                messagebox.showerror("Erro", "Não é possível inativar o último nome ativo do site.")
-                return
-
-            # Marcar o nome como inativo
-            cursor.execute("UPDATE Nome SET Ativo = False WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
-            self.conn.commit()
-
-            messagebox.showinfo("Sucesso", "Nome inativado com sucesso!")
-
-            # Atualizar a combobox de nomes
-            self.nome_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id)
-
-        except pyodbc.Error as e:
-            messagebox.showerror("Erro", f"Erro ao inativar nome: {e}")
-
-
+     
 class Aba_empresas:
     def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
         self.app = app
