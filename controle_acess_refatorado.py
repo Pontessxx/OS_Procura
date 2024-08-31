@@ -1006,7 +1006,7 @@ class Aba_relatorio_mes:
         self.frame_graficos.pack(padx=20, pady=20, side='right', fill='both', expand=True)
 
         # Frame para o Gráfico de Dispersão
-        self.frame_grafico_dispersao = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
+        self.frame_grafico_dispersao = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['frames_ajuste'])
         self.frame_grafico_dispersao.place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.5)
 
         # Frame para o Gráfico de Pizza
@@ -1247,7 +1247,7 @@ class Aba_relatorio_mes:
                 data_dict[presenca]['nomes'].append(nome)
         
         # Criando a figura do gráfico com fundo customizado
-        self.figura_dispersao = plt.Figure(figsize=(6, 4), facecolor=self.my_dict['preto'])
+        self.figura_dispersao = plt.Figure(figsize=(15, 8), facecolor=self.my_dict['preto'])
         ax = self.figura_dispersao.add_subplot(111)
 
         # Plotar os dados
@@ -1265,8 +1265,6 @@ class Aba_relatorio_mes:
         ax.tick_params(axis='x', colors='white')
         ax.tick_params(axis='y', colors='white')
 
-        ax.set_xlabel("Data", fontsize=10, color='white')
-        ax.set_ylabel("Nome", fontsize=10, color='white')
 
         # Posicionar a legenda fora do gráfico
         legend = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), facecolor=self.my_dict['preto'], edgecolor='white', fontsize=8)
