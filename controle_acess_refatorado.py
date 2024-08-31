@@ -1263,38 +1263,32 @@ class Aba_relatorio_mes:
         ax.set_yticks(range(1, len(nomes_unicos) + 1))
         ax.set_yticklabels(list(nomes_unicos), fontsize=8, color='white')  # Nomes no eixo Y
 
-        ax.set_xlim(min(dias_uteis), max(dias_uteis))
+        # Configurar o eixo X para mostrar apenas os dias úteis
+        ax.set_xticks(dias_uteis)  # Define os dias úteis como pontos no eixo X
+        ax.set_xticklabels([date.strftime('%d') for date in dias_uteis], fontsize=8, color='white')
+
         ax.set_facecolor(self.my_dict['preto'])
         self.figura_dispersao.patch.set_facecolor(self.my_dict['preto'])
 
         ax.spines['bottom'].set_color('white')
         #ax.spines['left'].set_color('white')
         ax.spines['left'].set_visible(False)
+
         ax.xaxis.label.set_color('white')
         ax.yaxis.label.set_color('white')
-        a = f'Presença por Nome - {self.mes_combobox.get()} de {ano}'
-        ax.title.set(text=a)
+        ax.title.set(text=f'Presença por Nome - {self.mes_combobox.get()} de {ano}')
         ax.title.set_color('white')
         ax.tick_params(axis='x', colors='white')
         ax.tick_params(axis='y', colors='white', labelsize=8)
-
 
         # Posicionar a legenda fora do gráfico
         legend = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), facecolor=self.my_dict['preto'], edgecolor='white', fontsize=8)
         for text in legend.get_texts():
             text.set_color("white")
 
-        # Formatação das datas no eixo X para mostrar todos os dias úteis
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
-        ax.xaxis.set_major_locator(mdates.DayLocator())  # Mostra cada dia útil
-        plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
-
         # Adicionar o gráfico ao Tkinter
         self.chart_dispersao = FigureCanvasTkAgg(self.figura_dispersao, self.frame_grafico_dispersao)
         self.chart_dispersao.get_tk_widget().pack(expand=True, fill='both')
-
-
-
 
 
 
