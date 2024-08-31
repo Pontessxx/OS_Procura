@@ -998,12 +998,38 @@ class Aba_relatorio_mes:
         self.atestados_label = ctk.CTkLabel(filtro_frame, text="ATESTADOS:", text_color=self.my_dict['font'])
         self.atestados_label.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
 
+        # Frame para a tabela de presença
+        tabela_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
+        tabela_frame.pack(padx=20, pady=20, side='right', fill='both', expand=True)
+
+        # Criando a Treeview para exibir a tabela
+        self.tabela = ttk.Treeview(tabela_frame, columns=("Nome", "OK", "Falta", "Atestado", "Curso"), show='headings')
+        self.tabela.column("Nome", width=60)  # Ajuste a largura conforme necessário
+        self.tabela.column("OK", width=40)
+        self.tabela.column("Falta", width=40)
+        self.tabela.column("Atestado", width=40)
+        self.tabela.column("Curso", width=40)
+
+        self.treeScrollbar = ctk.CTkScrollbar(tabela_frame, command=self.tabela.yview)
+        self.treeScrollbar.pack(side='right', fill='y')
+
+        self.tabela.heading("Nome", text="Nome")
+        self.tabela.heading("OK", text="OK")
+        self.tabela.heading("Falta", text="Falta")
+        self.tabela.heading("Atestado", text="Atestado")
+        self.tabela.heading("Curso", text="Curso")
+
+        self.tabela.pack(fill='both', expand=True)
+        self.tabela.configure(yscrollcommand=self.treeScrollbar.set)
+
         # Atualizar informações iniciais
         self.aplicar_filtro()
+
 
     def aplicar_filtro(self):
         # Esta função irá chamar as demais funções para atualizar as informações
         self.update_info()
+        self.update_tabela()
 
     def update_info(self):
         # Obter o mês e ano selecionados nas ComboBoxes
@@ -1046,6 +1072,48 @@ class Aba_relatorio_mes:
                 atestados = row[1]
 
         return faltas, atestados
+
+    def update_tabela(self):
+        # Obter os dados da consulta e preencher a tabela
+        cursor = self.conn.cursor()
+        query = """
+            SELECT 
+                Nome.Nome,
+                SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
+                SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
+                SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
+                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso
+            FROM 
+                (Controle
+            INNER JOIN 
+                Nome ON Controle.id_Nome = Nome.id_Nomes)
+            INNER JOIN 
+                Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+            WHERE 
+                Controle.id_SiteEmpresa = ? AND MONTH(Controle.Data) = ? AND YEAR(Controle.Data) = ?
+            GROUP BY 
+                Nome.Nome;
+        """
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = int(self.ano_combobox.get())
+        cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
+
+        # Limpar a tabela antes de adicionar novos dados
+        for row in self.tabela.get_children():
+            self.tabela.delete(row)
+
+        # Preencher a tabela com os resultados da consulta
+        for row in cursor.fetchall():
+            # Remover as tuplas dos valores e formatar adequadamente como inteiros
+            nome = row[0]  # Supondo que row[0] é uma string (o nome)
+            ok = int(row[1])  # Convertendo para int
+            falta = int(row[2])  # Convertendo para int
+            atestado = int(row[3])  # Convertendo para int
+            curso = int(row[4])  # Convertendo para int
+            # Inserir na tabela
+            self.tabela.insert("", "end", values=(nome, ok, falta, atestado, curso))
+
+
 
 
 # Para rodar o app:
