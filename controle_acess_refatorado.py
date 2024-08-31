@@ -332,7 +332,17 @@ class Aba_Controle:
         self.ano_combobox = ctk.CTkComboBox(combobox_frame, values=self.app.get_anos(), state='readonly')
         self.ano_combobox.grid(row=0, column=8, padx=10, pady=5)
         self.ano_combobox.set(str(datetime.datetime.now().year))
-
+        
+        # Botões
+        button = ctk.CTkButton(combobox_frame, text="Adicionar", width=55, height=30, command=self.adicionar_frequencia)
+        button.grid(row=0, column=10, padx=10, pady=5)
+        #button = ctk.CTkButton(combobox_frame, text="Deletar", width=55, height=30, command=self.remover_frequencia)
+        #button.grid(row=0, column=11, padx=10, pady=5)
+        #spacer = ctk.CTkLabel(combobox_frame, text='')
+        #spacer.grid(padx=0,row=0, column=12)
+        #self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=55, height=30, command=self.toggle_filter)
+        #self.filter_button.grid(row=0, column=13, padx=5, pady=5)
+        
         # Tabela (Treeview)
         tabela_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
@@ -378,6 +388,105 @@ class Aba_Controle:
             presenca = row[1]  # Status de presença
             data = row[2].strftime("%d/%m/%Y")  # Formatar data
             self.tabela.insert("", "end", values=(nome, presenca, data))
+        
+    def adicionar_frequencia(self):
+        # Obter o tipo de presença selecionado
+        tipo_presenca = self.tipo_presenca_combobox.get()
+
+        # Obter o dia, mês e ano selecionados
+        dia = self.dia_combobox.get()
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = self.ano_combobox.get()
+
+        # Verificar se todos os campos necessários foram preenchidos
+        if not tipo_presenca or not dia or not mes or not ano:
+            messagebox.showerror("Erro", "Todos os campos de presença e data devem ser preenchidos.")
+            return
+
+        # Converter a data selecionada em um formato datetime
+        try:
+            data_selecionada = datetime.datetime(int(ano), mes, int(dia))
+        except ValueError:
+            messagebox.showerror("Erro", "Data inválida selecionada.")
+            return
+
+        # Inicializar a lista para acumular os detalhes de sucesso
+        detalhes_sucesso = []
+
+        # Verificar se já existem registros de presença para os nomes na data selecionada
+        registros_existentes = []
+        novos_registros = []
+
+        try:
+            cursor = self.conn.cursor()
+
+            for nome, var in self.checkbox_vars.items():
+                if var.get() == 'on':  # Verifica se a checkbox está marcada
+                    # Obter o id_Nome do nome selecionado
+                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+                    id_nome = cursor.fetchone()[0]
+
+                    # Verificar se já existe um registro para a data selecionada
+                    cursor.execute("""
+                        SELECT id_Controle 
+                        FROM Controle
+                        WHERE id_Nome = ? AND Data = ? AND id_SiteEmpresa = ?
+                    """, (id_nome, data_selecionada, self.selected_siteempresa_id))
+
+                    resultado = cursor.fetchone()
+                    if resultado:
+                        registros_existentes.append((resultado[0], nome))
+                    else:
+                        novos_registros.append((id_nome, nome))
+
+            if registros_existentes:
+                # Perguntar ao usuário se ele deseja substituir os registros existentes
+                resposta = messagebox.askyesno("Confirmação", f"Já existem registros para {', '.join([nome for _, nome in registros_existentes])} na data {data_selecionada.strftime('%d/%m/%Y')}. Deseja substituir?")
+                if not resposta:
+                    return
+
+            # Inserir novos registros na tabela Controle
+            for id_nome, nome in novos_registros:
+                # Obter o id_Presenca do tipo de presença selecionado
+                cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca,))
+                id_presenca = cursor.fetchone()[0]
+
+                # Inserir os dados na tabela Controle
+                cursor.execute("""
+                    INSERT INTO Controle (id_Nome, id_Presenca, Data, id_SiteEmpresa)
+                    VALUES (?, ?, ?, ?)
+                """, (id_nome, id_presenca, data_selecionada, self.selected_siteempresa_id))
+                
+                detalhes_sucesso.append(f"{nome} - {tipo_presenca} em {data_selecionada.strftime('%d/%m/%Y')}")
+
+            # Atualizar registros existentes na tabela Controle
+            for id_controle, nome in registros_existentes:
+                cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca,))
+                id_presenca = cursor.fetchone()[0]
+
+                cursor.execute("""
+                    UPDATE Controle
+                    SET id_Presenca = ?, Data = ?
+                    WHERE id_Controle = ?
+                """, (id_presenca, data_selecionada, id_controle))
+                
+                detalhes_sucesso.append(f"{nome} - {tipo_presenca} em {data_selecionada.strftime('%d/%m/%Y')} (atualizado)")
+
+            self.conn.commit()  # Confirmar as alterações
+
+            # Montar a mensagem de sucesso
+            mensagem_sucesso = "Frequência adicionada/atualizada com sucesso para:\n" + "\n".join(detalhes_sucesso)
+            messagebox.showinfo("Sucesso", mensagem_sucesso)
+
+            # Atualizar a tabela após adicionar a frequência
+            self.preencher_tabela()
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao adicionar frequência: {e}")
+
+
+
+
 
 
 class Aba_Nomes:
@@ -442,8 +551,8 @@ class Aba_Nomes:
         try:
             cursor = self.conn.cursor()
 
-            # Inserir o nome na tabela Nome usando o id_SiteEmpresa selecionado
-            cursor.execute("INSERT INTO Nome (Nome, id_SiteEmpresa) VALUES (?, ?)", (nome, self.selected_siteempresa_id))
+            # Inserir o nome na tabela Nome usando o id_SiteEmpresa selecionado, e definindo Ativo como True
+            cursor.execute("INSERT INTO Nome (Nome, id_SiteEmpresa, Ativo) VALUES (?, ?, True)", (nome, self.selected_siteempresa_id))
             self.conn.commit()
 
             messagebox.showinfo("Sucesso", "Nome adicionado com sucesso!")
