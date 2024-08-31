@@ -1162,24 +1162,35 @@ class Aba_relatorio_mes:
         cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
 
         row = cursor.fetchone()
-        
-        # Verificar se todos os valores são zero (sem registros)
-        if all(value == 0 for value in row):
-            # Caso não haja registros, não cria o gráfico
-            messagebox.showinfo("Informação", "Não há registros para o mês e ano selecionados.")
-            return
 
+        # Filtrar os valores e rótulos que não são zero
         labels = ['OK', 'Falta', 'Atestado', 'Curso']
         sizes = [row[0], row[1], row[2], row[3]]
         colors = ['#4CAF50', '#FF5733', '#FFC300', '#8E44AD']  # Cores para cada categoria
+
+        # Filtrar as categorias com base em valores diferentes de zero
+        filtered_labels = []
+        filtered_sizes = []
+        filtered_colors = []
+
+        for i in range(len(sizes)):
+            if sizes[i] > 0:
+                filtered_labels.append(labels[i])
+                filtered_sizes.append(sizes[i])
+                filtered_colors.append(colors[i])
+
+        # Verificar se há valores a serem exibidos
+        if not filtered_sizes:
+            messagebox.showinfo("Informação", "Não há registros para o mês e ano selecionados.")
+            return
 
         # Criando a figura do gráfico com fundo customizado
         self.figura = plt.Figure(figsize=(4, 4), facecolor=self.my_dict['preto'])
         ax = self.figura.add_subplot(111)
 
         wedges, texts, autotexts = ax.pie(
-            sizes, labels=labels, colors=colors, 
-            autopct=lambda p: f'{int(p * sum(sizes) / 100)}', 
+            filtered_sizes, labels=filtered_labels, colors=filtered_colors, 
+            autopct=lambda p: f'{int(p * sum(filtered_sizes) / 100)}', 
             startangle=0, pctdistance=0.8, 
             wedgeprops=dict(width=0.4)
         )
