@@ -409,7 +409,7 @@ class Aba_Controle:
             messagebox.showerror("Erro", "Todos os campos de presença e data devem ser preenchidos.")
             return
 
-         # Verificar se algum nome foi selecionado
+        # Verificar se algum nome foi selecionado
         nomes_selecionados = [nome for nome, var in self.checkbox_vars.items() if var.get() == 'on']
         if not nomes_selecionados:
             messagebox.showerror("Erro", "Nenhum nome foi selecionado.")
@@ -420,6 +420,11 @@ class Aba_Controle:
             data_selecionada = datetime.datetime(int(ano), mes, int(dia))
         except ValueError:
             messagebox.showerror("Erro", "Data inválida selecionada.")
+            return
+
+        # Verificar se a data cai em um sábado ou domingo
+        if data_selecionada.weekday() >= 5:  # 5 e 6 correspondem a sábado e domingo, respectivamente
+            messagebox.showerror("Erro", "Não é permitido adicionar frequência para sábados ou domingos.")
             return
 
         # Inicializar a lista para acumular os detalhes de sucesso
@@ -448,9 +453,8 @@ class Aba_Controle:
                         ORDER BY Controle.Data DESC
                     """, (id_nome, self.selected_siteempresa_id))
 
-
                     ultimo_registro = cursor.fetchone()
-                    
+
                     if ultimo_registro and ultimo_registro[0].lower() == "atestado":
                         atestado_nomes.append(nome)
                     else:
