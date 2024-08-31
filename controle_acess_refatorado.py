@@ -1234,36 +1234,49 @@ class Aba_relatorio_mes:
             'CURSO': {'datas': [], 'nomes': [], 'cor': '#8E44AD', 'marker': '*'},
         }
         
-        cal = calendar.Calendar()
-        dias_uteis = [day for day, weekday in cal.itermonthdays2(ano, mes) if day != 0 and weekday < 5]
-
+        nomes_unicos = set()
         for row in cursor.fetchall():
             nome = row[0]
             data = row[1]
             presenca = row[2].upper()
             
-            if data.day in dias_uteis:
+            nomes_unicos.add(nome)  # Armazena os nomes únicos para o eixo Y
+            if presenca in data_dict:
                 data_dict[presenca]['datas'].append(data)
                 data_dict[presenca]['nomes'].append(nome)
-        
+
+        # Criar uma lista de todos os dias úteis no mês
+        cal = calendar.Calendar()
+        dias_uteis = [datetime.date(ano, mes, day) for day, weekday in cal.itermonthdays2(ano, mes) if day != 0 and weekday < 5]
+
         # Criando a figura do gráfico com fundo customizado
-        self.figura_dispersao = plt.Figure(figsize=(15, 8), facecolor=self.my_dict['preto'])
+        self.figura_dispersao = plt.Figure(figsize=(6, 4), facecolor=self.my_dict['preto'])
         ax = self.figura_dispersao.add_subplot(111)
 
         # Plotar os dados
         for tipo, info in data_dict.items():
             if info['datas']:
-                ax.scatter(info['datas'], info['nomes'], color=info['cor'], label=tipo, marker=info['marker'])
+                # Para que os nomes apareçam corretamente no eixo Y, eles precisam ser numericamente codificados
+                y_positions = [list(nomes_unicos).index(nome) + 1 for nome in info['nomes']]
+                ax.scatter(info['datas'], y_positions, color=info['cor'], label=tipo, marker=info['marker'])
 
+        ax.set_yticks(range(1, len(nomes_unicos) + 1))
+        ax.set_yticklabels(list(nomes_unicos), fontsize=8, color='white')  # Nomes no eixo Y
+
+        ax.set_xlim(min(dias_uteis), max(dias_uteis))
         ax.set_facecolor(self.my_dict['preto'])
         self.figura_dispersao.patch.set_facecolor(self.my_dict['preto'])
 
         ax.spines['bottom'].set_color('white')
-        ax.spines['left'].set_color('white')
+        #ax.spines['left'].set_color('white')
+        ax.spines['left'].set_visible(False)
         ax.xaxis.label.set_color('white')
         ax.yaxis.label.set_color('white')
+        a = f'Presença por Nome - {self.mes_combobox.get()} de {ano}'
+        ax.title.set(text=a)
+        ax.title.set_color('white')
         ax.tick_params(axis='x', colors='white')
-        ax.tick_params(axis='y', colors='white')
+        ax.tick_params(axis='y', colors='white', labelsize=8)
 
 
         # Posicionar a legenda fora do gráfico
@@ -1271,14 +1284,15 @@ class Aba_relatorio_mes:
         for text in legend.get_texts():
             text.set_color("white")
 
-        # Formatação das datas no eixo X
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))  # Mostra a cada 2 dias
+        # Formatação das datas no eixo X para mostrar todos os dias úteis
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+        ax.xaxis.set_major_locator(mdates.DayLocator())  # Mostra cada dia útil
         plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
 
         # Adicionar o gráfico ao Tkinter
         self.chart_dispersao = FigureCanvasTkAgg(self.figura_dispersao, self.frame_grafico_dispersao)
-        self.chart_dispersao.get_tk_widget().pack()
+        self.chart_dispersao.get_tk_widget().pack(expand=True, fill='both')
+
 
 
 
