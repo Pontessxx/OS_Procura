@@ -10,6 +10,7 @@ import matplotlib.dates as mdates
 import os
 import subprocess
 from fpdf import FPDF, XPos, YPos
+import pandas as pd
 
 class ControleApp:
     def __init__(self, root):
@@ -1413,12 +1414,14 @@ class Aba_relatorio_mes:
         """
         cursor.execute(query_tabela, (self.selected_siteempresa_id, mes, ano))
 
-        # Adicionar os dados da tabela ao PDF
+        # Adicionar os dados da tabela ao PDF e armazenar em uma lista para salvar em Excel
+        tabela_dados = []
         for row in cursor.fetchall():
             pdf.cell(60, 10, text=row[0], border=1)
             pdf.cell(60, 10, text=row[1], border=1)
             pdf.cell(60, 10, text=row[2], border=1)
             pdf.ln()
+            tabela_dados.append([row[0], row[1], row[2]])  # Assegurar que cada item seja uma lista de 3 elementos
 
         # Salvar o PDF no diretório de downloads
         downloads_path = os.path.join(os.path.expanduser("~"), "Downloads")
@@ -1431,8 +1434,14 @@ class Aba_relatorio_mes:
             os.remove(img_path)
         os.remove(dispersao_img_path)
 
+        # Salvar a tabela em um arquivo Excel
+        df = pd.DataFrame(tabela_dados, columns=["Nome", "Tipo de Presença", "Data"])
+        excel_filename = f"tabela_presencas_{self.mes_combobox.get()}_{self.ano_combobox.get()}.xlsx"
+        excel_filepath = os.path.join(downloads_path, excel_filename)
+        df.to_excel(excel_filepath, index=False)
+
         # Mostrar mensagem de confirmação
-        messagebox.showinfo("Sucesso", f"PDF salvo com sucesso em: {pdf_filepath}")
+        messagebox.showinfo("Sucesso", f"PDF e Excel salvos com sucesso em: {downloads_path}")
 
         # Abrir a pasta Downloads
         try:
@@ -1442,9 +1451,6 @@ class Aba_relatorio_mes:
                 subprocess.Popen(['xdg-open', downloads_path])
         except Exception as e:
             print(f"Erro ao abrir a pasta Downloads: {e}")
-
-
-
 
     def criar_grafico_dispersao_pdf(self):
         # Obter os dados de presença para o gráfico de dispersão
