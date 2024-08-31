@@ -4,6 +4,8 @@ from tkinter import ttk
 from tkinter import messagebox  # Importando o messagebox do tkinter
 import datetime
 import calendar
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class ControleApp:
     def __init__(self, root):
@@ -961,13 +963,13 @@ class Aba_relatorio_mes:
 
     def setup(self):
         # Título
-        label = ctk.CTkLabel(self.frame, text=f"Relatório Mensal para o site e empresa selecionados", text_color=self.my_dict['font'])
+        label = ctk.CTkLabel(self.frame, text="Relatório Mensal para o site e empresa selecionados", text_color=self.my_dict['font'])
         label.pack(pady=20)
-        
+
         # Frame para filtros e informações
         filtro_frame = ctk.CTkFrame(self.frame, width=160, fg_color=self.my_dict['menu-inf'], bg_color=self.my_dict['preto'])
         filtro_frame.pack(padx=20, pady=20, side='left', fill='y', expand=False)
-        
+
         # Mês
         mes_label = ctk.CTkLabel(filtro_frame, text="Mês:", text_color=self.my_dict['font'])
         mes_label.grid(row=0, column=0, padx=10, pady=5)
@@ -998,19 +1000,35 @@ class Aba_relatorio_mes:
         self.atestados_label = ctk.CTkLabel(filtro_frame, text="ATESTADOS:", text_color=self.my_dict['font'])
         self.atestados_label.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
 
-        # Frame para a tabela de presença
-        tabela_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
-        tabela_frame.pack(padx=20, pady=20, side='right', fill='both', expand=True)
+        # Frame para os gráficos
+        self.frame_graficos = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
+        self.frame_graficos.pack(padx=20, pady=20, side='right', fill='both', expand=True)
 
-        # Criando a Treeview para exibir a tabela
-        self.tabela = ttk.Treeview(tabela_frame, columns=("Nome", "OK", "Falta", "Atestado", "Curso"), show='headings')
+        # Frame para o Gráfico 1 (Pizza)
+        self.frame_grafico_1 = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
+        self.frame_grafico_1.place(relx=0.05, rely=0.05, relwidth=0.4, relheight=0.4)
+
+        # Frame para o Gráfico 2
+        self.frame_grafico_2 = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
+        self.frame_grafico_2.place(relx=0.55, rely=0.05, relwidth=0.4, relheight=0.4)
+
+        # Frame para o Gráfico 3
+        self.frame_grafico_3 = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
+        self.frame_grafico_3.place(relx=0.05, rely=0.55, relwidth=0.4, relheight=0.4)
+
+        # Frame para a tabela
+        self.frame_tabela = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
+        self.frame_tabela.place(relx=0.55, rely=0.55, relwidth=0.4, relheight=0.4)
+
+        # Criando a Treeview para exibir a tabela de presença
+        self.tabela = ttk.Treeview(self.frame_tabela, columns=("Nome", "OK", "Falta", "Atestado", "Curso"), show='headings')
         self.tabela.column("Nome", width=60)  # Ajuste a largura conforme necessário
         self.tabela.column("OK", width=40)
         self.tabela.column("Falta", width=40)
         self.tabela.column("Atestado", width=40)
         self.tabela.column("Curso", width=40)
 
-        self.treeScrollbar = ctk.CTkScrollbar(tabela_frame, command=self.tabela.yview)
+        self.treeScrollbar = ctk.CTkScrollbar(self.frame_tabela, command=self.tabela.yview)
         self.treeScrollbar.pack(side='right', fill='y')
 
         self.tabela.heading("Nome", text="Nome")
@@ -1025,11 +1043,11 @@ class Aba_relatorio_mes:
         # Atualizar informações iniciais
         self.aplicar_filtro()
 
-
     def aplicar_filtro(self):
         # Esta função irá chamar as demais funções para atualizar as informações
         self.update_info()
         self.update_tabela()
+        self.criar_grafico_pizza()
 
     def update_info(self):
         # Obter o mês e ano selecionados nas ComboBoxes
@@ -1113,6 +1131,70 @@ class Aba_relatorio_mes:
             # Inserir na tabela
             self.tabela.insert("", "end", values=(nome, ok, falta, atestado, curso))
 
+    def criar_grafico_pizza(self):
+        # Obter os dados de presenças para o gráfico de pizza
+        cursor = self.conn.cursor()
+        query = """
+            SELECT 
+                SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
+                SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
+                SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
+                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso
+            FROM 
+                (Controle
+            INNER JOIN 
+                Presenca ON Controle.id_Presenca = Presenca.id_Presenca)
+            WHERE 
+                Controle.id_SiteEmpresa = ? AND MONTH(Controle.Data) = ? AND YEAR(Controle.Data) = ?
+        """
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = int(self.ano_combobox.get())
+        cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
+
+        row = cursor.fetchone()
+        
+        # Verificar se todos os valores são zero (sem registros)
+        if all(value == 0 for value in row):
+            # Caso não haja registros, não cria o gráfico
+            messagebox.showinfo("Informação", "Não há registros para o mês e ano selecionados.")
+            return
+
+        labels = ['OK', 'Falta', 'Atestado', 'Curso']
+        sizes = [row[0], row[1], row[2], row[3]]
+        colors = ['#4CAF50', '#FF5733', '#FFC300', '#8E44AD']  # Cores para cada categoria
+
+        # Criando a figura do gráfico com fundo customizado
+        self.figura = plt.Figure(figsize=(4, 4), facecolor=self.my_dict['preto'])
+        ax = self.figura.add_subplot(111)
+
+        wedges, texts, autotexts = ax.pie(
+            sizes, labels=labels, colors=colors, 
+            autopct=lambda p: f'{int(p * sum(sizes) / 100)}', 
+            startangle=0, pctdistance=0.8, 
+            wedgeprops=dict(width=0.4)
+        )
+        
+        # Customizando o texto dentro do gráfico
+        for text in autotexts:
+            text.set_color('white')
+            text.set_fontsize(12)
+
+        # Customizando o texto das labels (fora do gráfico)
+        for text in texts:
+            text.set_color('white')
+            text.set_fontsize(12)
+
+        ax.axis('equal')  # Assegura que o gráfico seja um círculo
+
+        # Adicionar o gráfico ao Tkinter
+        chart = FigureCanvasTkAgg(self.figura, self.frame_grafico_1)
+        chart.get_tk_widget().pack()
+
+        # Customizar o fundo do gráfico
+        ax.set_facecolor(self.my_dict['preto'])
+        self.figura.patch.set_facecolor(self.my_dict['preto'])
+
+    
 
 
 
