@@ -1097,14 +1097,38 @@ class AbaRelatorioMes:
         self.frame_tabela = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
         self.frame_tabela.place(relx=0.55, rely=0.6, relwidth=0.4, relheight=0.35)
 
-        
-
         # Inicializar variáveis de gráficos
         self.chart_pizza = None
         self.chart_dispersao = None
 
         # Atualizar informações iniciais
         self.aplicar_filtro()
+
+    def criar_tabela(self):
+        for widget in self.frame_tabela.winfo_children():
+            widget.destroy()
+        # Criando a Treeview para exibir a tabela de presença
+        self.tabela = ttk.Treeview(self.frame_tabela, columns=("Nome", "OK", "Falta", "Atestado", "Curso", 'Férias'),
+                                   show='headings')
+        self.tabela.column("Nome", width=60)  # Ajuste a largura conforme necessário
+        self.tabela.column("OK", width=40)
+        self.tabela.column("Falta", width=40)
+        self.tabela.column("Atestado", width=40)
+        self.tabela.column("Curso", width=40)
+        self.tabela.column("Férias", width=40)
+
+        self.treeScrollbar = ctk.CTkScrollbar(self.frame_tabela, command=self.tabela.yview)
+        self.treeScrollbar.pack(side='right', fill='y')
+
+        self.tabela.heading("Nome", text="Nome")
+        self.tabela.heading("OK", text="OK")
+        self.tabela.heading("Falta", text="Falta")
+        self.tabela.heading("Atestado", text="Atestado")
+        self.tabela.heading("Curso", text="Curso")
+        self.tabela.heading("Férias", text="Férias")
+
+        self.tabela.pack(fill='both', expand=True)
+        self.tabela.configure(yscrollcommand=self.treeScrollbar.set)
 
     def aplicar_filtro(self):
         # Obter o mês e ano selecionados nas ComboBoxes
@@ -1144,34 +1168,19 @@ class AbaRelatorioMes:
 
             return
 
+        for widget in self.frame_grafico_dispersao.winfo_children():
+            widget.pack_forget()
+
+        for widget in self.frame_grafico_pizza.winfo_children():
+            widget.pack_forget()
+
         # Esta função irá chamar as demais funções para atualizar as informações
+
         self.update_info()
-        self.create_tabela()
+        self.criar_tabela()
         self.update_tabela()
         self.criar_grafico_pizza()
         self.criar_grafico_dispersao()
-    
-    def create_tabela(self):
-        # Criando a Treeview para exibir a tabela de presença
-        self.tabela = ttk.Treeview(self.frame_tabela, columns=("Nome", "OK", "Falta", "Atestado", "Curso"),
-                                   show='headings')
-        self.tabela.column("Nome", width=60)  # Ajuste a largura conforme necessário
-        self.tabela.column("OK", width=40)
-        self.tabela.column("Falta", width=40)
-        self.tabela.column("Atestado", width=40)
-        self.tabela.column("Curso", width=40)
-
-        self.treeScrollbar = ctk.CTkScrollbar(self.frame_tabela, command=self.tabela.yview)
-        self.treeScrollbar.pack(side='right', fill='y')
-
-        self.tabela.heading("Nome", text="Nome")
-        self.tabela.heading("OK", text="OK")
-        self.tabela.heading("Falta", text="Falta")
-        self.tabela.heading("Atestado", text="Atestado")
-        self.tabela.heading("Curso", text="Curso")
-
-        self.tabela.pack(fill='both', expand=True)
-        self.tabela.configure(yscrollcommand=self.treeScrollbar.set)
 
     def update_info(self):
         # Obter o mês e ano selecionados nas ComboBoxes
@@ -1225,7 +1234,8 @@ class AbaRelatorioMes:
                 SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
                 SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
                 SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
-                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso
+                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso,
+                SUM(IIF(Presenca.Presenca = 'férias', 1, 0)) AS ferias
             FROM 
                 (Controle
             INNER JOIN 
@@ -1253,8 +1263,9 @@ class AbaRelatorioMes:
             falta = int(row[2])  # Convertendo para int
             atestado = int(row[3])  # Convertendo para int
             curso = int(row[4])  # Convertendo para int
+            ferias = int(row[5])  # Convertendo para int
             # Inserir na tabela
-            self.tabela.insert("", "end", values=(nome, ok, falta, atestado, curso))
+            self.tabela.insert("", "end", values=(nome, ok, falta, atestado, curso, ferias))
 
     def criar_grafico_pizza(self):
         # Remover o gráfico de pizza anterior, se existir
@@ -1268,7 +1279,8 @@ class AbaRelatorioMes:
                 SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
                 SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
                 SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
-                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso
+                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso,
+                SUM(IIF(Presenca.Presenca = 'férias', 1, 0)) AS ferias
             FROM 
                 (Controle
             INNER JOIN 
@@ -1283,9 +1295,9 @@ class AbaRelatorioMes:
         row = cursor.fetchone()
 
         # Filtrar os valores e rótulos que não são zero
-        labels = ['OK', 'Falta', 'Atestado', 'Curso']
-        sizes = [row[0], row[1], row[2], row[3]]
-        colors = ['#4CAF50', '#FF5733', '#FFC300', '#8E44AD']  # Cores para cada categoria
+        labels = ['OK', 'Falta', 'Atestado', 'Curso', 'Férias']
+        sizes = [row[0], row[1], row[2], row[3], row[4]]
+        colors = ['#4CAF50', '#FF5733', '#FFC300', '#8E44AD', '#a5a5a5']  # Cores para cada categoria
 
         # Filtrar as categorias com base em valores diferentes de zero
         filtered_labels = []
@@ -1339,9 +1351,6 @@ class AbaRelatorioMes:
         if self.chart_dispersao:
             self.chart_dispersao.get_tk_widget().destroy()
 
-        for widget in self.frame_grafico_dispersao.winfo_children():
-            widget.pack_forget()
-
         # Obter os dados de presença para o gráfico de dispersão
         cursor = self.conn.cursor()
         query = """
@@ -1369,6 +1378,7 @@ class AbaRelatorioMes:
             'FALTA': {'datas': [], 'nomes': [], 'cor': '#FF5733', 'marker': 'x'},
             'ATESTADO': {'datas': [], 'nomes': [], 'cor': '#FFC300', 'marker': 'd'},
             'CURSO': {'datas': [], 'nomes': [], 'cor': '#8E44AD', 'marker': '*'},
+            'FÉRIAS': {'datas': [], 'nomes': [], 'cor': '#a5a5a5', 'marker': 's'},
         }
 
         nomes_unicos = set()
@@ -1437,7 +1447,8 @@ class AbaRelatorioMes:
                 SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
                 SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
                 SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
-                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso
+                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso,
+                SUM(IIF(Presenca.Presenca = 'férias', 1, 0)) AS ferias
             FROM 
                 (Controle
             INNER JOIN 
@@ -1472,6 +1483,7 @@ class AbaRelatorioMes:
         pdf.cell(30, 10, text="Falta", border=1)
         pdf.cell(40, 10, text="Atestado", border=1)
         pdf.cell(30, 10, text="Curso", border=1)
+        pdf.cell(30, 10, text="Férias", border=1)
         pdf.ln()
 
         # Adicionar os dados ao PDF
@@ -1481,6 +1493,7 @@ class AbaRelatorioMes:
             pdf.cell(30, 10, text=str(row[2]), border=1)
             pdf.cell(40, 10, text=str(row[3]), border=1)
             pdf.cell(30, 10, text=str(row[4]), border=1)
+            pdf.cell(30, 10, text=str(row[5]), border=1)
             pdf.ln()
 
         # Criar e salvar os gráficos de pizza por nome
@@ -1598,6 +1611,7 @@ class AbaRelatorioMes:
             'FALTA': {'datas': [], 'nomes': [], 'cor': '#FF5733', 'marker': 'x'},
             'ATESTADO': {'datas': [], 'nomes': [], 'cor': '#FFC300', 'marker': 'd'},
             'CURSO': {'datas': [], 'nomes': [], 'cor': '#8E44AD', 'marker': '*'},
+            'FÉRIAS': {'datas': [], 'nomes': [], 'cor': '#A5A5A5', 'marker': 'S'},
         }
 
         nomes_unicos = set()
@@ -1662,7 +1676,8 @@ class AbaRelatorioMes:
                 SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
                 SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
                 SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
-                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso
+                SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso,
+                SUM(IIF(Presenca.Presenca = 'férias', 1, 0)) AS ferias
             FROM 
                 (Controle
             INNER JOIN 
@@ -1684,9 +1699,9 @@ class AbaRelatorioMes:
         # Iterar sobre os resultados e criar um gráfico de pizza para cada nome
         for row in cursor.fetchall():
             nome = row[0]
-            sizes = [row[1], row[2], row[3], row[4]]
-            labels = ['OK', 'Falta', 'Atestado', 'Curso']
-            colors = ['#4CAF50', '#FF5733', '#FFC300', '#8E44AD']
+            sizes = [row[1], row[2], row[3], row[4], row[5]]
+            labels = ['OK', 'Falta', 'Atestado', 'Curso', 'Férias']
+            colors = ['#4CAF50', '#FF5733', '#FFC300', '#8E44AD', '#A5a5a5']
 
             # Filtrar as categorias com base em valores diferentes de zero
             filtered_labels = []
