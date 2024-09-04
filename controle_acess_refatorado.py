@@ -71,7 +71,8 @@ class ControleApp:
         janela = self.root
 
         # Frame lateral com botões
-        frame_menu_lateral = ctk.CTkFrame(janela, width=150, fg_color=self.my_dict['menu-inf'], bg_color=self.my_dict['preto'])
+        frame_menu_lateral = ctk.CTkFrame(janela, width=150, fg_color=self.my_dict['menu-inf'],
+                                          bg_color=self.my_dict['preto'])
         frame_menu_lateral.pack(side='left', fill='y')
 
         # Frame principal que mudará de acordo com os botões
@@ -80,10 +81,10 @@ class ControleApp:
 
         # Adicionar ComboBoxes ao frame lateral
         self.add_comboboxes(frame_menu_lateral)
-        
+
         # Adicionar botões ao frame lateral
         self.add_buttons_menu(frame_menu_lateral)
-        
+
         # Mostrar a mensagem inicial solicitando a seleção de um site e empresa
         self.show_initial_message()
 
@@ -143,12 +144,12 @@ class ControleApp:
         """Obtém os nomes associados ao ID_SiteEmpresas, filtrando por ativos se solicitado."""
         cursor = self.conn.cursor()
         query = "SELECT Nome.Nome FROM Nome WHERE id_SiteEmpresa = ?"
-        
+
         if ativos:
             query += " AND Ativo = True"
         else:
             query += " AND Ativo = False"
-        
+
         cursor.execute(query, (siteempresa_id,))
         nomes = [row[0] for row in cursor.fetchall()]
         return nomes
@@ -170,6 +171,7 @@ class ControleApp:
         cursor.execute(query)
         anos = [str(row[0]) for row in cursor.fetchall()]
         return anos
+
     def get_presenca(self):
         if self.conn is None:
             return []
@@ -214,16 +216,16 @@ class ControleApp:
             button.configure(state=state)
 
     def add_buttons_menu(self, frame):
-        button_texts = ["Controle de Frequencia","Nomes", "Empresas", "Relatorio Mensal"]
+        button_texts = ["Controle de Frequencia", "Nomes", "Empresas", "Relatorio Mensal"]
 
         for text in button_texts:
             button = ctk.CTkButton(
-                frame, 
-                text=text, 
-                command=lambda t=text: self.show_frame(t), 
-                hover_color=self.my_dict['hover'], 
-                border_width=2, 
-                border_color=self.my_dict['menu-sup'], 
+                frame,
+                text=text,
+                command=lambda t=text: self.show_frame(t),
+                hover_color=self.my_dict['hover'],
+                border_width=2,
+                border_color=self.my_dict['menu-sup'],
                 state="disabled"
             )
             button.pack(pady=10, padx=10, fill='x')
@@ -231,14 +233,15 @@ class ControleApp:
 
     def show_initial_message(self):
         # Exibe uma mensagem inicial solicitando que o usuário selecione um site e uma empresa
-        label = ctk.CTkLabel(self.frame_tela, text="Por favor, selecione um site e uma empresa no menu à esquerda.", text_color=self.my_dict['font'])
+        label = ctk.CTkLabel(self.frame_tela, text="Por favor, selecione um site e uma empresa no menu à esquerda.",
+                             text_color=self.my_dict['font'])
         label.pack(pady=20)
 
     def show_frame(self, frame_name):
         # Limpa o frame atual
         for widget in self.frame_tela.winfo_children():
             widget.destroy()
-        
+
         # Atualiza a cor dos botões
         for name, button in self.buttons.items():
             if name == frame_name:
@@ -249,35 +252,35 @@ class ControleApp:
         # Adiciona novo conteúdo baseado no botão pressionado
         if frame_name == "Controle de Frequencia":
             if self.selected_siteempresa_id:
-                Aba_Controle(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
+                AbaControle(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
             else:
                 self.show_initial_message()
         elif frame_name == "Relatorio Mensal":
             if self.selected_siteempresa_id:
-                Aba_relatorio_mes(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
+                AbaRelatorioMes(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
             else:
                 self.show_initial_message()
         elif frame_name == "Empresas":
             if self.selected_siteempresa_id:
-                Aba_empresas(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
+                AbaEmpresas(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
             else:
                 self.show_initial_message()
         elif frame_name == "Nomes":
             if self.selected_siteempresa_id:
-                Aba_Nomes(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
+                AbaNomes(self, self.frame_tela, self.my_dict, self.conn, self.selected_siteempresa_id)
             else:
                 self.show_initial_message()
 
 
-class Aba_Controle:
-    def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
-        self.app = app
+class AbaControle:
+    def __init__(self, app_, frame, my_dict, conn, selected_siteempresa_id):
+        self.app = app_
         self.frame = frame
         self.my_dict = my_dict
         self.conn = conn
         self.selected_siteempresa_id = selected_siteempresa_id
         self.filter_active = False  # Variável para controlar o estado do filtro
-        
+
         self.setup()
 
     def setup(self):
@@ -290,7 +293,8 @@ class Aba_Controle:
         print(nomes)
 
         # Exibir os nomes na aba de controle
-        label = ctk.CTkLabel(self.frame, text=f"Nomes associados ao site e empresa selecionados:", text_color=self.my_dict['font'])
+        label = ctk.CTkLabel(self.frame, text=f"Nomes associados ao site e empresa selecionados:",
+                             text_color=self.my_dict['font'])
         label.pack(pady=10)
 
         self.frame_checkbox = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'], height=50)
@@ -302,7 +306,8 @@ class Aba_Controle:
 
         for nome in nomes:
             var = ctk.StringVar(value='off')
-            checkbox = ctk.CTkCheckBox(self.frame_checkbox, text=nome, variable=var, onvalue='on', offvalue='off', font=('Arial', 15), hover_color=self.my_dict['Heading_color'])
+            checkbox = ctk.CTkCheckBox(self.frame_checkbox, text=nome, variable=var, onvalue='on', offvalue='off',
+                                       font=('Arial', 15), hover_color=self.my_dict['Heading_color'])
             checkbox.grid(row=row, column=col, padx=5, pady=5)
             self.checkbox_vars[nome] = var  # Armazena a variável da checkbox
             col += 1
@@ -311,7 +316,7 @@ class Aba_Controle:
                 col = 0
                 row += 1
 
-        combobox_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'],)
+        combobox_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'], )
         combobox_frame.pack(pady=10, padx=10, fill='x')
 
         # tipo presenca
@@ -337,22 +342,27 @@ class Aba_Controle:
         self.mes_combobox.set(self.app.meses_dict[mes_atual])
 
         # Ano
+        ano_atual = datetime.datetime.now().year
+        ano_inicial = 2024
+        anos = [str(a) for a in range(ano_inicial, ano_atual + 100)]
         ano_label = ctk.CTkLabel(combobox_frame, text="Ano :", text_color=self.my_dict['font'])
         ano_label.grid(row=0, column=7, padx=10, pady=5)
-        self.ano_combobox = ctk.CTkComboBox(combobox_frame, values=self.app.get_anos(), state='readonly')
+        self.ano_combobox = ctk.CTkComboBox(combobox_frame, values=anos, state='readonly')
         self.ano_combobox.grid(row=0, column=8, padx=10, pady=5)
         self.ano_combobox.set(str(datetime.datetime.now().year))
-        
+
         # Botões
         button = ctk.CTkButton(combobox_frame, text="Adicionar", width=55, height=30, command=self.adicionar_frequencia)
         button.grid(row=0, column=10, padx=10, pady=5)
-        button_delete = ctk.CTkButton(combobox_frame, text="Deletar", width=55, height=30, command=self.remover_frequencia)
+        button_delete = ctk.CTkButton(combobox_frame, text="Deletar", width=55, height=30,
+                                      command=self.remover_frequencia)
         button_delete.grid(row=0, column=11, padx=10, pady=5)
-        #spacer = ctk.CTkLabel(combobox_frame, text='')
-        #spacer.grid(padx=0,row=0, column=12)
-        self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=55, height=30, command=self.toggle_filter)
+        # spacer = ctk.CTkLabel(combobox_frame, text='')
+        # spacer.grid(padx=0,row=0, column=12)
+        self.filter_button = ctk.CTkButton(combobox_frame, text="Filtrar", width=55, height=30,
+                                           command=self.toggle_filter)
         self.filter_button.grid(row=0, column=12, padx=5, pady=5)
-        
+
         # Tabela (Treeview)
         tabela_frame = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
         tabela_frame.pack(pady=10, padx=10, fill='both', expand=True)
@@ -368,9 +378,12 @@ class Aba_Controle:
         self.tabela.pack(fill='both', expand=True)
 
         # Configurando as cores da Treeview
-        self.style.configure("Treeview.Heading", background=self.my_dict['Heading_color'], foreground=self.my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 12), bordercolor=self.my_dict['Heading_color'])
+        self.style.configure("Treeview.Heading", background=self.my_dict['Heading_color'],
+                             foreground=self.my_dict['font'], borderwidth=1, relief='solid', font=('Arial', 12),
+                             bordercolor=self.my_dict['Heading_color'])
         self.style.map("Treeview.Heading", background=[('active', self.my_dict['hover_treeview'])])
-        self.style.configure("Treeview", background=self.my_dict['preto'], foreground=self.my_dict['font'], fieldbackground=self.my_dict['preto'], rowheight=25)
+        self.style.configure("Treeview", background=self.my_dict['preto'], foreground=self.my_dict['font'],
+                             fieldbackground=self.my_dict['preto'], rowheight=25)
         self.style.map("Treeview", background=[('selected', self.my_dict['hover_treeview'])])
         # Preencher a Treeview com dados
         self.preencher_tabela()
@@ -398,7 +411,7 @@ class Aba_Controle:
             presenca = row[1]  # Status de presença
             data = row[2].strftime("%d/%m/%Y")  # Formatar data
             self.tabela.insert("", "end", values=(nome, presenca, data))
-            
+
     def adicionar_frequencia(self):
         # Obter o tipo de presença selecionado
         tipo_presenca = self.tipo_presenca_combobox.get()
@@ -435,7 +448,7 @@ class Aba_Controle:
         detalhes_sucesso = []
 
         # Verificar se já existem registros de presença para os nomes na data selecionada
-        registros_existentes = []
+        # registros_existentes = []
         novos_registros = []
         atestado_nomes = []  # Lista para armazenar os nomes com atestado
 
@@ -445,7 +458,8 @@ class Aba_Controle:
             for nome, var in self.checkbox_vars.items():
                 if var.get() == 'on':  # Verifica se a checkbox está marcada
                     # Obter o id_Nome do nome selecionado
-                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?",
+                                   (nome, self.selected_siteempresa_id))
                     id_nome = cursor.fetchone()[0]
 
                     # Verificar o último registro de presença para este nome
@@ -475,7 +489,8 @@ class Aba_Controle:
 
                 # Inserir registros para os nomes com atestado
                 for nome in atestado_nomes:
-                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?",
+                                   (nome, self.selected_siteempresa_id))
                     id_nome = cursor.fetchone()[0]
 
                     cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca_atestado,))
@@ -486,7 +501,8 @@ class Aba_Controle:
                         VALUES (?, ?, ?, ?)
                     """, (id_nome, id_presenca, data_selecionada, self.selected_siteempresa_id))
 
-                    detalhes_sucesso.append(f"{nome} - {tipo_presenca_atestado} em {data_selecionada.strftime('%d/%m/%Y')}")
+                    detalhes_sucesso.append(
+                        f"{nome} - {tipo_presenca_atestado} em {data_selecionada.strftime('%d/%m/%Y')}")
 
             # Inserir novos registros para os outros nomes
             for id_nome, nome in novos_registros:
@@ -513,69 +529,72 @@ class Aba_Controle:
             messagebox.showerror("Erro", f"Erro ao adicionar frequência: {e}")
 
     def remover_frequencia(self):
-            # Obter o dia, mês e ano selecionados
-            dia = self.dia_combobox.get()
-            mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
-            ano = self.ano_combobox.get()
+        # Obter o dia, mês e ano selecionados
+        dia = self.dia_combobox.get()
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = self.ano_combobox.get()
 
-            # Verificar se o dia, mês e ano foram selecionados
-            if not dia or not mes or not ano:
-                messagebox.showerror("Erro", "Selecione um dia, mês e ano para remover registros.")
-                return
+        # Verificar se o dia, mês e ano foram selecionados
+        if not dia or not mes or not ano:
+            messagebox.showerror("Erro", "Selecione um dia, mês e ano para remover registros.")
+            return
 
-            # Converter a data selecionada em um formato datetime
-            try:
-                data_selecionada = datetime.datetime(int(ano), mes, int(dia))
-            except ValueError:
-                messagebox.showerror("Erro", "Data inválida selecionada.")
-                return
+        # Converter a data selecionada em um formato datetime
+        try:
+            data_selecionada = datetime.datetime(int(ano), mes, int(dia))
+        except ValueError:
+            messagebox.showerror("Erro", "Data inválida selecionada.")
+            return
 
-            # Inicializar a lista para acumular os detalhes dos registros a serem deletados
-            registros_para_deletar = []
+        # Inicializar a lista para acumular os detalhes dos registros a serem deletados
+        registros_para_deletar = []
 
-            try:
-                cursor = self.conn.cursor()
+        try:
+            cursor = self.conn.cursor()
 
-                for nome, var in self.checkbox_vars.items():
-                    if var.get() == 'on':  # Verifica se a checkbox está marcada
-                        # Obter o id_Nome do nome selecionado
-                        cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
-                        id_nome = cursor.fetchone()[0]
+            for nome, var in self.checkbox_vars.items():
+                if var.get() == 'on':  # Verifica se a checkbox está marcada
+                    # Obter o id_Nome do nome selecionado
+                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?",
+                                   (nome, self.selected_siteempresa_id))
+                    id_nome = cursor.fetchone()[0]
 
-                        # Verificar se já existe um registro para a data selecionada
-                        cursor.execute("""
+                    # Verificar se já existe um registro para a data selecionada
+                    cursor.execute("""
                             SELECT id_Controle, Presenca.Presenca 
                             FROM Controle
                             INNER JOIN Presenca ON Controle.id_Presenca = Presenca.id_Presenca
                             WHERE id_Nome = ? AND Data = ? AND id_SiteEmpresa = ?
                         """, (id_nome, data_selecionada, self.selected_siteempresa_id))
 
-                        resultado = cursor.fetchone()
-                        if resultado:
-                            registros_para_deletar.append((resultado[0], nome, resultado[1], data_selecionada))
+                    resultado = cursor.fetchone()
+                    if resultado:
+                        registros_para_deletar.append((resultado[0], nome, resultado[1], data_selecionada))
 
-                if not registros_para_deletar:
-                    messagebox.showinfo("Informação", "Não há registros para deletar na data selecionada.")
-                    return
+            if not registros_para_deletar:
+                messagebox.showinfo("Informação", "Não há registros para deletar na data selecionada.")
+                return
 
-                # Preparar a mensagem de confirmação com os detalhes dos registros a serem deletados
-                detalhes_para_deletar = "\n".join([f"{nome} - {presenca} em {data.strftime('%d/%m/%Y')}" for _, nome, presenca, data in registros_para_deletar])
-                resposta = messagebox.askyesno("Confirmação", f"Os seguintes registros serão deletados:\n\n{detalhes_para_deletar}\n\nDeseja continuar?")
-                if not resposta:
-                    return
+            # Preparar a mensagem de confirmação com os detalhes dos registros a serem deletados
+            detalhes_para_deletar = "\n".join(
+                [f"{nome} - {presenca} em {data.strftime('%d/%m/%Y')}" for _, nome, presenca, data in
+                 registros_para_deletar])
+            resposta = messagebox.askyesno("Confirmação",
+                                           f"Os seguintes registros serão deletados:\n\n{detalhes_para_deletar}\n\nDeseja continuar?")
+            if not resposta:
+                return
 
-                # Deletar os registros selecionados
-                for id_controle, _, _, _ in registros_para_deletar:
-                    cursor.execute("DELETE FROM Controle WHERE id_Controle = ?", (id_controle,))
+            # Deletar os registros selecionados
+            for id_controle, _, _, _ in registros_para_deletar:
+                cursor.execute("DELETE FROM Controle WHERE id_Controle = ?", (id_controle,))
 
-                self.conn.commit()  # Confirmar as alterações
+            self.conn.commit()  # Confirmar as alterações
 
-                messagebox.showinfo("Sucesso", "Registros deletados com sucesso.")
-                self.preencher_tabela()  # Atualizar a tabela após deletar os registros
+            messagebox.showinfo("Sucesso", "Registros deletados com sucesso.")
+            self.preencher_tabela()  # Atualizar a tabela após deletar os registros
 
-            except pyodbc.Error as e:
-                messagebox.showerror("Erro", f"Erro ao deletar registros: {e}")
-
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao deletar registros: {e}")
 
     def filtrar_frequencia(self):
         # Obter o tipo de presença, dia, mês, ano e nomes selecionados
@@ -583,14 +602,14 @@ class Aba_Controle:
         dia = self.dia_combobox.get()
         mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
         ano = self.ano_combobox.get()
-        
+
         nomes_selecionados = [nome for nome, var in self.checkbox_vars.items() if var.get() == 'on']
-        
+
         # Verificar se algum critério foi selecionado
         if not (tipo_presenca or dia or mes or ano or nomes_selecionados):
             messagebox.showerror("Erro", "Selecione pelo menos um critério de filtragem.")
             return
-        
+
         # Construir a consulta SQL com base nos filtros selecionados
         query = """
             SELECT Nome.Nome, Presenca.Presenca, Controle.Data
@@ -600,31 +619,31 @@ class Aba_Controle:
             ON Presenca.id_Presenca = Controle.id_Presenca
             WHERE Controle.id_SiteEmpresa = ?
         """
-        
+
         params = [self.selected_siteempresa_id]
-        
+
         # Adicionar filtros conforme os critérios selecionados
         if tipo_presenca:
             query += " AND Presenca.Presenca = ?"
             params.append(tipo_presenca)
-        
+
         if dia:
             query += " AND DAY(Controle.Data) = ?"
             params.append(dia)
-        
+
         if mes:
             query += " AND MONTH(Controle.Data) = ?"
             params.append(mes)
-        
+
         if ano:
             query += " AND YEAR(Controle.Data) = ?"
             params.append(ano)
-        
+
         if nomes_selecionados:
             placeholders = ', '.join(['?'] * len(nomes_selecionados))
             query += f" AND Nome.Nome IN ({placeholders})"
             params.extend(nomes_selecionados)
-        
+
         # Executar a consulta e preencher a tabela
         try:
             cursor = self.conn.cursor()
@@ -640,14 +659,12 @@ class Aba_Controle:
                 presenca = row[1]
                 data = row[2].strftime("%d/%m/%Y")
                 self.tabela.insert("", "end", values=(nome, presenca, data))
-            
+
             self.filter_active = True  # Sinalizar que o filtro está ativo
 
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao filtrar os dados: {e}")
 
-    
-    
     def toggle_filter(self):
         if self.filter_active:
             self.preencher_tabela()  # Exibir todos os registros
@@ -661,11 +678,9 @@ class Aba_Controle:
             self.filter_button.configure(text="Limpar Filtro")  # Alterar o texto do botão para "Limpar Filtro"
 
 
-
-
-class Aba_Nomes:
-    def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
-        self.app = app
+class AbaNomes:
+    def __init__(self, app_, frame, my_dict, conn, selected_siteempresa_id):
+        self.app = app_
         self.frame = frame
         self.my_dict = my_dict
         self.conn = conn
@@ -675,49 +690,54 @@ class Aba_Nomes:
     def setup(self):
         label = ctk.CTkLabel(self.frame, text="Gerenciar Empresas e Nomes", text_color=self.my_dict['font'])
         label.pack(pady=20)
-        
+
         # Frame para o conteúdo de Nomes
         frame_input_nome = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
-        frame_input_nome.pack(pady=10, padx=10, fill='both', expand=True, side='left')
+        frame_input_nome.pack(pady=10, padx=10, fill='both', expand=True)
 
         # Inserir Nome
         nome_label = ctk.CTkLabel(frame_input_nome, text="Inserir Nome:", text_color=self.my_dict['font'])
         nome_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         self.nome_entry = ctk.CTkEntry(frame_input_nome, fg_color=self.my_dict['preto'],
-                                       placeholder_text="Insira o Nome aqui!", placeholder_text_color=self.my_dict['frames_ajuste'])
+                                       placeholder_text="Insira o Nome aqui!",
+                                       placeholder_text_color=self.my_dict['frames_ajuste'])
         self.nome_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-        button_add_nome = ctk.CTkButton(frame_input_nome, text="Adicionar Nome", fg_color=self.my_dict['adicionar_btn'], command=self.add_nome)
+        button_add_nome = ctk.CTkButton(frame_input_nome, text="Adicionar Nome", fg_color=self.my_dict['adicionar_btn'],
+                                        command=self.add_nome)
         button_add_nome.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
         # Remover Nome
         nome_label_remove = ctk.CTkLabel(frame_input_nome, text="Remover Nome:", text_color=self.my_dict['font'])
         nome_label_remove.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
-        self.nome_combobox = ctk.CTkComboBox(frame_input_nome, values=self.app.get_nomes(self.selected_siteempresa_id), state='readonly')
+        self.nome_combobox = ctk.CTkComboBox(frame_input_nome, values=self.app.get_nomes(self.selected_siteempresa_id),
+                                             state='readonly')
         self.nome_combobox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
-        button_remove_nome = ctk.CTkButton(frame_input_nome, text="Remover Nome", fg_color=self.my_dict['remover_btn'], command=self.inativar_nome)
+        button_remove_nome = ctk.CTkButton(frame_input_nome, text="Remover Nome", fg_color=self.my_dict['remover_btn'],
+                                           command=self.inativar_nome)
         button_remove_nome.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
-        
+
         # Reativar Nome
         reativar_nome_label = ctk.CTkLabel(frame_input_nome, text="Reativar Nome:", text_color=self.my_dict['font'])
         reativar_nome_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
 
         # Preenchendo a ComboBox de nomes inativos corretamente
-        self.nome_inativo_combobox = ctk.CTkComboBox(frame_input_nome, values=self.app.get_nomes(self.selected_siteempresa_id, ativos=False), state='readonly')
+        self.nome_inativo_combobox = ctk.CTkComboBox(frame_input_nome,
+                                                     values=self.app.get_nomes(self.selected_siteempresa_id,
+                                                                               ativos=False), state='readonly')
         self.nome_inativo_combobox.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
 
-        button_reativar_nome = ctk.CTkButton(frame_input_nome, text="Reativar Nome", fg_color=self.my_dict['adicionar_btn'], command=self.reativar_nome)
+        button_reativar_nome = ctk.CTkButton(frame_input_nome, text="Reativar Nome",
+                                             fg_color=self.my_dict['adicionar_btn'], command=self.reativar_nome)
         button_reativar_nome.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
 
-
-    
     def add_nome(self):
         # Recuperar o nome inserido
         nome = self.nome_entry.get().strip()
-        
+
         if not nome:
             messagebox.showerror("Erro", "O nome não pode estar vazio.")
             return
@@ -726,7 +746,8 @@ class Aba_Nomes:
             cursor = self.conn.cursor()
 
             # Inserir o nome na tabela Nome usando o id_SiteEmpresa selecionado, e definindo Ativo como True
-            cursor.execute("INSERT INTO Nome (Nome, id_SiteEmpresa, Ativo) VALUES (?, ?, True)", (nome, self.selected_siteempresa_id))
+            cursor.execute("INSERT INTO Nome (Nome, id_SiteEmpresa, Ativo) VALUES (?, ?, True)",
+                           (nome, self.selected_siteempresa_id))
             self.conn.commit()
 
             messagebox.showinfo("Sucesso", "Nome adicionado com sucesso!")
@@ -739,7 +760,7 @@ class Aba_Nomes:
 
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao adicionar nome: {e}")
-    
+
     def reativar_nome(self):
         """Reativa um nome inativo na tabela Nome."""
         nome = self.nome_inativo_combobox.get().strip()
@@ -752,7 +773,8 @@ class Aba_Nomes:
             cursor = self.conn.cursor()
 
             # Marcar o nome como ativo
-            cursor.execute("UPDATE Nome SET Ativo = True WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+            cursor.execute("UPDATE Nome SET Ativo = True WHERE Nome = ? AND id_SiteEmpresa = ?",
+                           (nome, self.selected_siteempresa_id))
             self.conn.commit()
 
             messagebox.showinfo("Sucesso", "Nome reativado com sucesso!")
@@ -764,10 +786,46 @@ class Aba_Nomes:
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao reativar nome: {e}")
 
-     
-class Aba_empresas:
-    def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
-        self.app = app
+    def inativar_nome(self):
+        """Inativa um nome na tabela Nome, garantindo que o site selecionado tenha pelo menos um nome ativo."""
+        nome = self.nome_combobox.get().strip()
+
+        if not nome:
+            messagebox.showerror("Erro", "Selecione um nome para inativar.")
+            return
+
+        try:
+            # Obter o ID do site_empresa e verificar quantos nomes ativos existem
+            cursor = self.conn.cursor()
+            query = """
+                SELECT COUNT(*) 
+                FROM Nome 
+                WHERE id_SiteEmpresa = ? AND Ativo = True
+            """
+            cursor.execute(query, (self.selected_siteempresa_id,))
+            count_ativos = cursor.fetchone()[0]
+
+            if count_ativos <= 1:
+                messagebox.showerror("Erro", "Não é possível inativar o último nome ativo do site.")
+                return
+
+            # Marcar o nome como inativo
+            cursor.execute("UPDATE Nome SET Ativo = False WHERE Nome = ? AND id_SiteEmpresa = ?",
+                           (nome, self.selected_siteempresa_id))
+            self.conn.commit()
+
+            messagebox.showinfo("Sucesso", "Nome inativado com sucesso!")
+
+            # Atualizar a combobox de nomes
+            self.nome_combobox['values'] = self.app.get_nomes(self.selected_siteempresa_id)
+
+        except pyodbc.Error as e:
+            messagebox.showerror("Erro", f"Erro ao inativar nome: {e}")
+
+
+class AbaEmpresas:
+    def __init__(self, app_, frame, my_dict, conn, selected_siteempresa_id):
+        self.app = app_
         self.frame = frame
         self.my_dict = my_dict
         self.conn = conn
@@ -777,39 +835,48 @@ class Aba_empresas:
     def setup(self):
         label = ctk.CTkLabel(self.frame, text="Gerenciar Empresas e Nomes", text_color=self.my_dict['font'])
         label.pack(pady=20)
-        
+
         # Frame para o conteúdo de Empresas
         self.frame_input_empresa = ctk.CTkFrame(self.frame, fg_color=self.my_dict['preto'])
         self.frame_input_empresa.pack(pady=10, padx=10, fill='both', expand=True, side='left')
-        
+
         # Inserir Empresa
         empresa_label = ctk.CTkLabel(self.frame_input_empresa, text="Inserir Empresa:", text_color=self.my_dict['font'])
         empresa_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-        self.empresa_entry = ctk.CTkEntry(self.frame_input_empresa, fg_color=self.my_dict['preto'], placeholder_text="Insira a empresa aqui!",placeholder_text_color=self.my_dict['frames_ajuste'])
+        self.empresa_entry = ctk.CTkEntry(self.frame_input_empresa, fg_color=self.my_dict['preto'],
+                                          placeholder_text="Insira a empresa aqui!",
+                                          placeholder_text_color=self.my_dict['frames_ajuste'])
         self.empresa_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-        button_add_empresa = ctk.CTkButton(self.frame_input_empresa, text="Adicionar Empresa", fg_color=self.my_dict['adicionar_btn'], command=self.add_empresa)
+        button_add_empresa = ctk.CTkButton(self.frame_input_empresa, text="Adicionar Empresa",
+                                           fg_color=self.my_dict['adicionar_btn'], command=self.add_empresa)
         button_add_empresa.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
         # Desativar Empresa
-        empresa_label_remove = ctk.CTkLabel(self.frame_input_empresa, text="Desativar Empresa:", text_color=self.my_dict['font'])
+        empresa_label_remove = ctk.CTkLabel(self.frame_input_empresa, text="Desativar Empresa:",
+                                            text_color=self.my_dict['font'])
         empresa_label_remove.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
-        self.empresa_combobox = ctk.CTkComboBox(self.frame_input_empresa, values=self.get_empresas_ativas(), state='readonly')
+        self.empresa_combobox = ctk.CTkComboBox(self.frame_input_empresa, values=self.get_empresas_ativas(),
+                                                state='readonly')
         self.empresa_combobox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
-        button_remove_empresa = ctk.CTkButton(self.frame_input_empresa, text="Desativar", fg_color=self.my_dict['remover_btn'], command=self.desativar_empresa)
+        button_remove_empresa = ctk.CTkButton(self.frame_input_empresa, text="Desativar",
+                                              fg_color=self.my_dict['remover_btn'], command=self.desativar_empresa)
         button_remove_empresa.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
 
         # Ativar Empresa
-        empresa_label_activate = ctk.CTkLabel(self.frame_input_empresa, text="Ativar Empresa:", text_color=self.my_dict['font'])
+        empresa_label_activate = ctk.CTkLabel(self.frame_input_empresa, text="Ativar Empresa:",
+                                              text_color=self.my_dict['font'])
         empresa_label_activate.grid(row=2, column=0, padx=5, pady=5, sticky="w")
 
-        self.empresa_inativa_combobox = ctk.CTkComboBox(self.frame_input_empresa, values=self.get_empresas_inativas(), state='readonly')
+        self.empresa_inativa_combobox = ctk.CTkComboBox(self.frame_input_empresa, values=self.get_empresas_inativas(),
+                                                        state='readonly')
         self.empresa_inativa_combobox.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
 
-        button_ativar_empresa = ctk.CTkButton(self.frame_input_empresa, text="Ativar", fg_color=self.my_dict['adicionar_btn'], command=self.ativar_empresa)
+        button_ativar_empresa = ctk.CTkButton(self.frame_input_empresa, text="Ativar",
+                                              fg_color=self.my_dict['adicionar_btn'], command=self.ativar_empresa)
         button_ativar_empresa.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
 
     def get_empresas_ativas(self):
@@ -859,7 +926,8 @@ class Aba_empresas:
                 return
 
             # Atualizar o campo Ativo para True na tabela Site_Empresa
-            cursor.execute("UPDATE Site_Empresa SET Ativo = True WHERE id_Sites = ? AND id_Empresas = ?", (self.app.selected_site_id, empresa_id))
+            cursor.execute("UPDATE Site_Empresa SET Ativo = True WHERE id_Sites = ? AND id_Empresas = ?",
+                           (self.app.selected_site_id, empresa_id))
             self.conn.commit()
 
             messagebox.showinfo("Sucesso", "Empresa ativada com sucesso!")
@@ -870,9 +938,6 @@ class Aba_empresas:
 
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao ativar empresa: {e}")
-
-
-    
 
     def desativar_empresa(self):
         """Torna uma empresa não ativa, garantindo que o site selecionado tenha pelo menos uma empresa ativa."""
@@ -899,7 +964,8 @@ class Aba_empresas:
             cursor = self.conn.cursor()
 
             # Desativar a empresa na tabela Site_Empresa
-            cursor.execute("UPDATE Site_Empresa SET Ativo = False WHERE id_Sites = ? AND id_Empresas = ?", (self.app.selected_site_id, empresa_id))
+            cursor.execute("UPDATE Site_Empresa SET Ativo = False WHERE id_Sites = ? AND id_Empresas = ?",
+                           (self.app.selected_site_id, empresa_id))
             self.conn.commit()
 
             messagebox.showinfo("Sucesso", "Empresa desativada com sucesso!")
@@ -911,12 +977,11 @@ class Aba_empresas:
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao desativar empresa: {e}")
 
-
     def add_empresa(self):
         # Recuperar os valores inseridos
         empresa_nome = self.empresa_entry.get().strip()
         siteempresa_id = self.selected_siteempresa_id
-        
+
         if not empresa_nome:
             messagebox.showerror("Erro", "O nome da empresa não pode estar vazio.")
             return
@@ -946,7 +1011,8 @@ class Aba_empresas:
             id_site = cursor.fetchone()[0]
 
             # Inserir na tabela Site_Empresa com Ativo=TRUE
-            cursor.execute("INSERT INTO Site_Empresa (id_Sites, id_Empresas, Ativo) VALUES (?, ?, True)", (id_site, id_empresa))
+            cursor.execute("INSERT INTO Site_Empresa (id_Sites, id_Empresas, Ativo) VALUES (?, ?, True)",
+                           (id_site, id_empresa))
             self.conn.commit()
 
             messagebox.showinfo("Sucesso", "Empresa adicionada com sucesso!")
@@ -961,9 +1027,10 @@ class Aba_empresas:
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao adicionar empresa: {e}")
 
-class Aba_relatorio_mes:
-    def __init__(self, app, frame, my_dict, conn, selected_siteempresa_id):
-        self.app = app
+
+class AbaRelatorioMes:
+    def __init__(self, app_, frame, my_dict, conn, selected_siteempresa_id):
+        self.app = app_
         self.frame = frame
         self.my_dict = my_dict
         self.conn = conn
@@ -972,11 +1039,13 @@ class Aba_relatorio_mes:
 
     def setup(self):
         # Título
-        label = ctk.CTkLabel(self.frame, text="Relatório Mensal para o site e empresa selecionados", text_color=self.my_dict['font'])
+        label = ctk.CTkLabel(self.frame, text="Relatório Mensal para o site e empresa selecionados",
+                             text_color=self.my_dict['font'])
         label.pack(pady=20)
 
         # Frame para filtros e informações
-        filtro_frame = ctk.CTkFrame(self.frame, width=160, fg_color=self.my_dict['menu-inf'], bg_color=self.my_dict['preto'])
+        filtro_frame = ctk.CTkFrame(self.frame, width=160, fg_color=self.my_dict['menu-inf'],
+                                    bg_color=self.my_dict['preto'])
         filtro_frame.pack(padx=20, pady=20, side='left', fill='y', expand=False)
 
         # Mês
@@ -998,7 +1067,7 @@ class Aba_relatorio_mes:
         # Botão para aplicar o filtro
         filtro_button = ctk.CTkButton(filtro_frame, text="Aplicar Filtro", command=self.aplicar_filtro)
         filtro_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
-        
+
         salvar_button = ctk.CTkButton(filtro_frame, text="Salvar como PDF", command=self.salvar_pdf)
         salvar_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
@@ -1028,8 +1097,64 @@ class Aba_relatorio_mes:
         self.frame_tabela = ctk.CTkFrame(self.frame_graficos, fg_color=self.my_dict['preto'])
         self.frame_tabela.place(relx=0.55, rely=0.6, relwidth=0.4, relheight=0.35)
 
+        
+
+        # Inicializar variáveis de gráficos
+        self.chart_pizza = None
+        self.chart_dispersao = None
+
+        # Atualizar informações iniciais
+        self.aplicar_filtro()
+
+    def aplicar_filtro(self):
+        # Obter o mês e ano selecionados nas ComboBoxes
+        mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
+        ano = int(self.ano_combobox.get())
+
+        cursor = self.conn.cursor()
+        query = """
+                    SELECT COUNT(*)
+                    FROM Controle
+                    WHERE id_SiteEmpresa = ? AND MONTH(Data) = ? AND YEAR(Data) = ?
+                """
+        cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
+        resultado = cursor.fetchone()
+
+        if resultado[0] == 0:
+            for widget in self.frame_grafico_dispersao.winfo_children():
+                widget.pack_forget()
+
+            for widget in self.frame_grafico_pizza.winfo_children():
+                widget.pack_forget()
+
+            for widget in self.frame_tabela.winfo_children():
+                widget.pack_forget()
+
+            no_data_message = f"Não há dados inseridos em {mes} de {ano}"
+
+            no_data_label_dispersao = ctk.CTkLabel(self.frame_grafico_dispersao, text=no_data_message,
+                                                   text_color='white')
+            no_data_label_dispersao.pack(expand=True)
+
+            no_data_label_pizza = ctk.CTkLabel(self.frame_grafico_pizza, text=no_data_message, text_color='white')
+            no_data_label_pizza.pack(expand=True)
+
+            no_data_label_tabela = ctk.CTkLabel(self.frame_tabela, text=no_data_message, text_color='white')
+            no_data_label_tabela.pack(expand=True)
+
+            return
+
+        # Esta função irá chamar as demais funções para atualizar as informações
+        self.update_info()
+        self.create_tabela()
+        self.update_tabela()
+        self.criar_grafico_pizza()
+        self.criar_grafico_dispersao()
+    
+    def create_tabela(self):
         # Criando a Treeview para exibir a tabela de presença
-        self.tabela = ttk.Treeview(self.frame_tabela, columns=("Nome", "OK", "Falta", "Atestado", "Curso"), show='headings')
+        self.tabela = ttk.Treeview(self.frame_tabela, columns=("Nome", "OK", "Falta", "Atestado", "Curso"),
+                                   show='headings')
         self.tabela.column("Nome", width=60)  # Ajuste a largura conforme necessário
         self.tabela.column("OK", width=40)
         self.tabela.column("Falta", width=40)
@@ -1048,20 +1173,6 @@ class Aba_relatorio_mes:
         self.tabela.pack(fill='both', expand=True)
         self.tabela.configure(yscrollcommand=self.treeScrollbar.set)
 
-        # Inicializar variáveis de gráficos
-        self.chart_pizza = None
-        self.chart_dispersao = None
-
-        # Atualizar informações iniciais
-        self.aplicar_filtro()
-
-    def aplicar_filtro(self):
-        # Esta função irá chamar as demais funções para atualizar as informações
-        self.update_info()
-        self.update_tabela()
-        self.criar_grafico_pizza()
-        self.criar_grafico_dispersao()
-
     def update_info(self):
         # Obter o mês e ano selecionados nas ComboBoxes
         mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
@@ -1076,7 +1187,8 @@ class Aba_relatorio_mes:
         self.faltas_label.configure(text=f"FALTAS: {faltas}")
         self.atestados_label.configure(text=f"ATESTADOS: {atestados}")
 
-    def calcular_dias_uteis(self, mes, ano):
+    @staticmethod
+    def calcular_dias_uteis(mes, ano):
         # Calcula o número de dias úteis (excluindo sábados e domingos) no mês e ano fornecidos
         cal = calendar.Calendar()
         dias_uteis = sum(1 for day in cal.itermonthdays2(ano, mes) if day[0] != 0 and day[1] < 5)
@@ -1196,12 +1308,12 @@ class Aba_relatorio_mes:
         ax = self.figura.add_subplot(111)
 
         wedges, texts, autotexts = ax.pie(
-            filtered_sizes, labels=filtered_labels, colors=filtered_colors, 
-            autopct=lambda p: f'{int(p * sum(filtered_sizes) / 100)}', 
-            startangle=0, pctdistance=0.8, 
+            filtered_sizes, labels=filtered_labels, colors=filtered_colors,
+            autopct=lambda p: f'{int(p * sum(filtered_sizes) / 100)}',
+            startangle=0, pctdistance=0.8,
             wedgeprops=dict(width=0.4)
         )
-        
+
         # Customizando o texto dentro do gráfico
         for text in autotexts:
             text.set_color('white')
@@ -1226,6 +1338,9 @@ class Aba_relatorio_mes:
         # Remover o gráfico de dispersão anterior, se existir
         if self.chart_dispersao:
             self.chart_dispersao.get_tk_widget().destroy()
+
+        for widget in self.frame_grafico_dispersao.winfo_children():
+            widget.pack_forget()
 
         # Obter os dados de presença para o gráfico de dispersão
         cursor = self.conn.cursor()
@@ -1255,13 +1370,13 @@ class Aba_relatorio_mes:
             'ATESTADO': {'datas': [], 'nomes': [], 'cor': '#FFC300', 'marker': 'd'},
             'CURSO': {'datas': [], 'nomes': [], 'cor': '#8E44AD', 'marker': '*'},
         }
-        
+
         nomes_unicos = set()
         for row in cursor.fetchall():
             nome = row[0]
             data = row[1]
             presenca = row[2].upper()
-            
+
             nomes_unicos.add(nome)  # Armazena os nomes únicos para o eixo Y
             if presenca in data_dict:
                 data_dict[presenca]['datas'].append(data)
@@ -1269,7 +1384,8 @@ class Aba_relatorio_mes:
 
         # Criar uma lista de todos os dias úteis no mês
         cal = calendar.Calendar()
-        dias_uteis = [datetime.date(ano, mes, day) for day, weekday in cal.itermonthdays2(ano, mes) if day != 0 and weekday < 5]
+        dias_uteis = [datetime.date(ano, mes, day) for day, weekday in cal.itermonthdays2(ano, mes) if
+                      day != 0 and weekday < 5]
 
         # Criando a figura do gráfico com fundo customizado
         self.figura_dispersao = plt.Figure(figsize=(6, 4), facecolor=self.my_dict['preto'])
@@ -1293,7 +1409,7 @@ class Aba_relatorio_mes:
         self.figura_dispersao.patch.set_facecolor(self.my_dict['preto'])
 
         ax.spines['bottom'].set_color('white')
-        #ax.spines['left'].set_color('white')
+        # ax.spines['left'].set_color('white')
         ax.spines['left'].set_visible(False)
 
         ax.xaxis.label.set_color('white')
@@ -1304,14 +1420,15 @@ class Aba_relatorio_mes:
         ax.tick_params(axis='y', colors='white', labelsize=8)
 
         # Posicionar a legenda fora do gráfico
-        legend = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), facecolor=self.my_dict['preto'], edgecolor='white', fontsize=8)
+        legend = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), facecolor=self.my_dict['preto'],
+                           edgecolor='white', fontsize=8)
         for text in legend.get_texts():
             text.set_color("white")
 
         # Adicionar o gráfico ao Tkinter
         self.chart_dispersao = FigureCanvasTkAgg(self.figura_dispersao, self.frame_grafico_dispersao)
         self.chart_dispersao.get_tk_widget().pack(expand=True, fill='both')
- 
+
     def salvar_pdf(self):
         # Consulta SQL para obter os dados
         query = """
@@ -1334,7 +1451,7 @@ class Aba_relatorio_mes:
         """
         mes = list(self.app.meses_dict.keys())[list(self.app.meses_dict.values()).index(self.mes_combobox.get())]
         ano = int(self.ano_combobox.get())
-        
+
         cursor = self.conn.cursor()
         cursor.execute(query, (self.selected_siteempresa_id, mes, ano))
 
@@ -1345,7 +1462,8 @@ class Aba_relatorio_mes:
 
         # Configurar o título
         pdf.set_font("Helvetica", size=12)
-        pdf.cell(200, 10, text=f"Relatório Mensal - {self.mes_combobox.get()} {self.ano_combobox.get()}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+        pdf.cell(200, 10, text=f"Relatório Mensal - {self.mes_combobox.get()} {self.ano_combobox.get()}",
+                 new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
 
         # Configurar os cabeçalhos da tabela
         pdf.set_font("Helvetica", size=10)
@@ -1481,13 +1599,13 @@ class Aba_relatorio_mes:
             'ATESTADO': {'datas': [], 'nomes': [], 'cor': '#FFC300', 'marker': 'd'},
             'CURSO': {'datas': [], 'nomes': [], 'cor': '#8E44AD', 'marker': '*'},
         }
-        
+
         nomes_unicos = set()
         for row in cursor.fetchall():
             nome = row[0]
             data = row[1]
             presenca = row[2].upper()
-            
+
             nomes_unicos.add(nome)  # Armazena os nomes únicos para o eixo Y
             if presenca in data_dict:
                 data_dict[presenca]['datas'].append(data)
@@ -1495,7 +1613,8 @@ class Aba_relatorio_mes:
 
         # Criar uma lista de todos os dias úteis no mês
         cal = calendar.Calendar()
-        dias_uteis = [datetime.date(ano, mes, day) for day, weekday in cal.itermonthdays2(ano, mes) if day != 0 and weekday < 5]
+        dias_uteis = [datetime.date(ano, mes, day) for day, weekday in cal.itermonthdays2(ano, mes) if
+                      day != 0 and weekday < 5]
 
         # Criando a figura do gráfico com fundo branco
         figura_dispersao = plt.Figure(figsize=(6, 4), facecolor='white')
@@ -1533,7 +1652,6 @@ class Aba_relatorio_mes:
         figura_dispersao.savefig(dispersao_img_path, dpi=300, bbox_inches='tight')
 
         return dispersao_img_path
-
 
     def criar_grafico_pizza_por_nome_pdf(self):
         # Obter os nomes e presenças relacionados
@@ -1587,9 +1705,9 @@ class Aba_relatorio_mes:
                 ax = figura.add_subplot(111)
 
                 wedges, texts, autotexts = ax.pie(
-                    filtered_sizes, labels=filtered_labels, colors=filtered_colors, 
-                    autopct=lambda p: f'{int(p * sum(filtered_sizes) / 100)}', 
-                    startangle=0, pctdistance=0.8, 
+                    filtered_sizes, labels=filtered_labels, colors=filtered_colors,
+                    autopct=lambda p: f'{int(p * sum(filtered_sizes) / 100)}',
+                    startangle=0, pctdistance=0.8,
                     wedgeprops=dict(width=0.4)
                 )
 
@@ -1611,9 +1729,6 @@ class Aba_relatorio_mes:
                 imagens_pizza.append((nome, img_path))
 
         return imagens_pizza
-
-
-
 
 
 # Para rodar o app:
