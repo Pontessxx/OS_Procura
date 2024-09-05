@@ -446,11 +446,8 @@ class AbaControle:
 
         # Inicializar a lista para acumular os detalhes de sucesso
         detalhes_sucesso = []
-
-        # Verificar se já existem registros de presença para os nomes na data selecionada
-        # registros_existentes = []
         novos_registros = []
-        atestado_nomes = []  # Lista para armazenar os nomes com atestado
+        nomes_com_registro_existente = []  # Lista para nomes com registros na data
 
         try:
             cursor = self.conn.cursor()
@@ -458,51 +455,44 @@ class AbaControle:
             for nome, var in self.checkbox_vars.items():
                 if var.get() == 'on':  # Verifica se a checkbox está marcada
                     # Obter o id_Nome do nome selecionado
-                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?",
-                                   (nome, self.selected_siteempresa_id))
+                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
                     id_nome = cursor.fetchone()[0]
 
-                    # Verificar o último registro de presença para este nome
+                    # Verificar se já existe um registro para a data selecionada
                     cursor.execute("""
-                        SELECT TOP 1 Presenca.Presenca
+                        SELECT id_Controle, Presenca.Presenca
                         FROM Controle
                         INNER JOIN Presenca ON Controle.id_Presenca = Presenca.id_Presenca
-                        WHERE id_Nome = ? AND id_SiteEmpresa = ?
-                        ORDER BY Controle.Data DESC
-                    """, (id_nome, self.selected_siteempresa_id))
+                        WHERE id_Nome = ? AND Data = ? AND id_SiteEmpresa = ?
+                    """, (id_nome, data_selecionada, self.selected_siteempresa_id))
 
-                    ultimo_registro = cursor.fetchone()
+                    registro_existente = cursor.fetchone()
 
-                    if ultimo_registro and ultimo_registro[0].lower() == "atestado":
-                        atestado_nomes.append(nome)
+                    if registro_existente:
+                        nomes_com_registro_existente.append((nome, id_nome, registro_existente[0], registro_existente[1]))
                     else:
                         novos_registros.append((id_nome, nome))
 
-            # Verificar se há nomes com atestado no último registro
-            if atestado_nomes:
-                resposta = messagebox.askyesno(
-                    "Confirmação",
-                    f"Os seguintes nomes possuem 'atestado' no último registro: {', '.join(atestado_nomes)}.\n"
-                    "Deseja marcar a nova frequência como 'atestado' clique em 'sim'.\n Quer colocar 'falta' para esses nomes, clique em 'não'."
-                )
-                tipo_presenca_atestado = "atestado" if resposta else "falta"
+            # Perguntar ao usuário se deseja editar os registros existentes
+            if nomes_com_registro_existente:
+                nomes = ', '.join([nome for nome, _, _, _ in nomes_com_registro_existente])
+                resposta = messagebox.askyesno("Confirmação", f"Já existem registros para os seguintes nomes em {data_selecionada.strftime('%d/%m/%Y')}:\n{nomes}\nDeseja editar esses registros?")
+                
+                if resposta:  # Se o usuário quiser editar os registros
+                    for nome, id_nome, id_controle, presenca_atual in nomes_com_registro_existente:
+                        # Atualizar o registro com o novo tipo de presença
+                        cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca,))
+                        id_presenca = cursor.fetchone()[0]
+                        
+                        cursor.execute("""
+                            UPDATE Controle
+                            SET id_Presenca = ?
+                            WHERE id_Controle = ?
+                        """, (id_presenca, id_controle))
 
-                # Inserir registros para os nomes com atestado
-                for nome in atestado_nomes:
-                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?",
-                                   (nome, self.selected_siteempresa_id))
-                    id_nome = cursor.fetchone()[0]
-
-                    cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca_atestado,))
-                    id_presenca = cursor.fetchone()[0]
-
-                    cursor.execute("""
-                        INSERT INTO Controle (id_Nome, id_Presenca, Data, id_SiteEmpresa)
-                        VALUES (?, ?, ?, ?)
-                    """, (id_nome, id_presenca, data_selecionada, self.selected_siteempresa_id))
-
-                    detalhes_sucesso.append(
-                        f"{nome} - {tipo_presenca_atestado} em {data_selecionada.strftime('%d/%m/%Y')}")
+                        detalhes_sucesso.append(f"{nome} - {tipo_presenca} em {data_selecionada.strftime('%d/%m/%Y')} (editado)")
+                else:
+                    detalhes_sucesso.append(f"Registros existentes mantidos para {nomes}")
 
             # Inserir novos registros para os outros nomes
             for id_nome, nome in novos_registros:
@@ -519,14 +509,21 @@ class AbaControle:
             self.conn.commit()  # Confirmar as alterações
 
             # Montar a mensagem de sucesso
-            mensagem_sucesso = "Frequência adicionada com sucesso para:\n" + "\n".join(detalhes_sucesso)
+            mensagem_sucesso = "Operação de frequência concluída para:\n" + "\n".join(detalhes_sucesso)
             messagebox.showinfo("Sucesso", mensagem_sucesso)
 
             # Atualizar a tabela após adicionar a frequência
             self.preencher_tabela()
 
+            # Limpar as checkboxes após adicionar
+            for var in self.checkbox_vars.values():
+                var.set('off')
+
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao adicionar frequência: {e}")
+
+
+
 
     def remover_frequencia(self):
         # Obter o dia, mês e ano selecionados
