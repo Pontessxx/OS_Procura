@@ -1,20 +1,20 @@
 import customtkinter as ctk
 import pyodbc
 from tkinter import ttk
-from tkinter import messagebox  # Importando o messagebox do tkinter
+from tkinter import messagebox
 import datetime
 import calendar
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.dates as mdates
 import os
 import subprocess
 from fpdf import FPDF, XPos, YPos
 import pandas as pd
 
+
 class ControleApp:
-    def __init__(self, root):
-        self.root = root
+    def __init__(self, rot):
+        self.root = rot
         ctk.set_appearance_mode('dark')
         root.geometry('1130x600')
         root.title('Controle de Frequência')
@@ -41,7 +41,7 @@ class ControleApp:
             5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
             9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
         }
-        
+
         self.buttons = {}
         self.conn = self.connect_to_db()
         self.selected_site_id = None  # Armazena o ID do site selecionado
@@ -49,7 +49,8 @@ class ControleApp:
         self.selected_siteempresa_id = None  # Armazena o ID_SiteEmpresa correspondente
         self.setup_auto()
 
-    def connect_to_db(self):
+    @staticmethod
+    def connect_to_db():
         try:
             con_string = r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\Henrique\Downloads\Controle.accdb'
             conn = pyodbc.connect(con_string)
@@ -290,7 +291,6 @@ class AbaControle:
 
         # Obter os nomes relacionados ao ID_SiteEmpresas
         nomes = self.app.get_nomes(self.selected_siteempresa_id)
-        print(nomes)
 
         # Exibir os nomes na aba de controle
         label = ctk.CTkLabel(self.frame, text=f"Nomes associados ao site e empresa selecionados:",
@@ -412,7 +412,7 @@ class AbaControle:
             data = row[2].strftime("%d/%m/%Y")  # Formatar data
             self.tabela.insert("", "end", values=(nome, presenca, data))
 
-    def adicionar_frequencia(self):
+    def adicionar_frequencia(self): 
         # Obter o tipo de presença selecionado
         tipo_presenca = self.tipo_presenca_combobox.get()
 
@@ -440,59 +440,99 @@ class AbaControle:
             return
 
         # Verificar se a data cai em um sábado ou domingo
-        if data_selecionada.weekday() >= 5:  # 5 e 6 correspondem a sábado e domingo, respectivamente
+        if data_selecionada.weekday() >= 5: # 5 e 6 correspondem a sábado e domingo, respectivamente
             messagebox.showerror("Erro", "Não é permitido adicionar frequência para sábados ou domingos.")
             return
 
         # Inicializar a lista para acumular os detalhes de sucesso
         detalhes_sucesso = []
+
+        # Verificar se já existem registros de presença para os nomes na data selecionada
         novos_registros = []
-        nomes_com_registro_existente = []  # Lista para nomes com registros na data
+        atestado_nomes = [] # Lista para armazenar os nomes com atestado
+        nomes_com_dados_existentes = [] # Nomes que já possuem registros na data
 
         try:
             cursor = self.conn.cursor()
 
             for nome, var in self.checkbox_vars.items():
-                if var.get() == 'on':  # Verifica se a checkbox está marcada
+                if var.get() == 'on': # Verifica se a checkbox está marcada
                     # Obter o id_Nome do nome selecionado
-                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?", (nome, self.selected_siteempresa_id))
+                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?",
+                                (nome, self.selected_siteempresa_id))
                     id_nome = cursor.fetchone()[0]
 
                     # Verificar se já existe um registro para a data selecionada
                     cursor.execute("""
-                        SELECT id_Controle, Presenca.Presenca
+                        SELECT id_Controle, Presenca.Presenca 
                         FROM Controle
                         INNER JOIN Presenca ON Controle.id_Presenca = Presenca.id_Presenca
                         WHERE id_Nome = ? AND Data = ? AND id_SiteEmpresa = ?
                     """, (id_nome, data_selecionada, self.selected_siteempresa_id))
 
-                    registro_existente = cursor.fetchone()
+                    resultado = cursor.fetchone()
 
-                    if registro_existente:
-                        nomes_com_registro_existente.append((nome, id_nome, registro_existente[0], registro_existente[1]))
+                    if resultado:
+                        nomes_com_dados_existentes.append((nome, resultado[1])) # Guardar o nome e o tipo de presença existente
                     else:
-                        novos_registros.append((id_nome, nome))
+                        # Verificar o último registro de presença para este nome apenas se o tipo selecionado for "atestado"
+                        if tipo_presenca.lower() == "atestado":
+                            cursor.execute("""
+                                SELECT TOP 1 Presenca.Presenca
+                                FROM Controle
+                                INNER JOIN Presenca ON Controle.id_Presenca = Presenca.id_Presenca
+                                WHERE id_Nome = ? AND id_SiteEmpresa = ?
+                                ORDER BY Controle.Data DESC
+                            """, (id_nome, self.selected_siteempresa_id))
 
-            # Perguntar ao usuário se deseja editar os registros existentes
-            if nomes_com_registro_existente:
-                nomes = ', '.join([nome for nome, _, _, _ in nomes_com_registro_existente])
-                resposta = messagebox.askyesno("Confirmação", f"Já existem registros para os seguintes nomes em {data_selecionada.strftime('%d/%m/%Y')}:\n{nomes}\nDeseja editar esses registros?")
-                
-                if resposta:  # Se o usuário quiser editar os registros
-                    for nome, id_nome, id_controle, presenca_atual in nomes_com_registro_existente:
-                        # Atualizar o registro com o novo tipo de presença
-                        cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca,))
-                        id_presenca = cursor.fetchone()[0]
-                        
-                        cursor.execute("""
-                            UPDATE Controle
-                            SET id_Presenca = ?
-                            WHERE id_Controle = ?
-                        """, (id_presenca, id_controle))
+                            ultimo_registro = cursor.fetchone()
 
-                        detalhes_sucesso.append(f"{nome} - {tipo_presenca} em {data_selecionada.strftime('%d/%m/%Y')} (editado)")
-                else:
-                    detalhes_sucesso.append(f"Registros existentes mantidos para {nomes}")
+                            if ultimo_registro and ultimo_registro[0].lower() == "atestado":
+                                atestado_nomes.append(nome)
+                            else:
+                                novos_registros.append((id_nome, nome))
+                        else:
+                            # Se não for "atestado", diretamente adicionar o nome
+                            novos_registros.append((id_nome, nome))
+
+            # Perguntar ao usuário se deseja alterar os valores já existentes
+            if nomes_com_dados_existentes:
+                nomes_existentes_str = "\n".join([f"{nome}: {presenca}" for nome, presenca in nomes_com_dados_existentes])
+                resposta = messagebox.askyesno(
+                    "Confirmação",
+                    f"Os seguintes nomes já possuem registros na data selecionada:\n\n{nomes_existentes_str}\n\n"
+                    "Deseja alterar os valores existentes?"
+                )
+
+                if not resposta:
+                    # Se o usuário não quiser alterar, remover os nomes com dados existentes da lista de novos registros
+                    for nome, _ in nomes_com_dados_existentes:
+                        novos_registros = [registro for registro in novos_registros if registro[1] != nome]
+
+            # Verificar se há nomes com atestado no último registro
+            if atestado_nomes:
+                resposta_atestado = messagebox.askyesno(
+                    "Confirmação",
+                    f"Os seguintes nomes possuem 'atestado' no último registro: {', '.join(atestado_nomes)}.\n"
+                    "Deseja marcar a nova frequência como 'atestado' clique em 'sim'.\n Quer colocar 'falta' para esses nomes, clique em 'não'."
+                )
+                tipo_presenca_atestado = "atestado" if resposta_atestado else "falta"
+
+                # Inserir registros para os nomes com atestado
+                for nome in atestado_nomes:
+                    cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?",
+                                (nome, self.selected_siteempresa_id))
+                    id_nome = cursor.fetchone()[0]
+
+                    cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca_atestado,))
+                    id_presenca = cursor.fetchone()[0]
+
+                    cursor.execute("""
+                        INSERT INTO Controle (id_Nome, id_Presenca, Data, id_SiteEmpresa)
+                        VALUES (?, ?, ?, ?)
+                    """, (id_nome, id_presenca, data_selecionada, self.selected_siteempresa_id))
+
+                    detalhes_sucesso.append(f"{nome} - {tipo_presenca_atestado} em {data_selecionada.strftime('%d/%m/%Y')}")
 
             # Inserir novos registros para os outros nomes
             for id_nome, nome in novos_registros:
@@ -506,10 +546,10 @@ class AbaControle:
 
                 detalhes_sucesso.append(f"{nome} - {tipo_presenca} em {data_selecionada.strftime('%d/%m/%Y')}")
 
-            self.conn.commit()  # Confirmar as alterações
+            self.conn.commit() # Confirmar as alterações
 
             # Montar a mensagem de sucesso
-            mensagem_sucesso = "Operação de frequência concluída para:\n" + "\n".join(detalhes_sucesso)
+            mensagem_sucesso = "Frequência adicionada com sucesso para:\n" + "\n".join(detalhes_sucesso)
             messagebox.showinfo("Sucesso", mensagem_sucesso)
 
             # Atualizar a tabela após adicionar a frequência
@@ -521,9 +561,6 @@ class AbaControle:
 
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao adicionar frequência: {e}")
-
-
-
 
     def remover_frequencia(self):
         # Obter o dia, mês e ano selecionados
@@ -1294,7 +1331,7 @@ class AbaRelatorioMes:
         # Filtrar os valores e rótulos que não são zero
         labels = ['OK', 'Falta', 'Atestado', 'Curso', 'Férias']
         sizes = [row[0], row[1], row[2], row[3], row[4]]
-        colors = ['#4CAF50', '#FF5733', '#FFC300', '#8E44AD', '#a5a5a5']  # Cores para cada categoria
+        colors = ['#333', '#FF5733', '#FFC300', '#8E44AD', '#a5a5a5']  # Cores para cada categoria
 
         # Filtrar as categorias com base em valores diferentes de zero
         filtered_labels = []
@@ -1371,11 +1408,12 @@ class AbaRelatorioMes:
 
         # Preparar os dados para o gráfico de dispersão
         data_dict = {
-            'OK': {'datas': [], 'nomes': [], 'cor': '#4CAF50', 'marker': 'o'},
+            'OK': {'datas': [], 'nomes': [], 'cor': '#333', 'marker': 'o'},
             'FALTA': {'datas': [], 'nomes': [], 'cor': '#FF5733', 'marker': 'x'},
             'ATESTADO': {'datas': [], 'nomes': [], 'cor': '#FFC300', 'marker': 'd'},
             'CURSO': {'datas': [], 'nomes': [], 'cor': '#8E44AD', 'marker': '*'},
             'FÉRIAS': {'datas': [], 'nomes': [], 'cor': '#a5a5a5', 'marker': 's'},
+            'ALPHAVILLE':{'datas': [], 'nomes': [], 'cor': '#5D578E', 'marker': 's'},
         }
 
         nomes_unicos = set()
@@ -1604,11 +1642,12 @@ class AbaRelatorioMes:
 
         # Preparar os dados para o gráfico de dispersão
         data_dict = {
-            'OK': {'datas': [], 'nomes': [], 'cor': '#4CAF50', 'marker': 'o'},
+            'OK': {'datas': [], 'nomes': [], 'cor': '#333', 'marker': 'o'},
             'FALTA': {'datas': [], 'nomes': [], 'cor': '#FF5733', 'marker': 'x'},
             'ATESTADO': {'datas': [], 'nomes': [], 'cor': '#FFC300', 'marker': 'd'},
             'CURSO': {'datas': [], 'nomes': [], 'cor': '#8E44AD', 'marker': '*'},
-            'FÉRIAS': {'datas': [], 'nomes': [], 'cor': '#A5A5A5', 'marker': 'S'},
+            'FÉRIAS': {'datas': [], 'nomes': [], 'cor': '#A5A5A5', 'marker': 's'},
+            'ALPHAVILLE':{'datas': [], 'nomes': [], 'cor': '#ccc', 'marker': 's'},
         }
 
         nomes_unicos = set()
@@ -1698,7 +1737,7 @@ class AbaRelatorioMes:
             nome = row[0]
             sizes = [row[1], row[2], row[3], row[4], row[5]]
             labels = ['OK', 'Falta', 'Atestado', 'Curso', 'Férias']
-            colors = ['#4CAF50', '#FF5733', '#FFC300', '#8E44AD', '#A5a5a5']
+            colors = ['#333', '#FF5733', '#FFC300', '#8E44AD', '#A5a5a5']
 
             # Filtrar as categorias com base em valores diferentes de zero
             filtered_labels = []
