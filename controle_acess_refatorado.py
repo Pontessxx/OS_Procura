@@ -440,7 +440,7 @@ class AbaControle:
             return
 
         # Verificar se a data cai em um sábado ou domingo
-        if data_selecionada.weekday() >= 5: # 5 e 6 correspondem a sábado e domingo, respectivamente
+        if data_selecionada.weekday() >= 5:  # 5 e 6 correspondem a sábado e domingo, respectivamente
             messagebox.showerror("Erro", "Não é permitido adicionar frequência para sábados ou domingos.")
             return
 
@@ -449,14 +449,14 @@ class AbaControle:
 
         # Verificar se já existem registros de presença para os nomes na data selecionada
         novos_registros = []
-        atestado_nomes = [] # Lista para armazenar os nomes com atestado
-        nomes_com_dados_existentes = [] # Nomes que já possuem registros na data
+        atestado_nomes = []  # Lista para armazenar os nomes com atestado
+        nomes_com_dados_existentes = []  # Nomes que já possuem registros na data
 
         try:
             cursor = self.conn.cursor()
 
             for nome, var in self.checkbox_vars.items():
-                if var.get() == 'on': # Verifica se a checkbox está marcada
+                if var.get() == 'on':  # Verifica se a checkbox está marcada
                     # Obter o id_Nome do nome selecionado
                     cursor.execute("SELECT id_Nomes FROM Nome WHERE Nome = ? AND id_SiteEmpresa = ?",
                                 (nome, self.selected_siteempresa_id))
@@ -473,7 +473,8 @@ class AbaControle:
                     resultado = cursor.fetchone()
 
                     if resultado:
-                        nomes_com_dados_existentes.append((nome, resultado[1])) # Guardar o nome e o tipo de presença existente
+                        # Se já existir um registro, adicionar à lista de nomes com dados existentes
+                        nomes_com_dados_existentes.append((nome, resultado[0], resultado[1]))  # Nome, id_Controle, Presença
                     else:
                         # Verificar o último registro de presença para este nome apenas se o tipo selecionado for "atestado"
                         if tipo_presenca.lower() == "atestado":
@@ -497,16 +498,29 @@ class AbaControle:
 
             # Perguntar ao usuário se deseja alterar os valores já existentes
             if nomes_com_dados_existentes:
-                nomes_existentes_str = "\n".join([f"{nome}: {presenca}" for nome, presenca in nomes_com_dados_existentes])
+                nomes_existentes_str = "\n".join([f"{nome}: {presenca}" for nome, _, presenca in nomes_com_dados_existentes])
                 resposta = messagebox.askyesno(
                     "Confirmação",
                     f"Os seguintes nomes já possuem registros na data selecionada:\n\n{nomes_existentes_str}\n\n"
                     "Deseja alterar os valores existentes?"
                 )
 
-                if not resposta:
+                if resposta:
+                    # Atualizar os registros existentes
+                    for nome, id_controle, _ in nomes_com_dados_existentes:
+                        cursor.execute("SELECT id_Presenca FROM Presenca WHERE Presenca = ?", (tipo_presenca,))
+                        id_presenca = cursor.fetchone()[0]
+
+                        cursor.execute("""
+                            UPDATE Controle
+                            SET id_Presenca = ?, Data = ?
+                            WHERE id_Controle = ?
+                        """, (id_presenca, data_selecionada, id_controle))
+
+                        detalhes_sucesso.append(f"{nome} - {tipo_presenca} (editado) em {data_selecionada.strftime('%d/%m/%Y')}")
+                else:
                     # Se o usuário não quiser alterar, remover os nomes com dados existentes da lista de novos registros
-                    for nome, _ in nomes_com_dados_existentes:
+                    for nome, _, _ in nomes_com_dados_existentes:
                         novos_registros = [registro for registro in novos_registros if registro[1] != nome]
 
             # Verificar se há nomes com atestado no último registro
@@ -546,10 +560,10 @@ class AbaControle:
 
                 detalhes_sucesso.append(f"{nome} - {tipo_presenca} em {data_selecionada.strftime('%d/%m/%Y')}")
 
-            self.conn.commit() # Confirmar as alterações
+            self.conn.commit()  # Confirmar as alterações
 
             # Montar a mensagem de sucesso
-            mensagem_sucesso = "Frequência adicionada com sucesso para:\n" + "\n".join(detalhes_sucesso)
+            mensagem_sucesso = "Frequência adicionada/atualizada com sucesso para:\n" + "\n".join(detalhes_sucesso)
             messagebox.showinfo("Sucesso", mensagem_sucesso)
 
             # Atualizar a tabela após adicionar a frequência
@@ -561,6 +575,8 @@ class AbaControle:
 
         except pyodbc.Error as e:
             messagebox.showerror("Erro", f"Erro ao adicionar frequência: {e}")
+
+
 
     def remover_frequencia(self):
         # Obter o dia, mês e ano selecionados
