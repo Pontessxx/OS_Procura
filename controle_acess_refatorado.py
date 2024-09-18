@@ -1158,10 +1158,9 @@ class AbaRelatorioMes:
         for widget in self.frame_tabela.winfo_children():
             widget.destroy()
         # Criando a Treeview para exibir a tabela de presença
-        self.tabela = ttk.Treeview(self.frame_tabela, columns=("Nome", "OK", "Falta", "Atestado", "Curso", 'Férias'),
+        self.tabela = ttk.Treeview(self.frame_tabela, columns=("Nome", "Falta", "Atestado", "Curso", 'Férias'),
                                    show='headings')
         self.tabela.column("Nome", width=60)  # Ajuste a largura conforme necessário
-        self.tabela.column("OK", width=40)
         self.tabela.column("Falta", width=40)
         self.tabela.column("Atestado", width=40)
         self.tabela.column("Curso", width=40)
@@ -1171,7 +1170,6 @@ class AbaRelatorioMes:
         self.treeScrollbar.pack(side='right', fill='y')
 
         self.tabela.heading("Nome", text="Nome")
-        self.tabela.heading("OK", text="OK")
         self.tabela.heading("Falta", text="Falta")
         self.tabela.heading("Atestado", text="Atestado")
         self.tabela.heading("Curso", text="Curso")
@@ -1281,7 +1279,6 @@ class AbaRelatorioMes:
         query = """
             SELECT 
                 Nome.Nome,
-                SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
                 SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
                 SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
                 SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso,
@@ -1307,15 +1304,16 @@ class AbaRelatorioMes:
 
         # Preencher a tabela com os resultados da consulta
         for row in cursor.fetchall():
-            # Remover as tuplas dos valores e formatar adequadamente como inteiros
-            nome = row[0]  # Supondo que row[0] é uma string (o nome)
-            ok = int(row[1])  # Convertendo para int
-            falta = int(row[2])  # Convertendo para int
-            atestado = int(row[3])  # Convertendo para int
-            curso = int(row[4])  # Convertendo para int
-            ferias = int(row[5])  # Convertendo para int
+            nome = row[0]  # Nome
+            falta = '' if row[1] == 0 else int(row[1])  # Preencher com vazio se for 0
+            atestado = '' if row[2] == 0 else int(row[2])  # Preencher com vazio se for 0
+            curso = '' if row[3] == 0 else int(row[3])  # Preencher com vazio se for 0
+            ferias = '' if row[4] == 0 else int(row[4])  # Preencher com vazio se for 0
+
             # Inserir na tabela
-            self.tabela.insert("", "end", values=(nome, ok, falta, atestado, curso, ferias))
+            self.tabela.insert("", "end", values=(nome, falta, atestado, curso, ferias))
+
+
 
     def criar_grafico_pizza(self):
         # Remover o gráfico de pizza anterior, se existir
