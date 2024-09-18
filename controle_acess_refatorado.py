@@ -1326,7 +1326,6 @@ class AbaRelatorioMes:
         cursor = self.conn.cursor()
         query = """
             SELECT 
-                SUM(IIF(Presenca.Presenca = 'ok', 1, 0)) AS ok,
                 SUM(IIF(Presenca.Presenca = 'falta', 1, 0)) AS falta,
                 SUM(IIF(Presenca.Presenca = 'atestado', 1, 0)) AS atestado,
                 SUM(IIF(Presenca.Presenca = 'curso', 1, 0)) AS curso,
@@ -1344,10 +1343,10 @@ class AbaRelatorioMes:
 
         row = cursor.fetchone()
 
-        # Filtrar os valores e rótulos que não são zero
-        labels = ['OK', 'Falta', 'Atestado', 'Curso', 'Férias']
-        sizes = [row[0], row[1], row[2], row[3], row[4]]
-        colors = ['#333', '#FF5733', '#FFC300', '#8E44AD', '#a5a5a5']  # Cores para cada categoria
+        # Labels e valores
+        labels = ['Falta', 'Atestado', 'Curso', 'Férias']
+        sizes = [row[0], row[1], row[2], row[3]]
+        colors = ['#FF5733', '#FFC300', '#8E44AD', '#A5a5a5']  # Cores para cada categoria
 
         # Filtrar as categorias com base em valores diferentes de zero
         filtered_labels = []
@@ -1355,7 +1354,7 @@ class AbaRelatorioMes:
         filtered_colors = []
 
         for i in range(len(sizes)):
-            if sizes[i] > 0:
+            if sizes[i] > 0:  # Somente incluir categorias com valores maiores que zero
                 filtered_labels.append(labels[i])
                 filtered_sizes.append(sizes[i])
                 filtered_colors.append(colors[i])
@@ -1371,7 +1370,7 @@ class AbaRelatorioMes:
 
         wedges, texts, autotexts = ax.pie(
             filtered_sizes, labels=filtered_labels, colors=filtered_colors,
-            autopct=lambda p: f'{int(p * sum(filtered_sizes) / 100)}',
+            autopct=lambda p: f'{int(p * sum(filtered_sizes) / 100)}',  # Mostra valores como inteiros
             startangle=0, pctdistance=0.8,
             wedgeprops=dict(width=0.4)
         )
@@ -1395,6 +1394,7 @@ class AbaRelatorioMes:
         # Customizar o fundo do gráfico
         ax.set_facecolor(self.my_dict['preto'])
         self.figura.patch.set_facecolor(self.my_dict['preto'])
+
 
     def criar_grafico_dispersao(self):
         # Remover o gráfico de dispersão anterior, se existir
